@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="token" content="web">
+<title>LLM From Zero</title>
+<link rel="stylesheet" href="style.css">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [["$", "$"], ["\\(", "\\)"]], displayMath: [["$$", "$$"], ["\\[", "\\]"]] },
+  svg: { fontCache: "global" },
+  startup: { typeset: false }
+};
+</script>
+<script src="vendor/mathjax/tex-svg.js" defer></script>
+<meta name="theme-color" content="#18212c">
+<meta name="description" content="Learn to build language models from zero: lessons, exercises with tests, quizzes and recall.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+.boot { max-width: 520px; margin: 12vh auto 0; padding: 0 16px; display: grid; gap: 12px; }
+.boot .spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: lfz-spin 0.9s linear infinite; }
+@keyframes lfz-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .boot .spin { animation: none; } }
+.update-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 60;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px;
+  display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 18px rgba(0,0,0,.18); max-width: calc(100vw - 32px); }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="#/">LLM From Zero</a>
+  <nav id="nav" aria-label="Sections">
+    <a href="#/" data-nav="home">Today</a>
+    <a href="#/recall" data-nav="recall">Recall</a>
+    <a href="#/learn" data-nav="learn">Learn</a>
+    <a href="#/practice/python" data-nav="practice">Practice</a>
+    <a href="#/quiz" data-nav="quiz">Quiz</a>
+    <a href="#/map" data-nav="map">Map</a>
+    <a href="#/lists/build" data-nav="lists">Lists</a>
+    <a href="#/read" data-nav="read">Read</a>
+    <a href="#/certs" data-nav="certs">Certificates</a>
+    <a href="#/settings" data-nav="settings">Settings</a>
+  </nav>
+  <div id="focus-pill" class="focus-pill"></div>
+</header>
+<div id="focus-panel" class="focus-panel" role="dialog" aria-label="Focus session" hidden></div>
+<main id="view" tabindex="-1"><div class="boot" id="boot">
+  <div class="spin" aria-hidden="true"></div>
+  <h1>LLM From Zero</h1>
+  <p id="boot-step">Starting</p>
+  <p class="muted small">Everything runs in this browser, Python included. The first visit downloads Python (about 12 MB); after that the app opens offline. Your progress is kept in this browser: use Settings, then Devices, to move it between devices.</p>
+</div></main>
+<div id="update-bar" class="update-bar" role="status" hidden><span>A new version of the app is ready.</span><button class="btn primary" type="button" onclick="location.reload()">Reload</button></div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script src="config.js"></script>
+<script src="boot.js"></script>
+</body>
+</html>
