@@ -30,8 +30,27 @@ TABLES = ("attempts", "solved", "hints", "sol_views", "lessons", "ticks", "quiz"
 LOCAL_SETTINGS = ("seen_version", "ticks_synced", "agent_url", "agent_model", "agent_kind", "agent_ctx", "sync_exported", "sync_imported")
 
 
-def export(con, work_dir, content_version):
-    tables = {t: [dict(r) for r in con.execute("select * from %s" % t)] for t in TABLES}
+# What a partial export ("since" a time) keeps of each table. Each kept row carries its own time, so the
+# rows left out are ones the other device was sent before. The small tables without a time go whole.
+SINCE = {"attempts": "ts", "solved": "ts", "sol_views": "ts", "lessons": "ts", "ticks": "ts", "quiz": "ts", "solves": "ts",
+         "reviews": "ts", "notes": "ts", "papers": "ts", "paper_notes": "ts", "nudges": "ts", "recall_log": "ts"}
+FOCUS_OVERLAP = 86400        # a focus session can end, and get its note, a while after it started
+
+
+def export(con, work_dir, content_version, since=0):
+    """Everything, or with `since` (a Unix time) only what was recorded from then on."""
+    tables = {}
+    for t in TABLES:
+        if since and t in SINCE:
+            rows = con.execute("select * from %s where %s >= ?" % (t, SINCE[t]), (since,))
+        elif since and t == "focus":
+            rows = con.execute("select * from focus where ts >= ?", (since - FOCUS_OVERLAP,))
+        elif since and t == "recall":            # new cards, and cards that something happened to since
+            rows = con.execute("select * from recall where made >= ? or id in (select card from recall_log where ts >= ?)"
+                               " or (kind = 'quiz' and ref in (select qid from quiz where ts >= ?))", (since, since, since))
+        else:
+            rows = con.execute("select * from %s" % t)
+        tables[t] = [dict(r) for r in rows]
     work = {}
     if os.path.isdir(work_dir):
         for root, _dirs, files in os.walk(work_dir):
@@ -41,12 +60,18 @@ def export(con, work_dir, content_version):
                 path = os.path.join(root, name)
                 rel = os.path.relpath(path, work_dir).replace(os.sep, "/")
                 try:
+                    mtime = int(os.path.getmtime(path))
+                    if since and mtime < since:
+                        continue
                     with open(path, encoding="utf-8") as f:
-                        work[rel] = {"code": f.read(), "mtime": int(os.path.getmtime(path))}
+                        work[rel] = {"code": f.read(), "mtime": mtime}
                 except (OSError, UnicodeDecodeError):
                     continue
-    return {"app": "llm-from-zero", "format": FORMAT, "version": 3, "content": content_version, "exported": int(time.time()),
-            "tables": tables, "work": work}
+    out = {"app": "llm-from-zero", "format": FORMAT, "version": 3, "content": content_version, "exported": int(time.time()),
+           "tables": tables, "work": work}
+    if since:
+        out["since"] = int(since)
+    return out
 
 
 class SyncError(Exception):

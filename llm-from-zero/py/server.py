@@ -1579,9 +1579,13 @@ class Api:
         except Exception as e:
             return {"torch": "", "error": "%s: %s" % (type(e).__name__, str(e)[:200])}
 
-    def export(self, _q):
+    def export(self, q):
+        try:
+            since = max(0, int(q.get("since") or 0))
+        except ValueError:
+            raise Bad("since must be a time in seconds.")
         with db() as con:
-            data = sync.export(con, WORK, C.manifest["version"])
+            data = sync.export(con, WORK, C.manifest["version"], since)
             put_setting(con, "sync_exported", str(now()))
         return data
 

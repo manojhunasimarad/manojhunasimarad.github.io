@@ -1,7 +1,7 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "3.2.0-8581615af9",
- "version": "3.2.0",
+ "build": "3.3.0-e55038c472",
+ "version": "3.3.0",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",
  "pyodideCore": [
@@ -97,6 +97,8 @@ self.LFZ_CONFIG = {
   "vendor/mathjax/tex-svg.js",
   "vendor/sqlite/sqlite3.mjs",
   "vendor/sqlite/sqlite3.wasm",
+  "vendor/qr/qrcode.js",
+  "vendor/qr/jsQR.js",
   "py/webrun.py",
   "py/server.py",
   "py/engine.py",

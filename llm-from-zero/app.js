@@ -1292,12 +1292,18 @@ function devicesPanel(d) {
         <label class="btn" for="sync-file">Add progress from a file</label><input type="file" id="sync-file" accept=".json,application/json" class="visually-hidden">
       </div>
       <p class="muted small" id="sync-msg"></p>
+      <div class="row-flex">
+        <button class="btn" id="qr-show">Show as QR codes</button>
+        <button class="btn" id="qr-scan">Scan QR codes</button>
+      </div>
+      <p class="muted small">No file needed: this screen shows your progress as a few QR codes and the other device reads them with its camera. Use it where files, Bluetooth and copy-paste are blocked, such as an office laptop. Each time, only what is new since the last codes is sent.</p>
       <details class="box"><summary>Sending the file by Bluetooth</summary><div class="prose">
         <ol>
           <li>On the phone, press "Send it to another device" and choose Bluetooth or Quick Share. If that button is not shown, press "Save my progress as a file", open the file in Files or Downloads, and share it from there.</li>
           <li>On a Windows laptop, open Settings, Bluetooth and devices, then "Send or receive files via Bluetooth", and choose "Receive files" before you send.</li>
           <li>Open the app on the receiving device, come to this page, and press "Add progress from a file".</li>
         </ol>
+        <p>Where nothing can be sent, as on an office laptop, use the QR codes instead: “Show as QR codes” on the office laptop, “Scan QR codes” on the phone. The other way round needs the office laptop's camera, or skip it: the office laptop does not need your other progress to record new work.</p>
         <p>To bring two devices level, add the phone's file on the laptop, then save on the laptop and add that file on the phone. Email, a USB cable or Google Drive work just as well as Bluetooth. The file is small: tens of kilobytes for most people.</p>
         <p>What a file does not carry: a tick you removed on one device comes back if the other still has it, and paper PDFs stay where they were uploaded. The notes on a paper do travel: upload the same PDF on the other device and they are already there.</p>
       </div></details>
@@ -1305,6 +1311,8 @@ function devicesPanel(d) {
 }
 
 function devicesWire() {
+  $("#qr-show").addEventListener("click", () => qrShow());
+  $("#qr-scan").addEventListener("click", () => qrScan());
   const msg = $("#sync-msg");
   const fileName = () => "llm-from-zero-progress-" + (WEB ? "browser" : "laptop") + "-" + new Date().toISOString().slice(0, 10) + ".json";
   const makeFile = async () => {
@@ -1347,6 +1355,242 @@ function devicesWire() {
     } catch (e) { msg.textContent = e.message; }
     $("#sync-file").value = "";
   });
+}
+
+/* ------------------------------------------------------------------ progress as QR codes
+   The progress file is compressed, written in the 45 characters a QR code holds most compactly
+   (base45, RFC 9285), and cut into numbered codes: LFZ<z>:<set>:<n>:<of>:<text>. The other device
+   collects them in any order and adds the file as if it had been opened from disk. */
+
+const B45 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+const QR_CHARS = 690;           // per code: QR version 17 or 18 at error correction M, easy to read off a screen
+function b45encode(bytes) {
+  let s = "";
+  for (let i = 0; i + 1 < bytes.length; i += 2) {
+    const n = bytes[i] * 256 + bytes[i + 1];
+    s += B45[n % 45] + B45[Math.floor(n / 45) % 45] + B45[Math.floor(n / 2025)];
+  }
+  if (bytes.length % 2) { const n = bytes[bytes.length - 1]; s += B45[n % 45] + B45[Math.floor(n / 45)]; }
+  return s;
+}
+function b45decode(s) {
+  const out = new Uint8Array(Math.floor(s.length / 3) * 2 + (s.length % 3 ? 1 : 0));
+  let k = 0;
+  for (let i = 0; i < s.length; i += 3) {
+    const v = Array.from(s.slice(i, i + 3), ch => B45.indexOf(ch));
+    if (v.includes(-1) || v.length === 1) throw new Error("A code was misread. Scan again.");
+    const n = v[0] + v[1] * 45 + (v.length === 3 ? v[2] * 2025 : 0);
+    if (v.length === 3) { if (n > 65535) throw new Error("A code was misread. Scan again."); out[k++] = n >> 8; out[k++] = n & 255; }
+    else { if (n > 255) throw new Error("A code was misread. Scan again."); out[k++] = n; }
+  }
+  return out.subarray(0, k);
+}
+async function squeeze(text) {
+  const raw = new TextEncoder().encode(text);
+  if (!window.CompressionStream) return [0, raw];
+  return [1, new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate"))).arrayBuffer())];
+}
+async function unsqueeze(z, bytes) {
+  if (z !== 1) return new TextDecoder().decode(bytes);
+  if (!window.DecompressionStream) throw new Error("This browser is too old to read these codes. Update it and try again.");
+  return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"))).text();
+}
+const loaded = {};
+function loadScript(src) {
+  return loaded[src] || (loaded[src] = new Promise((resolve, reject) => {
+    const el = document.createElement("script");
+    el.src = src; el.onload = resolve;
+    el.onerror = () => { delete loaded[src]; reject(new Error("Could not load " + src + ".")); };
+    document.head.appendChild(el);
+  }));
+}
+
+function sheet(title) {               // a full-screen panel over the page; closing it runs the cleanups given
+  const el = document.createElement("div");
+  el.className = "sheet"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", title);
+  el.innerHTML = `<div class="sheet-in"><div class="row-flex spread"><h2>${esc(title)}</h2><button class="btn quiet" data-close>Close</button></div><div class="sheet-body stack"></div></div>`;
+  document.body.appendChild(el);
+  const cleanups = [];
+  const close = () => { cleanups.forEach(f => { try { f(); } catch (e) {} }); el.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  el.querySelector("[data-close]").addEventListener("click", close);
+  el.querySelector("[data-close]").focus();
+  return { el, body: el.querySelector(".sheet-body"), close, onClose: f => cleanups.push(f) };
+}
+
+async function qrShow() {
+  const sh = sheet("Show your progress as QR codes");
+  const last = lsGet("lfz.qrSent", 0);
+  sh.body.innerHTML = `
+    <p>On the other device, open Settings, press <strong>Scan QR codes</strong> and point its camera at this screen. The codes change by themselves; keep the camera on them until it says it has them all.</p>
+    <div class="row-flex"><label for="qr-what">Send</label><select id="qr-what">
+      ${last ? `<option value="${last - 3600}">what is new since the last codes (${esc(dateWord(last))})</option>` : ""}
+      <option value="${Math.floor(Date.now() / 1000) - 3 * 86400}">the last three days</option>
+      <option value="0">everything</option></select>
+      <button class="btn primary" id="qr-go">Show the codes</button></div>
+    <div id="qr-out" class="stack"></div>`;
+  let timer = 0;
+  sh.onClose(() => clearInterval(timer));
+  const out = $("#qr-out", sh.el);
+  $("#qr-go", sh.el).addEventListener("click", async () => {
+    clearInterval(timer);
+    out.innerHTML = `<p class="muted">Preparing the codes</p>`;
+    try {
+      await loadScript("vendor/qr/qrcode.js");
+      const since = Number($("#qr-what", sh.el).value);
+      const data = await api("/api/export" + (since ? "?since=" + since : ""));
+      const [z, bytes] = await squeeze(JSON.stringify(data));
+      const text = b45encode(bytes);
+      const set = Array.from(crypto.getRandomValues(new Uint8Array(4)), b => "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[b % 36]).join("");
+      const n = Math.max(1, Math.ceil(text.length / QR_CHARS));
+      const codes = Array.from({ length: n }, (_, i) => `LFZ${z}:${set}:${i + 1}:${n}:` + text.slice(i * QR_CHARS, (i + 1) * QR_CHARS));
+      lsSet("lfz.qrSent", Math.floor(Date.now() / 1000));
+      out.innerHTML = `<div class="qr-box"><canvas id="qr-canvas" width="10" height="10" aria-label="QR code"></canvas></div>
+        <div class="row-flex spread"><span class="num" id="qr-count"></span>
+          <span class="row-flex"><button class="btn" id="qr-pause">Pause</button><button class="btn" id="qr-prev" hidden>Previous</button><button class="btn" id="qr-next" hidden>Next</button><button class="btn quiet" id="qr-speed">Slower</button></span></div>
+        <p class="muted small">${n === 1 ? "One code" : n + " codes"}, ${Math.round(bytes.length / 1024 * 10) / 10} KB${since ? "" : ", everything"}. Taking photos works too: pause, then photograph each code and use “Scan QR codes”, then “Read from photos” on the other device.</p>`;
+      const canvas = $("#qr-canvas", out), cx = canvas.getContext("2d");
+      let i = 0, playing = true, ms = 450;
+      const draw = () => {
+        const qr = qrcode(0, "M");
+        qr.addData(codes[i], "Alphanumeric");
+        qr.make();
+        // every module a whole number of screen pixels, so no row of the code comes out thinner than the rest
+        const m = qr.getModuleCount(), quiet = 4, dpr = window.devicePixelRatio || 1;
+        const target = Math.min(window.innerWidth * 0.92, window.innerHeight * 0.68, 560) * dpr;
+        const cell = Math.max(2, Math.floor(target / (m + 2 * quiet)));
+        canvas.width = canvas.height = (m + 2 * quiet) * cell;
+        canvas.style.width = canvas.style.height = canvas.width / dpr + "px";
+        cx.fillStyle = "#fff"; cx.fillRect(0, 0, canvas.width, canvas.height);
+        cx.fillStyle = "#000";
+        for (let r = 0; r < m; r++) for (let c = 0; c < m; c++) if (qr.isDark(r, c)) cx.fillRect((c + quiet) * cell, (r + quiet) * cell, cell, cell);
+        $("#qr-count", out).textContent = "Code " + (i + 1) + " of " + n;
+      };
+      const step = d => { i = (i + d + n) % n; draw(); };
+      const play = () => { clearInterval(timer); if (playing && n > 1) timer = setInterval(() => step(1), ms); };
+      draw(); play();
+      $("#qr-pause", out).hidden = n === 1;
+      $("#qr-speed", out).hidden = n === 1;
+      $("#qr-pause", out).addEventListener("click", e => {
+        playing = !playing; e.target.textContent = playing ? "Pause" : "Play";
+        $("#qr-prev", out).hidden = $("#qr-next", out).hidden = playing; play();
+      });
+      $("#qr-prev", out).addEventListener("click", () => step(-1));
+      $("#qr-next", out).addEventListener("click", () => step(1));
+      $("#qr-speed", out).addEventListener("click", e => { ms = ms === 450 ? 1100 : 450; e.target.textContent = ms === 450 ? "Slower" : "Faster"; play(); });
+    } catch (e) { out.innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
+  });
+}
+
+async function qrScan() {
+  const sh = sheet("Scan QR codes from another device");
+  sh.body.innerHTML = `
+    <p>On the other device, open Settings and press <strong>Show as QR codes</strong>. Then point this camera at its screen, close enough that the code fills most of the picture.</p>
+    <div class="cam-box"><video id="qr-video" playsinline muted></video></div>
+    <div class="meter"><div class="top"><span class="name" id="qr-state">Starting the camera. If the browser asks, allow it.</span><span class="num" id="qr-have"></span></div><div class="track"><i id="qr-bar" style="width:0%"></i></div></div>
+    <div class="row-flex"><label class="btn" for="qr-photos">Read from photos</label><input type="file" id="qr-photos" accept="image/*" multiple class="visually-hidden"><span class="muted small" id="qr-missing"></span></div>
+    <div id="qr-result"></div>`;
+  const video = $("#qr-video", sh.el), state = $("#qr-state", sh.el);
+  let stream = null, stopped = false, done = false, set = null, total = 0, z = 1, busy = false;
+  const got = new Map();
+  sh.onClose(() => { stopped = true; if (stream) stream.getTracks().forEach(t => t.stop()); });
+  const canvas = document.createElement("canvas"), cx = canvas.getContext("2d", { willReadFrequently: true });
+  let detector = null;
+  try {
+    if ("BarcodeDetector" in window && (await BarcodeDetector.getSupportedFormats()).includes("qr_code")) detector = new BarcodeDetector({ formats: ["qr_code"] });
+  } catch (e) { detector = null; }
+  try { await loadScript("vendor/qr/jsQR.js"); } catch (e) { if (!detector) { state.textContent = e.message; return; } }
+
+  const show = () => {
+    $("#qr-have", sh.el).textContent = total ? got.size + " of " + total : "";
+    $("#qr-bar", sh.el).style.width = (total ? Math.round(100 * got.size / total) : 0) + "%";
+    const missing = [];
+    for (let k = 1; k <= total; k++) if (!got.has(k)) missing.push(k);
+    $("#qr-missing", sh.el).textContent = total && missing.length && missing.length <= 12 && got.size ? "Still to read: " + missing.join(", ") : "";
+  };
+  const finish = async () => {
+    done = true;
+    state.textContent = "All codes read. Adding them";
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    $(".cam-box", sh.el).hidden = true;
+    try {
+      let text = "";
+      for (let k = 1; k <= total; k++) text += got.get(k);
+      const data = JSON.parse(await unsqueeze(z, b45decode(text)));
+      const r = await api("/api/import", { data });
+      state.textContent = "Done";
+      $("#qr-result", sh.el).innerHTML = `<div class="banner good"><strong>${esc(r.message)}</strong></div>`;
+      toast(r.message);
+    } catch (e) {
+      state.textContent = "Could not add them";
+      $("#qr-result", sh.el).innerHTML = `<div class="banner bad">${esc(e.message === "Unexpected end of JSON input" || e instanceof SyntaxError ? "The codes did not fit together. On the other device press Show the codes again, then scan again." : e.message)}</div>`;
+    }
+  };
+  const take = text => {
+    const m = /^LFZ([01]):([0-9A-Z]{4}):(\d{1,4}):(\d{1,4}):/.exec(text || "");
+    if (!m || done) return false;
+    const k = Number(m[3]), n = Number(m[4]);
+    if (!n || k < 1 || k > n) return false;
+    if (set !== m[2]) {                          // the other device started a new set of codes
+      if (set) state.textContent = "New codes on the other screen: starting over";
+      set = m[2]; total = n; z = Number(m[1]); got.clear();
+    }
+    if (!got.has(k)) { got.set(k, text.slice(m[0].length)); show(); }
+    if (got.size === total) finish();
+    return true;
+  };
+  const read = async source => {                  // every code found in one picture (a video frame or a photo)
+    const found = [];
+    if (detector) { try { for (const b of await detector.detect(source)) found.push(b.rawValue); } catch (e) {} }
+    if (!found.length && window.jsQR) {
+      const w0 = source.videoWidth || source.width, h0 = source.videoHeight || source.height;
+      if (w0 && h0) {
+        const scale = Math.min(1, 1000 / Math.max(w0, h0));
+        canvas.width = Math.round(w0 * scale); canvas.height = Math.round(h0 * scale);
+        cx.drawImage(source, 0, 0, canvas.width, canvas.height);
+        const img = cx.getImageData(0, 0, canvas.width, canvas.height);
+        const r = jsQR(img.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+        if (r && r.data) found.push(r.data);
+      }
+    }
+    return found;
+  };
+
+  $("#qr-photos", sh.el).addEventListener("change", async e => {
+    const files = Array.from(e.target.files || []);
+    let used = 0;
+    for (const f of files) {
+      try {
+        const bmp = await createImageBitmap(f);
+        for (const t of await read(bmp)) if (take(t)) used++;
+        bmp.close && bmp.close();
+      } catch (err) { /* not a picture this browser can open */ }
+    }
+    if (!done) state.textContent = used ? "Read " + used + " of the photos" + (total > got.size ? ". Add photos of the codes still missing." : "") : "No codes from this app were found in those photos.";
+    e.target.value = "";
+  });
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  } catch (e) {
+    state.textContent = "The camera is not available here. Allow it for this site in the browser, or use “Read from photos”.";
+    $(".cam-box", sh.el).hidden = true;
+    return;
+  }
+  if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }
+  video.srcObject = stream;
+  try { await video.play(); } catch (e) {}
+  state.textContent = "Looking for codes";
+  const loop = async () => {
+    if (stopped || done) return;
+    if (!busy && video.readyState >= 2) {
+      busy = true;
+      try { for (const t of await read(video)) take(t); } finally { busy = false; }
+    }
+    setTimeout(loop, 90);
+  };
+  loop();
 }
 
 function browserPanel(d) {
