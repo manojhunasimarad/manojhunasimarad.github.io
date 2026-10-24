@@ -136,6 +136,10 @@ label.toggle { display: inline-flex; align-items: center; gap: 6px; cursor: poin
 .banner { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); padding: 10px 14px; border-radius: 4px; }
 .banner.good { border-left-color: var(--done); }
 .banner.bad { border-left-color: var(--bad); }
+.banner.warn { border-left-color: var(--warn); background: color-mix(in srgb, var(--warn) 8%, var(--surface)); }
+.banner.mock-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; border-left-color: var(--warn); margin-bottom: 12px; }
+.mock-clock { font-family: var(--font-mono); font-size: 34px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.mock-prompt { font-size: 18px; max-width: 64ch; text-wrap: balance; }
 details.box { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
 details.box > summary { cursor: pointer; padding: 8px 12px; font-weight: 600; }
 details.box > div { padding: 0 12px 12px; }
@@ -261,6 +265,8 @@ table.rounds td { color: var(--ink); }
 .links .detail { color: var(--muted); }
 .row-note { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
 .ticks li.done .row-note { text-decoration: none; }
+.row-book { display: block; font-size: 12px; letter-spacing: 0.02em; color: var(--muted); margin-bottom: 1px; }
+.ticks li.done .row-book { text-decoration: none; }
 .panel > .head a.small { margin-left: auto; }
 
 /* focus: a pill in the top bar that stays while you move between pages, and a small panel under it */

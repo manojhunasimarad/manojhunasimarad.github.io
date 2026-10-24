@@ -1,7 +1,7 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "3.3.0-e55038c472",
- "version": "3.3.0",
+ "build": "4.0.0-d54e967ce2",
+ "version": "4.0.0",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",
  "pyodideCore": [
@@ -93,6 +93,7 @@ self.LFZ_CONFIG = {
   "style.css",
   "api-worker.js",
   "run-worker.js",
+  "sqlbridge.js",
   "manifest.webmanifest",
   "vendor/mathjax/tex-svg.js",
   "vendor/sqlite/sqlite3.mjs",

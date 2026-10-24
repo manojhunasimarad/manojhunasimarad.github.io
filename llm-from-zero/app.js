@@ -74,6 +74,7 @@ const ROUTES = [
   [/^\/skill\/([\w-]+)$/, skill, "map"],
   [/^\/roles$/, roles, "map"],
   [/^\/review\/([\w-]+)$/, review, "practice"],
+  [/^\/mock$/, mock, "practice"],
   [/^\/focus$/, focusPage, "home"],
   [/^\/recall(?:\?(.*))?$/, recall, "recall"],
   [/^\/read(?:\?(.*))?$/, read, "read"],
@@ -145,6 +146,9 @@ async function home() {
   const count = s => s.solved + " of " + s.total + " solved.";
   const cards = [];
   const lead = d.recall.due ? "recall" : d.reviews.length ? "review" : "lesson";      // the one card with the filled button
+  if (!d.active_today && (d.streak > 0 || new Date().getHours() >= 18)) cards.push(card("Short on time", "Keep the streak in two minutes",
+    d.recall.due ? "Three quiz questions, or the recall card that is due. Either counts for today." : "Three quiz questions. They count for today, and the ones you miss come back under Recall.",
+    ["Three questions", "#/quiz", false, "quiz3"]));
   if (d.recall.due) cards.push(card("Recall", d.recall.due + (d.recall.due === 1 ? " thing" : " things") + " from earlier",
     "Write what you remember, then compare. About " + d.recall.due * 2 + " minutes. Do this before anything new.", ["Start", "#/recall", true]));
   else if (done.has("recall")) cards.push(card("Recall", "Done for today", d.recall.waiting ? d.recall.waiting + " more will keep until tomorrow." : "The next ones appear when they are due.", null, true));
@@ -164,12 +168,21 @@ async function home() {
     : d.rec.ml
       ? card("ML problem", d.rec.ml.title, d.rec.ml.why + " " + count(ml), ["Solve", "#/ex/" + d.rec.ml.id], done.has("ml"))
       : card("ML problem", "The planned problems are solved", "", ["Browse", "#/practice/ml"]));
-  const core = ["sys", "num"].map(set).filter(s => s && d.rec[s.id]).sort((a, b) => a.solved / a.total - b.solved / b.total)[0];
+  const least = ids => ids.map(set).filter(s => s && d.rec[s.id]).sort((a, b) => a.solved / a.total - b.solved / b.total)[0];
+  const role = ["gen", "sql", "ds"].some(id => done.has(id)) ? set(["gen", "sql", "ds"].find(id => done.has(id))) : least(["gen", "sql", "ds"]);
+  if (role && d.rec[role.id]) cards.push(card("Interview set: " + role.title, d.rec[role.id].title, d.rec[role.id].why + " " + count(role), ["Solve", "#/ex/" + d.rec[role.id].id], done.has(role.id)));
+  const core = least(["sys", "num"]);
   if (core) cards.push(card(core.title, d.rec[core.id].title, d.rec[core.id].why + " " + count(core), ["Solve", "#/ex/" + d.rec[core.id].id], done.has(core.id)));
+  if (d.lists.books) cards.push(card("Books and repos", done.has("list:books") ? "A chapter is ticked today" : "One chapter at your stage",
+    "Read it, do its exercises, tick it, and write two lines from memory. " + d.lists.books.done + " of " + d.lists.books.total + " ticked.", ["Open the list", "#/lists/books"], done.has("list:books")));
   if (d.reading.next) cards.push(card("Paper", d.reading.next.title, ["Not started. Pass 1 takes ten minutes.", "Pass 1 is done. Pass 2 is the full read.", "Pass 2 is done. Pass 3: could you reproduce a result?"][d.reading.next.stage] || "",
     ["Read", "#/paper/" + d.reading.next.id]));
   cards.push(card("Quiz", "Ten questions", d.quiz.missed ? d.quiz.missed + " missed questions are waiting for another try." : "New questions first.",
     ["Start", "#/quiz", false, "quiz10"], done.has("quiz")));
+  const mocks = lsGet("lfz.mocks", []), lastMock = mocks.length ? mocks[mocks.length - 1] : null;
+  const mockDays = lastMock ? Math.floor((Date.now() - lastMock.finished) / 86400000) : null;
+  if (mockActive()) cards.push(card("Mock round", "A round is running", "Hints and solutions stay locked until it ends.", ["Back to it", "#/mock", true]));
+  else if (mockDays === null || mockDays >= 6) cards.push(card("Mock round", "Timed, no hints", lastMock ? "The last one was " + mockDays + " days ago. One a week is enough." : "Two problems in 45 minutes, as in a real first round. One a week is enough.", ["Choose a round", "#/mock"]));
   if (!d.recall.cards) cards.push(card("Recall", "Nothing to recall yet", "Tick a video or a paper under Lists and write two lines from memory. It comes back here tomorrow.", ["How it works", "#/recall"]));
 
   const lists = d.lists;
@@ -179,7 +192,8 @@ async function home() {
       ${d.news.map(e => (d.news.length > 1 ? `<span class="num">Version ${esc(e.version)}</span>` : "") + `<ul class="prose">${e.changes.map(c => `<li>${esc(c)}</li>`).join("")}</ul>`).join("")}
       <div><button class="btn" id="news-ok">Got it</button></div></div></div>` : ""}
     <div class="stack"><h1>Today</h1>
-      <p class="lede">${d.active_today ? "You have worked today." : "Nothing done yet today."} Streak: ${d.streak} ${d.streak === 1 ? "day" : "days"}${d.best_streak > d.streak ? ", longest " + d.best_streak : ""}. The cards below are chosen from what you did last: solve one without help and the next is harder.</p>
+      <p class="lede">${d.active_today ? "You have worked today." : "Nothing done yet today."} Streak: ${d.streak} ${d.streak === 1 ? "day" : "days"}${d.best_streak > d.streak ? ", longest " + d.best_streak : ""}. The cards below are chosen from what you did last: solve one without help and the next is harder. <a href="#/settings" class="small">Daily reminder</a></p>
+      ${!d.active_today && d.streak > 0 && new Date().getHours() >= 18 ? `<div class="banner warn" id="at-risk"><strong>Your ${d.streak}-day streak ends at midnight.</strong> Two minutes keeps it: <a href="#/quiz" data-act="quiz3">three quiz questions</a>.</div>` : ""}
       ${heatHtml(d)}</div>
     <section class="panel"><div class="body focus-strip">
       <div class="stack grow">
@@ -198,9 +212,10 @@ async function home() {
         ${meter("Python", py.solved, py.total)}
         ${meter("DSA patterns", dsa.solved, dsa.total)}
         ${d.ml_installed ? meter("ML coding", ml.solved, ml.total) : meter("ML coding", 0, 1, "not downloaded")}
-        ${["sys", "num"].map(set).filter(Boolean).map(s => meter(s.title, s.solved, s.total)).join("")}
+        ${["gen", "sql", "ds", "sys", "num"].map(set).filter(Boolean).map(s => meter(s.title, s.solved, s.total)).join("")}
         ${meter("Quiz", d.quiz.right, d.quiz.total, d.quiz.right + " right of " + d.quiz.total)}
         ${meter("Build list", lists.build.done, lists.build.total)}
+        ${lists.books ? meter("Books and repos", lists.books.done, lists.books.total) : ""}
         ${meter("Papers", lists.papers.done, lists.papers.total)}
         ${meter("Replays", lists.replays.done, lists.replays.total)}
         ${meter("A2Z sheet", lists.dsa.done, lists.dsa.total)}
@@ -220,6 +235,7 @@ async function home() {
     <p class="muted small">Version ${esc(d.version)}. <a href="#/settings">What changed</a></p>`;
   const qb = $('[data-act="quiz10"]');
   if (qb) qb.addEventListener("click", e => { e.preventDefault(); startQuiz({ scope: "all", n: 10, mode: "practice" }); });
+  $$('[data-act="quiz3"]').forEach(b => b.addEventListener("click", e => { e.preventDefault(); startQuiz({ scope: "all", n: 3, mode: "practice" }); }));
   $("#focus-go").addEventListener("click", () => { location.hash = "#/focus"; });
   const nb = $("#news-ok");
   if (nb) nb.addEventListener("click", async () => { await api("/api/settings", { k: "seen_version" }); $("#news").remove(); });
@@ -259,7 +275,12 @@ async function lesson(id) {
     <div class="row-flex"><a class="btn quiet" href="#/learn">Back to Learn</a><span class="num">${d.minutes} min read</span></div>
     <h1>${esc(d.title)}</h1>
     <article class="prose" id="lesson-body">${d.html}</article>
+    ${d.ml_missing ? `<div class="banner">${d.ml_missing} ML coding ${d.ml_missing === 1 ? "problem belongs" : "problems belong"} to this lesson. They appear here once the ML coding set is downloaded: <a href="#/practice/ml">set it up</a>, once, about 8 MB.</div>` : ""}
     ${exs ? `<section class="panel"><div class="head"><h2>Now write these</h2></div><ul class="rows">${exs}</ul></section>` : ""}
+    ${d.build ? `<section class="panel"><div class="head"><h2>Build list, Stage ${d.build.stage}: ${esc(d.build.title)}</h2><a class="small" href="#/lists/build">Open the list</a></div>
+      <div class="body"><p class="muted small">The work of this stage. Tick a row when it is done; ticks keep the streak.</p><ul class="ticks" id="lesson-build">${d.build.rows.map(r => lessonRow(r, false)).join("")}</ul></div></section>` : ""}
+    ${d.reading.length ? `<section class="panel"><div class="head"><h2>Read alongside</h2><a class="small" href="#/lists/books">Books and repos</a></div>
+      <div class="body"><p class="muted small">A second explanation of the same ideas, from the books and courses the field uses. Read one, do its exercises, tick it.</p><ul class="ticks" id="lesson-reading">${d.reading.map(r => lessonRow(r, true)).join("")}</ul></div></section>` : ""}
     <div class="row-flex">
       <button class="btn${d.read ? "" : " primary"}" id="mark">${d.read ? "Mark as unread" : "Mark as read"}</button>
       ${d.prev ? `<a class="btn" href="#/lesson/${esc(d.prev)}">Previous lesson</a>` : ""}
@@ -291,6 +312,40 @@ async function lesson(id) {
   };
   drawRecall(lessonAsk === d.id);
   lessonAsk = null;
+  const byId = {};
+  (d.build ? d.build.rows : []).concat(d.reading).forEach(r => { byId[r.id] = r; });
+  $$("#lesson-build, #lesson-reading").forEach(ul => ul.addEventListener("change", async e => {
+    const li = e.target.closest("li");
+    if (!li || e.target.type !== "checkbox") return;
+    const on = e.target.checked, r = byId[li.dataset.id], reading = ul.id === "lesson-reading";
+    try {
+      await api("/api/tick", { id: li.dataset.id, on });
+      r.done = on;
+      li.classList.toggle("done", on);
+      const holder = $(".rc-holder", li);
+      if (holder && !on) holder.remove();
+      if (on && reading && d.ask_books && !r.recall && !holder) {
+        const h = document.createElement("div");
+        h.className = "rc-holder";
+        li.appendChild(h);
+        recallBox(h, d.ask_books, async note => {
+          const res = await api("/api/recall/add", { kind: "row", ref: r.id, note });
+          r.recall = { id: res.id, when: res.when };
+          h.remove();
+          $(".rc", li).innerHTML = `<a class="chip" href="#/recall?card=${res.id}">recall ${esc(res.when)}</a>`;
+          toast("Saved. It comes back tomorrow, under Recall.");
+        }, () => h.remove());
+      } else toast(on ? "Ticked. It counts for today." : "Tick removed.");
+    } catch (err) { e.target.checked = !on; toast(err.message); }
+  }));
+}
+
+function lessonRow(r, reading) {
+  const id = esc(r.id);
+  return `<li data-id="${id}" class="${r.done ? "done" : ""}"><input type="checkbox" id="lt-${id}"${r.done ? " checked" : ""}>`
+    + `<label for="lt-${id}">${reading && r.book ? `<span class="row-book">${esc(r.book)}</span>` : !reading && r.sub ? `<span class="row-book">${esc(r.sub)}</span>` : ""}${esc(r.t)}</label>`
+    + (reading && r.link ? `<span class="links"><a href="${esc(r.link)}" target="_blank" rel="noopener">Open</a></span>` : "")
+    + `<span class="rc">${r.recall ? `<a class="chip" href="#/recall?card=${r.recall.id}">recall ${esc(r.recall.when)}</a>` : ""}</span></li>`;
 }
 
 /* ------------------------------------------------------------------ practice */
@@ -301,7 +356,7 @@ async function practice(sid) {
   if (ticket !== routeId) return;   // a newer page has been opened meanwhile
   const tabs = sets.sets.map(s => `<a href="#/practice/${esc(s.id)}"${s.id === sid ? ' aria-current="page"' : ""}>${esc(s.title)}${s.total ? ` <span class="num">${s.solved}/${s.total}</span>` : ""}</a>`).join("");
   const me = sets.sets.find(s => s.id === sid);
-  let h = `<div class="stack"><h1>Practice</h1><p class="lede">${esc(me.blurb)}</p></div><div class="tabs">${tabs}</div>`;
+  let h = `<div class="stack"><div class="row-flex spread"><h1>Practice</h1><a class="btn" href="#/mock">Mock interview round</a></div><p class="lede">${esc(me.blurb)}</p></div><div class="tabs">${tabs}</div>`;
   if (d.rec && !(sid === "ml" && !d.ml_installed)) h += nextHtml(d.rec, "Suggested next");
   if (sid === "ml" && !d.ml_installed) {
     h += `<section class="panel"><div class="body stack">
@@ -398,7 +453,7 @@ async function exercise(id) {
   const draftKey = "lfz.draft." + d.id;
   const draft = lsGet(draftKey, null);
   const code = draft != null && draft !== d.code ? draft : d.code;
-  const setName = { python: "Python", dsa: "DSA patterns", ml: "ML coding", sys: "Parallel and GPU", num: "Numerical" }[d.set] || d.set;
+  const setName = { python: "Python", dsa: "DSA patterns", ml: "ML coding", sys: "Parallel and GPU", num: "Numerical", gen: "Generative AI", sql: "SQL", ds: "Statistics" }[d.set] || d.set;
   const hintWord = d.hint_label || "Hint";
   view.innerHTML = `
     <div class="row-flex"><a class="btn quiet" href="#/practice/${esc(d.set)}">${esc(setName)}</a>${d.skill ? `<a href="#/skill/${esc(d.skill.id)}">${esc(d.skill.name)}</a>${d.skill.step ? `<span class="num">step ${d.skill.step} of 3</span>` : ""}` : `<span class="muted">${esc(d.unit)}</span>`}</div>
@@ -444,6 +499,25 @@ async function exercise(id) {
       ${d.next ? `<a class="btn" href="#/ex/${esc(d.next)}" id="next-ex">Next exercise</a>` : ""}
     </div>`;
   typeset(view);
+  const mk = mockActive(), inMock = !!(mk && mk.ids && mk.ids.includes(d.id));
+  if (inMock) {
+    ["#hints-box", "#sol-box", "#nudge-box"].forEach(sel => { const el = $(sel); if (el) { el.hidden = true; el.dataset.mock = "1"; } });
+    const nav = $("#next-ex"); if (nav) nav.parentElement.hidden = true;
+    const bar = document.createElement("div");
+    bar.className = "banner mock-bar";
+    view.insertBefore(bar, view.firstChild);
+    const draw = () => {
+      const left = mockLeft(mk), k = mk.ids.indexOf(d.id) + 1;
+      const nextId = mk.ids.find(x => !mk.solved[x] && x !== d.id);
+      bar.innerHTML = `<strong>Mock round: ${esc(mk.title)}</strong> <span class="num">problem ${k} of ${mk.ids.length}</span> <span class="num" id="mock-left">${left ? clockText(left) + " left" : "time is up"}</span>`
+        + `<span class="muted small">Hints and solutions are locked.</span>`
+        + (mk.solved[d.id] ? ` <span class="chip ok">solved at ${clockText(mk.solved[d.id])}</span>` : "")
+        + (mk.solved[d.id] && nextId ? ` <a href="#/ex/${esc(nextId)}">Next problem</a>` : "") + ` <a href="#/mock">${left ? "Round overview" : "See the result"}</a>`;
+    };
+    draw();
+    const t = setInterval(() => { if (!document.body.contains(bar)) { clearInterval(t); return; } draw(); }, 1000);
+    leaveHook = () => clearInterval(t);
+  }
 
   const ed = $("#code");
   ed.value = code;
@@ -530,6 +604,15 @@ async function exercise(id) {
       }
       $("#results").innerHTML = head + r.results.map(resultHtml).join("");
       unlocked = r.solution_unlocked; drawLock();
+      if (inMock) {
+        const m2 = mockActive();
+        if (m2 && m2.ids.includes(d.id)) {
+          m2.runs[d.id] = (m2.runs[d.id] || 0) + 1;
+          if (r.solved && !m2.solved[d.id] && mockLeft(m2) > 0) m2.solved[d.id] = Math.round((Date.now() - m2.start) / 1000);
+          lsSet("lfz.mock", m2);
+          Object.assign(mk, m2);
+        }
+      }
       if (r.solved) {
         $("#solved-chip").hidden = false;
         if (r.how && r.how.review && !d.review) reviewLine({ passes: 0, of: 3, when: r.how.review, due: false, done: false });
@@ -820,7 +903,8 @@ async function certs() {
 /* ------------------------------------------------------------------ lists */
 
 const LBL = { D: "deep-ml", L: "LeetCode", G: "GFG", C: "Code360", I: "InterviewBit", S: "SPOJ", A: "Article", V: "Video",
-              T: "Watch", H: "Hugging Face", P: "arXiv", W: "Open", PL: "Playlist", CH: "Channel" };
+              T: "Watch", H: "Hugging Face", P: "arXiv", W: "Open", PL: "Playlist", CH: "Channel",
+              R: "Repo", N: "Notebook", CO: "Colab", K: "Kaggle", F: "Free online" };
 const linkHtml = (p, cls) => `<a${cls || ""} href="${esc(p[1])}" target="_blank" rel="noopener">${LBL[p[0]] || "Link"}${p[2] ? `<span class="detail"> ${esc(p[2])}</span>` : ""}</a>`;
 
 async function lists(key) {
@@ -839,6 +923,7 @@ async function lists(key) {
   const tabs = d.order.map(k => `<a href="#/lists/${esc(k)}"${k === key ? ' aria-current="page"' : ""}>${esc(d.names[k])}</a>`).join("");
   const intro = {
     build: "The stages, as things to tick. Tick a function only when its tests pass.",
+    books: "The books, courses and repositories the field learns from, one row per chapter, placed at your stage. One row a day keeps the streak.",
     papers: "Read it, implement it from the paper alone, then reproduce one result at a scale you can afford.",
     replays: "Winning competition solutions, rebuilt one version at a time. Write your own score under each version.",
     frontier: "What is trending now, for practising triage. Tick a paper when you have decided what it is worth.",
@@ -848,12 +933,13 @@ async function lists(key) {
     watch: "Your YouTube subscriptions, gone through and placed at the stage where each series helps.",
     syl: "The core courses of your M.Tech, with where this app covers each topic. Tick a topic when you can explain it with no notes; tick a lab when you have run it and written down the numbers."
   }[key];
-  const filter = key === "dsa" || key === "video" || key === "watch";
+  const filter = key === "dsa" || key === "video" || key === "watch" || key === "books";
   const rcHtml = id => d.recall[id] ? `<a class="chip" href="#/recall?card=${d.recall[id].id}">recall ${esc(d.recall[id].when)}</a>`
     : ticks[id] ? `<button class="btn quiet rc-add">Write what you kept</button>` : "";
   const rowHtml = it => {
     const a = (cls, p) => linkHtml(p, cls);
-    const here = it.x ? `<a class="here" href="#/ex/${esc(it.x)}">${solvedHere.has(it.x) ? "Solved here" : "Solve here"}</a>` : "";
+    const here = it.x ? `<a class="here" href="#/ex/${esc(it.x)}">${solvedHere.has(it.x) ? "Solved here" : "Solve here"}</a>`
+      : it.xr ? `<a class="here" href="#/ex/${esc(it.xr)}" title="An exercise in this app on the same idea">${solvedHere.has(it.xr) ? "Practised here" : "Practise here"}</a>` : "";
     const arx = (it.p || []).find(p => p[0] === "P");
     const readHere = arx && !WEB ? `<a class="here" href="#/read?add=${encodeURIComponent(arx[1])}&title=${encodeURIComponent(it.t)}">Read here</a>` : "";
     const links = here + readHere + (it.p || []).map(p => a("", p)).join("") + (it.s || []).map(p => a(' class="sol"', p)).join("");
@@ -869,7 +955,7 @@ async function lists(key) {
     const aboutOpen = lsGet("lfz.about." + key, true);
     h += `<details class="box" id="about"${aboutOpen ? " open" : ""}><summary>How to use this list</summary><div class="prose">${d.about[key]}</div></details>`;
   }
-  const searchWord = key === "watch" ? "Search channels and titles" : "Search problems";
+  const searchWord = key === "watch" ? "Search channels and titles" : key === "books" ? "Search books, chapters and repos" : "Search problems";
   if (filter) h += `<div class="row-flex"><input type="search" id="q" placeholder="${searchWord}" aria-label="${searchWord}">
       <label class="toggle"><input type="checkbox" id="hide"> Hide done</label>${key === "dsa" ? `<label class="toggle"><input type="checkbox" id="sol"> Show solution links</label>` : ""}</div>`;
   h += `<div class="stack" id="steps">`;
@@ -983,10 +1069,173 @@ async function lists(key) {
   }
 }
 
+/* ------------------------------------------------------------------ mock interview rounds */
+
+const MOCK_KINDS = [
+  { id: "dsa", title: "Coding round", set: "dsa", n: 2, minutes: 45, about: "Two DSA problems you have not solved, medium ones first. The usual first round." },
+  { id: "gen", title: "Generative AI coding", set: "gen", n: 2, minutes: 40, about: "Two problems from the Generative AI set: the 'write it from scratch' round of LLM interviews." },
+  { id: "sql", title: "SQL screen", set: "sql", n: 3, minutes: 30, about: "Three queries, as in a data science or analytics screen." },
+  { id: "ds", title: "Statistics round", set: "ds", n: 2, minutes: 30, about: "Two statistics problems: tests, intervals and experiments." },
+  { id: "design", title: "ML system design", minutes: 35, about: "One design prompt from the Interview list, out loud or on paper, then mark yourself against the template." },
+];
+const DESIGN_STEPS = ["Clarified the goal, the users and the constraints (scale, latency, cost)", "Chose one metric offline and one online, and said why",
+  "Described the data: sources, labels, how labels arrive, imbalance", "Named the features, and how they are computed the same way in training and serving",
+  "Started with a simple baseline before the complex model", "Chose the validation split that matches production (by time, by user)",
+  "Planned the online test: A/B design, guardrails, rollout", "Described serving: batch or online, latency budget, fallbacks",
+  "Covered monitoring: drift, data quality, retraining, and what alerts"];
+const mockGet = () => lsGet("lfz.mock", null);
+const mockActive = () => { const m = mockGet(); return m && !m.done ? m : null; };
+const mockLeft = m => Math.max(0, Math.round((m.end - Date.now()) / 1000));
+const clockText = sec => Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+
+function mockScore(m) {
+  if (m.kind === "design") return (m.check || []).length + " of " + DESIGN_STEPS.length + " parts covered";
+  const n = m.ids.filter(x => m.solved[x]).length;
+  return n + " of " + m.ids.length + " solved" + (n ? ", last at " + clockText(Math.max(...m.ids.filter(x => m.solved[x]).map(x => m.solved[x]))) : "");
+}
+
+function mockFinish(m) {
+  m.done = true;
+  m.finished = Date.now();
+  lsSet("lfz.mock", m);
+  const hist = lsGet("lfz.mocks", []);
+  hist.push({ kind: m.kind, title: m.title, finished: m.finished, minutes: m.minutes, score: mockScore(m), solved: m.ids ? m.ids.filter(x => m.solved[x]).length : (m.check || []).length, of: m.ids ? m.ids.length : DESIGN_STEPS.length });
+  lsSet("lfz.mocks", hist.slice(-40));
+}
+
+async function mockStart(kind) {
+  const k = MOCK_KINDS.find(x => x.id === kind);
+  const m = { kind, title: k.title, minutes: k.minutes, start: Date.now(), end: Date.now() + k.minutes * 60000, solved: {}, runs: {}, ids: [], check: [] };
+  if (kind === "design") {
+    const L = await api("/api/lists");
+    const st = (L.tracks.iv || []).find(x => x.t === "ML system design");
+    const rows = st ? st.subs.flatMap(sb => sb.items).filter(it => it.i !== "iv_sd_template") : [];
+    const fresh = rows.filter(it => !L.ticks[it.i]);
+    const pick = (fresh.length ? fresh : rows)[Math.floor(Math.random() * (fresh.length || rows.length))];
+    if (!pick) throw new Error("No design prompts found.");
+    m.design = { id: pick.i, t: pick.t };
+    delete m.ids;
+  } else {
+    const d = await api("/api/exercises?set=" + k.set);
+    const rank = { medium: 0, hard: 1, easy: 2 };
+    const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
+    const order = rows => shuffle(rows).sort((a, b) => (rank[a.difficulty] ?? 3) - (rank[b.difficulty] ?? 3));
+    const unsolved = order(d.rows.filter(r => r.status !== "solved")), solved = order(d.rows.filter(r => r.status === "solved"));
+    m.ids = unsolved.concat(solved).slice(0, k.n).map(r => r.id);
+    m.titles = Object.fromEntries(d.rows.map(r => [r.id, r.title]));
+    if (!m.ids.length) throw new Error("This set has no problems yet.");
+  }
+  lsSet("lfz.mock", m);
+  return m;
+}
+
+async function mock() {
+  const ticket = routeId;
+  let m = mockActive();
+  if (m && mockLeft(m) === 0) { mockFinish(m); m = null; }
+  if (ticket !== routeId) return;
+  if (m) {
+    const k = MOCK_KINDS.find(x => x.id === m.kind);
+    const rows = m.ids ? m.ids.map((id, i) => `<li><span class="dot ${m.solved[id] ? "solved" : m.runs[id] ? "open" : ""}"></span><span class="num">${i + 1}</span>`
+      + `<a class="main" href="#/ex/${esc(id)}">${esc((m.titles || {})[id] || id)}</a><span class="num">${m.solved[id] ? "solved at " + clockText(m.solved[id]) : m.runs[id] ? m.runs[id] + (m.runs[id] === 1 ? " run" : " runs") : "not started"}</span></li>`).join("") : "";
+    view.innerHTML = `<div class="stack"><h1>Mock round: ${esc(m.title)}</h1><p class="lede">${esc(k.about)} Hints and solutions are locked until the round ends. Work as you would in the interview: say your plan out loud before you type.</p></div>
+      <section class="panel"><div class="body stack"><div class="mock-clock" id="mock-clock" role="timer" aria-live="off"></div>${meter("Time used", 0, 1, "0%")}</div></section>
+      ${m.ids ? `<section class="panel"><div class="head"><h2>Problems</h2></div><ul class="rows">${rows}</ul></section>`
+        : `<section class="panel"><div class="head"><h2>The prompt</h2></div><div class="body stack"><p class="mock-prompt">${esc(m.design.t)}</p>
+            <p class="muted small">Talk it through for about 30 minutes, or write it on paper. Then tick what you covered. Be strict: covered means you said it clearly, not that you know it.</p>
+            <ul class="ticks" id="mock-check">${DESIGN_STEPS.map((t, i) => `<li><input type="checkbox" id="mc-${i}"${(m.check || []).includes(i) ? " checked" : ""}><label for="mc-${i}">${esc(t)}</label></li>`).join("")}</ul></div></section>`}
+      <div class="row-flex"><button class="btn primary" id="mock-end">Finish the round</button><span class="muted small">Leaving this page does not stop the clock.</span></div>`;
+    const tick = () => {
+      const left = mockLeft(m), used = Math.min(1, (Date.now() - m.start) / (m.end - m.start));
+      const el = $("#mock-clock");
+      if (!el) return false;
+      el.textContent = left ? clockText(left) + " left" : "Time is up";
+      const bar = $(".meter .track i"); if (bar) bar.style.width = Math.round(used * 100) + "%";
+      const num = $(".meter .num"); if (num) num.textContent = Math.round(used * 100) + "%";
+      if (!left) { mockFinish(m); route(); return false; }
+      return true;
+    };
+    tick();
+    const t = setInterval(() => { if (!tick()) clearInterval(t); }, 1000);
+    leaveHook = () => clearInterval(t);
+    const ch = $("#mock-check");
+    if (ch) ch.addEventListener("change", () => { m.check = DESIGN_STEPS.map((_, i) => i).filter(i => $("#mc-" + i).checked); lsSet("lfz.mock", m); });
+    $("#mock-end").addEventListener("click", () => { clearInterval(t); mockFinish(m); route(); });
+    return;
+  }
+  const last = mockGet();
+  const hist = lsGet("lfz.mocks", []).slice().reverse();
+  let result = "";
+  if (last && last.done && Date.now() - last.finished < 3600000) {
+    const good = last.kind === "design" ? (last.check || []).length >= 7 : last.ids.every(x => last.solved[x]);
+    result = `<section class="panel"><div class="head"><h2>Result: ${esc(last.title)}</h2><span class="chip${good ? " ok" : ""}">${esc(mockScore(last))}</span></div><div class="body stack">
+      <p>${good ? "That would pass a typical round. Next week, try a harder one." : last.kind === "design" ? "Practise the parts you missed: they are the questions an interviewer asks next." : "Now open each problem again with hints allowed, and finish it. Then it comes back for a rewrite from memory, which is where it sticks."}</p>
+      ${last.ids ? `<ul class="rows">${last.ids.map(id => `<li><span class="dot ${last.solved[id] ? "solved" : ""}"></span><a class="main" href="#/ex/${esc(id)}">${esc((last.titles || {})[id] || id)}</a><span class="num">${last.solved[id] ? "solved at " + clockText(last.solved[id]) : "not solved in time"}</span></li>`).join("")}</ul>`
+        : `<p class="muted small">Missed: ${DESIGN_STEPS.filter((_, i) => !(last.check || []).includes(i)).map(esc).join("; ") || "nothing"}.</p>
+           ${good ? `<div><button class="btn" id="mock-tick" data-id="${esc(last.design.id)}">Tick "${esc(last.design.t.slice(0, 60))}" in the Interview list</button></div>` : ""}`}
+    </div></section>`;
+  }
+  view.innerHTML = `<div class="stack"><h1>Mock interview rounds</h1><p class="lede">A timed round with hints and solutions locked, the way an interview feels. Problems you have not solved come first. One round a week is enough; the attempts count for the streak like any other.</p></div>
+    ${result}
+    <div class="today">${MOCK_KINDS.map(k => `<div class="card"><span class="k">${k.minutes} minutes</span><span class="t">${esc(k.title)}</span><span class="muted small">${esc(k.about)}</span><button class="btn" data-mock="${k.id}">Start</button></div>`).join("")}</div>
+    ${hist.length ? `<section class="panel"><div class="head"><h2>Your rounds on this device</h2></div><div class="body"><div class="scroll-x"><table class="plain"><thead><tr><th>Date</th><th>Round</th><th>Result</th></tr></thead><tbody>
+      ${hist.map(x => `<tr><td class="num">${new Date(x.finished).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</td><td>${esc(x.title)}</td><td>${esc(x.score)}</td></tr>`).join("")}</tbody></table></div></div></section>` : ""}`;
+  $$("[data-mock]").forEach(b => b.addEventListener("click", async () => {
+    b.disabled = true;
+    try {
+      const m2 = await mockStart(b.dataset.mock);
+      location.hash = m2.ids ? "#/ex/" + m2.ids[0] : "#/mock";
+      if (!m2.ids) route();
+    } catch (e) { toast(e.message); b.disabled = false; }
+  }));
+  const mt = $("#mock-tick");
+  if (mt) mt.addEventListener("click", async () => { await api("/api/tick", { id: mt.dataset.id, on: true }); mt.disabled = true; mt.textContent = "Ticked"; toast("Ticked in the Interview list."); });
+}
+
+/* ------------------------------------------------------------------ daily reminder */
+
+function reminderPanel() {
+  const t = lsGet("lfz.remind", "20:00");
+  return `<section class="panel" id="reminder"><div class="head"><h2>Daily reminder</h2></div><div class="body stack">
+    <p>A calendar event that repeats every day with an alert, so the streak does not depend on remembering. It works in Google Calendar, Outlook and a phone's calendar. Nothing is sent anywhere.</p>
+    <div class="row-flex"><label for="rm-time">Time</label><input type="time" id="rm-time" value="${esc(t)}"><button class="btn primary" id="rm-go">Add to my calendar</button><span class="muted small" id="rm-msg"></span></div>
+    <p class="muted small">This saves a small .ics file. Open it and the calendar offers to add the event. On the office laptop, add it to your phone's calendar instead.</p>
+  </div></section>`;
+}
+
+function reminderIcs(hhmm, url) {
+  const [h, mi] = hhmm.split(":").map(Number);
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, mi);
+  if (start < now) start.setDate(start.getDate() + 1);
+  const p = n => String(n).padStart(2, "0");
+  const local = d => `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}T${p(d.getHours())}${p(d.getMinutes())}00`;
+  const utc = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LLM From Zero//Daily reminder//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
+    "UID:lfz-daily-" + now.getTime() + "@llm-from-zero", "DTSTAMP:" + utc(now), "DTSTART:" + local(start), "DURATION:PT20M", "RRULE:FREQ=DAILY",
+    "SUMMARY:LLM From Zero: keep the streak", "DESCRIPTION:One exercise\\, one chapter or three quiz questions. " + url, "URL:" + url,
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:LLM From Zero: keep the streak", "TRIGGER:PT0M", "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR"].join("\r\n") + "\r\n";
+}
+
+function reminderWire() {
+  $("#rm-go").addEventListener("click", () => {
+    const t = $("#rm-time").value || "20:00";
+    lsSet("lfz.remind", t);
+    const f = new File([reminderIcs(t, location.href.split("#")[0])], "llm-from-zero-daily-reminder.ics", { type: "text/calendar" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(f);
+    a.download = f.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    $("#rm-msg").textContent = "Saved " + f.name + ". Open it to add the event at " + t + " every day.";
+  });
+}
+
 /* ------------------------------------------------------------------ skill map */
 
 const STATE_WORD = { strong: "strong", learning: "in progress", ready: "ready to start", later: "for later", missing: "needs the download" };
-const GROUP_SHORT = { py: "Python", dsa: "DSA", ml: "ML", role: "Role topic", sys: "Systems", num: "Numerical" };
+const GROUP_SHORT = { py: "Python", dsa: "DSA", ml: "ML", role: "Role topic", sys: "Systems", num: "Numerical", data: "SQL and stats", gen: "GenAI" };
 const mapTabs = cur => `<div class="tabs"><a href="#/map"${cur === "map" ? ' aria-current="page"' : ""}>Skill map</a><a href="#/roles"${cur === "roles" ? ' aria-current="page"' : ""}>Role tracks</a></div>`;
 
 async function map() {
@@ -1135,12 +1384,13 @@ async function settings() {
   const when = new Date(m.date + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
   view.innerHTML = `<h1>Settings</h1>
     ${devicesPanel(d)}
+    ${reminderPanel()}
     <section class="panel"><div class="head"><h2>Solutions</h2></div><div class="body stack">
       <label class="toggle"><input type="radio" name="sol" value="after_attempt"${d.solutions === "after_attempt" ? " checked" : ""}> Unlock a solution after I have run an attempt of my own (recommended)</label>
       <label class="toggle"><input type="radio" name="sol" value="always"${d.solutions === "always" ? " checked" : ""}> Always allow solutions</label>
     </div></section>
     <section class="panel"><div class="head"><h2>Version ${esc(m.version)}</h2><span class="muted small">${esc(when)}</span></div><div class="body stack">
-      <p>${c.exercises} exercises with tests (${c.python} Python, ${c.dsa} DSA), ${c.ml_plan} planned ML problems, ${c.lessons} lessons, ${c.questions} quiz questions, ${c.skills} skills on the map.</p>
+      <p>${c.exercises} exercises with tests (${c.python} Python, ${c.dsa} DSA${c.gen ? ", " + c.gen + " generative AI, " + c.sql + " SQL, " + c.ds + " statistics" : ""}${c.sys ? ", " + c.sys + " parallel and GPU, " + c.num + " numerical" : ""}), ${c.ml_plan} planned ML problems, ${c.lessons} lessons, ${c.questions} quiz questions, ${c.skills} skills on the map.</p>
       ${m.changelog.map((e, i) => `<details class="box"${i === 0 ? " open" : ""}><summary>${esc(e.version)}</summary><div><ul class="prose">${e.changes.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div></details>`).join("")}
       <details class="box"><summary>How updates work</summary><div class="prose">
         <ul>${m.rules.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
@@ -1202,6 +1452,7 @@ ssh -N -L 11500:127.0.0.1:11434 you@the-server</pre>
     </section>`;
   $$('input[name="sol"]').forEach(r => r.addEventListener("change", async () => { await api("/api/settings", { k: "solutions", v: r.value }); toast("Saved."); }));
   devicesWire();
+  reminderWire();
   if (WEB) {
     if (navigator.storage && navigator.storage.persisted) navigator.storage.persisted().then(p => {
       const el = $("#storage-line");

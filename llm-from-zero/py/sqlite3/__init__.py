@@ -108,6 +108,8 @@ _OPEN = {}
 
 
 def connect(database, timeout=5.0, detect_types=0, isolation_level="", check_same_thread=True, factory=None, cached_statements=128, uri=False):
+    if str(database) == ":memory:":                # as in CPython, every in-memory connection is a database of its own
+        return Connection(_Database(":memory:"))
     db = _OPEN.get(database)
     if db is None:
         db = _OPEN[database] = _Database(str(database))
@@ -153,6 +155,8 @@ class Connection:
 
     def close(self):
         self.commit()
+        if self._db.path == ":memory:":
+            js.lfzSql.close(self._db.handle)
 
     def __enter__(self):
         return self

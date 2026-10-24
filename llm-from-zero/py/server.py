@@ -152,6 +152,8 @@ class Content:
     def __init__(self):
         self.lessons_doc = read_json("lessons.json")
         self.lessons = {l["id"]: l for l in self.lessons_doc["lessons"]}
+        in_courses = [i for c in self.lessons_doc.get("courses", []) for i in c.get("lessons", []) if i in self.lessons]
+        self.lesson_order = in_courses + [i for i in self.lessons if i not in in_courses]   # the order of the courses, not of the file names
         ex_doc = read_json("exercises.json")
         self.sets = ex_doc["sets"]
         self.local = ex_doc["exercises"]
@@ -165,18 +167,23 @@ class Content:
         self.by_topic = {}
         for q in self.quiz["questions"]:
             self.by_topic.setdefault(q["topic"], []).append(q["id"])
-        self.rows_for = {}      # exercise id -> the list rows that are about the same problem
+        self.rows_for = {}      # exercise id -> the list rows that are about the same problem (solving it ticks them)
+        self.related = set()    # exercises a row only points to as practice ("xr"): solving one ticks nothing
         self.rows = {}          # list row id -> (list, title, first outside link)
+        self.row_section = {}   # list row id -> the title of its section
         for key in self.lists["order"]:
             for it in list_items(self.lists[key]):
                 if it.get("x"):
                     self.rows_for.setdefault(it["x"], []).append(it["i"])
+                if it.get("xr"):
+                    self.related.add(it["xr"])
             for st in self.lists[key]:
                 for sb in st["subs"]:
                     for it in sb["items"]:
                         head = sb["t"] + ": " if sb.get("t") and key in ("papers", "replays", "build") else ""
                         link = sb.get("u") or next((p[1] for p in it.get("p", []) if len(p) > 1), "")
                         self.rows[it["i"]] = (key, (head + it["t"])[:200], link)
+                        self.row_section[it["i"]] = st["t"]
         self.watch = {it["i"]: it for it in list_items(self.lists.get("watch", []))}
         self.ml = []
         self.load_ml()
@@ -331,6 +338,7 @@ RECALL_ASK = {
     "frontier": "Close the paper. From memory: what does it claim, and how does it show it?",
     "iv": "Without notes: explain it in four or five lines, the way you would say it in an interview.",
     "syl": "Without notes: explain it in four or five lines, the way you would in a viva. For a lab row: what did you measure, and what explained it?",
+    "books": "Close the book. From memory: the chapter's main idea in two or three lines, and the exercise that was hardest and why.",
 }
 RECALL_BACK = {
     "watch": "Without opening it: which ideas from this were worth keeping?",
@@ -339,6 +347,7 @@ RECALL_BACK = {
     "frontier": "Without opening it: what does it claim, and how does it show it?",
     "iv": "Without notes: explain it in four or five lines, the way you would say it in an interview.",
     "syl": "Without notes: explain it in four or five lines, the way you would in a viva.",
+    "books": "Without opening it: what was this chapter's main idea, and which exercise was hardest?",
 }
 RECALL_DEFAULT = "From memory: what is worth keeping from this? Two or three lines."
 RECALL_LESSON = "Without scrolling up: what did this lesson teach? Name each idea and give one example."
@@ -549,6 +558,9 @@ class Api:
             for r in con.execute("select ex from solved where ts>=?", (start,)):
                 if r["ex"] in C.set_of:
                     done_today.add(C.set_of[r["ex"]])
+            for r in con.execute("select id from ticks where ts>=?", (start,)):
+                if r["id"] in C.rows:
+                    done_today.add("list:" + C.rows[r["id"]][0])
         news = None
         if seen_version != C.manifest["version"]:   # everything released since the version this learner last saw
             def parts(v):
@@ -561,7 +573,7 @@ class Api:
             ids = C.order[s["id"]]
             sets.append({"id": s["id"], "title": s["title"], "total": len(ids), "solved": sum(1 for i in ids if i in solved),
                          "next": next((i for i in ids if i not in solved), None)})
-        lesson_ids = [l["id"] for l in C.lessons_doc["lessons"]]
+        lesson_ids = C.lesson_order
         next_lesson = next((i for i in lesson_ids if i not in read), None)
         answered = [q for q in qs if q in C.questions]
         lists = {}
@@ -616,16 +628,27 @@ class Api:
         l = C.lessons.get(q.get("id", ""))
         if not l:
             raise NotFound("No such lesson.")
-        ids = [x["id"] for x in C.lessons_doc["lessons"]]
+        ids = C.lesson_order
         i = ids.index(l["id"])
         with db() as con:
             solved, tried = statuses(con)
             read = bool(con.execute("select 1 from lessons where id=?", (l["id"],)).fetchone())
             card = con.execute("select * from recall where kind='lesson' and ref=?", (l["id"],)).fetchone()
             ask = recall_options(con)["ask"]
-        exs = [{"id": e, "title": C.exercises[e]["title"], "status": status_of(e, solved, tried)}
+            ticks = {r["id"] for r in con.execute("select id from ticks")}
+            row_cards = {r["ref"]: {"id": r["id"], "when": recall_when(r)} for r in con.execute("select * from recall where kind='row'")}
+        exs = [{"id": e, "title": C.exercises[e]["title"], "status": status_of(e, solved, tried), "set": C.exercises[e]["set"]}
                for e in l.get("exercises", []) if e in C.exercises]
+        missing = sum(1 for e in l.get("exercises", []) if e not in C.exercises and e.startswith("ml-"))
+        build = None
+        if l.get("build") is not None and l["build"] < len(C.lists.get("build", [])):
+            st = C.lists["build"][l["build"]]
+            build = {"stage": l["build"], "title": st["t"], "when": st.get("when", ""),
+                     "rows": [{"id": it["i"], "t": it["t"], "sub": sb.get("t", ""), "done": it["i"] in ticks} for sb in st["subs"] for it in sb["items"]]}
+        reading = [{"id": rid, "t": C.rows[rid][1], "book": C.row_section.get(rid, ""), "link": C.rows[rid][2], "done": rid in ticks,
+                    "recall": row_cards.get(rid)} for rid in l.get("reading", []) if rid in C.rows]
         return {"id": l["id"], "title": l["title"], "html": l["html"], "minutes": l.get("minutes"), "read": read,
+                "build": build, "reading": reading, "ml_missing": missing, "ask_books": RECALL_ASK["books"] if ask else "",
                 "recall": {"id": card["id"], "when": recall_when(card)} if card else None, "ask": ask, "ask_text": RECALL_LESSON,
                 "exercises": exs, "prev": ids[i - 1] if i > 0 else None, "next": ids[i + 1] if i + 1 < len(ids) else None}
 
@@ -937,7 +960,7 @@ class Api:
             ask = recall_options(con)["ask"]
         return {"tracks": {k: C.lists[k] for k in C.lists["order"]}, "ticks": ticks, "order": C.lists["order"],
                 "names": C.lists.get("names", {}), "about": C.lists.get("about", {}), "notes": notes,
-                "solved": sorted(solved & set(C.rows_for)),
+                "solved": sorted(solved & (set(C.rows_for) | C.related)),
                 "recall": cards, "ask": RECALL_ASK if ask else {}, "ask_default": RECALL_DEFAULT}
 
     def note(self, body):
@@ -1089,7 +1112,7 @@ class Api:
         elif due:
             suggest = "Rewrite from memory: " + C.titles[due[0]["id"]]
         else:
-            nxt = next((l for l in C.lessons_doc["lessons"] if l["id"] not in read), None)
+            nxt = next((C.lessons[i] for i in C.lesson_order if i not in read), None)
             rec = engine.recommend(C.G, st, mast, C.titles, "python", C.set_of) or engine.recommend(C.G, st, mast, C.titles, "dsa", C.set_of)
             if nxt and not any(s["solved"] for s in st.values()):
                 suggest = "Read: " + nxt["title"]

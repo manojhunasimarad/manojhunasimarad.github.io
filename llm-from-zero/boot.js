@@ -64,8 +64,8 @@ window.LFZ_WEB = true;
         for (const p of this.pending.values()) p.reject(new Error("The test runner stopped. " + (e.message || "")));
         this.pending.clear();
       };
-      this.ready = (sources || (sources = Promise.all(["py/runner.py", "py/webrun.py"].map(p => realFetch(CFG.base + p).then(r => r.text())))))
-        .then(([r, w]) => this.ask({ kind: "boot", pyodideUrl: CFG.pyodideUrl, runner: r, webrun: w }));
+      this.ready = (sources || (sources = Promise.all(["py/runner.py", "py/webrun.py", "py/sqlite3/__init__.py"].map(p => realFetch(CFG.base + p).then(r => r.text())))))
+        .then(([r, w, s]) => this.ask({ kind: "boot", pyodideUrl: CFG.pyodideUrl, base: CFG.base, runner: r, webrun: w, sqlite: s }));
     },
     ask(msg, onStart) {
       const id = ++this.seq;

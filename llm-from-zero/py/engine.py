@@ -60,7 +60,7 @@ class Graph:
                 ladder = [x for x in ladder if x[0] in exercises]
             sk = dict(s, ladder=ladder, wanted=wanted,
                       kind="quiz" if s.get("quiz") else ("ml" if s.get("ml_block") is not None else "ex"),
-                      linear=s["group"] in ("py", "ml", "sys", "num"))   # these follow a course order; only the DSA ladders are "same idea, harder"
+                      linear=s["group"] in ("py", "ml", "sys", "num", "data", "gen"))   # these follow a course order; only the DSA ladders are "same idea, harder"
             self.skills.append(sk)
             self.by_id[sk["id"]] = sk
             for ex_id, lv in ladder:

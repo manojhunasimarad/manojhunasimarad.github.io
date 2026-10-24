@@ -2,7 +2,8 @@
 
 A test is a piece of code that prints something, plus the text it should print.
 Values are compared as values: a NumPy array and the same numbers written as a list match,
-numbers match within a small tolerance, and dictionaries match in any key order.
+numbers with a decimal point match within a small tolerance, whole numbers match exactly, and
+dictionaries match in any key order.
 """
 
 import ast
@@ -16,6 +17,7 @@ import tempfile
 
 NUMBER = r"[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?|[-+]?\b(?:inf|nan)\b"
 QUOTED = r"'[^'\n]*'|\"[^\"\n]*\""
+INTEGER = re.compile(r"[-+]?\d+")
 TOKEN = re.compile("(" + QUOTED + ")|(" + NUMBER + r")|([A-Za-z_][A-Za-z_0-9]*)|([\[\]])")
 # Words that only describe how NumPy prints a value, not the value itself.
 NOISE = {"array", "np", "numpy", "dtype", "float", "float16", "float32", "float64", "int", "int8", "int16",
@@ -29,7 +31,7 @@ def tokens(text, brackets=True):
         if quoted:
             out.append(quoted[1:-1])     # a quoted string counts as one token, so 'it s' and "it's" differ
         elif number:
-            out.append(float(number))
+            out.append(int(number) if INTEGER.fullmatch(number) else float(number))   # whole numbers must match exactly
         elif word:
             word = {"True_": "True", "False_": "False"}.get(word, word)
             if word not in NOISE:
@@ -43,7 +45,11 @@ def same_tokens(a, b):
     if len(a) != len(b):
         return False
     for x, y in zip(a, b):
-        if isinstance(x, float) and isinstance(y, float):
+        if type(x) is int and type(y) is int:
+            if x != y:
+                return False
+        elif isinstance(x, (int, float)) and isinstance(y, (int, float)):
+            x, y = float(x), float(y)
             if math.isnan(x) and math.isnan(y):
                 continue
             if not math.isclose(x, y, rel_tol=1e-3, abs_tol=1e-4):
@@ -64,7 +70,7 @@ def deep_equal(a, b):
     if isinstance(a, bool) or isinstance(b, bool):
         return a == b
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
-        return same_tokens([float(a)], [float(b)])
+        return same_tokens([a], [b])
     if isinstance(a, dict) and isinstance(b, dict):
         return a.keys() == b.keys() and all(deep_equal(a[k], b[k]) for k in a)
     if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
