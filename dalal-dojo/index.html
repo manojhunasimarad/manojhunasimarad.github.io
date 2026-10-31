@@ -1,0 +1,2002 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Dalal Dojo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a trading desk. Watchlist rail | chart + market depth | coach rail, with the order blotter under the chart. */
+:root{
+  --bg:#f2f4f7; --panel:#ffffff; --panel-2:#edf0f5; --line:#dce2ea; --line-2:#c9d1dc;
+  --fg:#131b25; --muted:#586577; --faint:#8592a3;
+  --accent:#b86a00; --accent-soft:#fcefd8; --accent-fg:#ffffff;
+  --buy:#1f5fdc; --buy-soft:#e4ecfc; --sell:#d6431f; --sell-soft:#fce7e1; --on-trade:#ffffff;
+  --up:#0d8a53; --down:#cc3340; --up-soft:#dff3ea; --down-soft:#fbe4e6;
+  --focus:#1f5fdc; --scrim:rgba(15,22,32,.38); --shadow:0 18px 50px rgba(18,28,40,.18);
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-ui:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-num:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1016; --panel:#111821; --panel-2:#18212c; --line:#222d3a; --line-2:#2e3b4b;
+  --fg:#e4eaf1; --muted:#8e9cae; --faint:#5e6c7e;
+  --accent:#f1a83a; --accent-soft:#2a2113; --accent-fg:#1a1206;
+  --buy:#5a94ff; --buy-soft:#13213a; --sell:#ff7356; --sell-soft:#381a13; --on-trade:#08101c;
+  --up:#2fc985; --down:#ff5c67; --up-soft:#10291f; --down-soft:#341519;
+  --focus:#5a94ff; --scrim:rgba(0,0,0,.55); --shadow:0 18px 50px rgba(0,0,0,.5);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1016; --panel:#111821; --panel-2:#18212c; --line:#222d3a; --line-2:#2e3b4b;
+  --fg:#e4eaf1; --muted:#8e9cae; --faint:#5e6c7e;
+  --accent:#f1a83a; --accent-soft:#2a2113; --accent-fg:#1a1206;
+  --buy:#5a94ff; --buy-soft:#13213a; --sell:#ff7356; --sell-soft:#381a13; --on-trade:#08101c;
+  --up:#2fc985; --down:#ff5c67; --up-soft:#10291f; --down-soft:#341519;
+  --focus:#5a94ff; --scrim:rgba(0,0,0,.55); --shadow:0 18px 50px rgba(0,0,0,.5);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:13px/1.45 var(--f-ui);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.up{color:var(--up)} .down{color:var(--down)} .muted{color:var(--muted)} .faint{color:var(--faint)}
+.lbl{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- shell ---------- */
+.app{height:100%;display:flex;flex-direction:column;gap:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 12px}
+.topbar{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-block:9px}
+.brand{display:flex;align-items:center;gap:9px;font:800 19px/1 var(--f-display);letter-spacing:-.025em;white-space:nowrap}
+.brand svg{width:26px;height:26px;flex:none}
+.brand small{font:600 10px/1 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:3px 6px;border:1px solid var(--line-2);border-radius:4px}
+.idx{display:flex;flex-direction:column;gap:1px;white-space:nowrap;padding-left:14px;border-left:1px solid var(--line)}
+.idx .row{display:flex;gap:7px;align-items:baseline}
+.idx b{font:600 14px/1.1 var(--f-num)}
+.idx .chg{font:500 11.5px/1 var(--f-num)}
+.spacer{flex:1}
+.modepill{display:flex;align-items:center;gap:7px;padding:6px 10px;border:1px solid var(--line-2);border-radius:999px;font-weight:600;font-size:12px;white-space:nowrap}
+.modepill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.modepill[data-mode="live"] .dot{background:var(--up);box-shadow:0 0 0 3px var(--up-soft)}
+.modepill:hover{background:var(--panel-2)}
+.clock{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.clock b{font:600 16px/1 var(--f-num)}
+.phase{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:3px 7px;border-radius:4px;background:var(--panel-2);color:var(--muted)}
+.phase[data-p="open"]{background:var(--up-soft);color:var(--up)}
+.phase[data-p="pre"],.phase[data-p="closing"]{background:var(--accent-soft);color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:var(--r);overflow:hidden}
+.seg button{padding:5px 9px;font-size:12px;font-weight:600;color:var(--muted);border-left:1px solid var(--line-2)}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 13px;border-radius:var(--r);font-weight:650;font-size:13px;border:1px solid var(--line-2);background:var(--panel);white-space:nowrap}
+.btn:hover{background:var(--panel-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.buy{background:var(--buy);border-color:var(--buy);color:var(--on-trade)}
+.btn.sell{background:var(--sell);border-color:var(--sell);color:var(--on-trade)}
+.btn.sm{padding:4px 9px;font-size:12px}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.rank{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto auto;column-gap:10px;row-gap:3px;align-items:center;white-space:nowrap;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.rank .xpbar{grid-column:2}
+.rank .lv{grid-row:1/4;font:800 15px/1 var(--f-display);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);border:1.5px solid var(--accent)}
+.rank .name{font-weight:700;font-size:12.5px}
+.xpbar{height:5px;border-radius:3px;background:var(--panel-2);overflow:hidden;position:relative}
+.xpbar i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:3px;transition:width .4s}
+.rank .xp{font:500 10.5px/1 var(--f-num);color:var(--muted);grid-column:2;margin-top:3px}
+
+.desk{flex:1;min-height:0;display:grid;grid-template-columns:268px minmax(0,1fr) 318px;grid-template-rows:minmax(0,1fr) minmax(220px,34%);gap:10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);min-width:0;min-height:0}
+.watch{grid-column:1;grid-row:1/3;display:flex;flex-direction:column}
+.center{grid-column:2;grid-row:1;display:flex;flex-direction:column}
+.coach{grid-column:3;grid-row:1/3;display:flex;flex-direction:column;overflow:hidden}
+.blotter{grid-column:2;grid-row:2;display:flex;flex-direction:column}
+
+/* ---------- watchlist ---------- */
+.wl-head{display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid var(--line)}
+.wl-head input{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel-2)}
+.wl{list-style:none;margin:0;padding:0;overflow:auto;flex:1}
+.wl li{position:relative;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);cursor:pointer}
+.wl li:hover,.wl li[aria-selected="true"]{background:var(--panel-2)}
+.wl li[aria-selected="true"]{box-shadow:inset 3px 0 0 var(--accent)}
+.wl .s{font-weight:650;font-size:12.5px;letter-spacing:.01em}
+.wl .s.idx-s{color:var(--muted)}
+.wl .n{font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl .p{font:500 12.5px/1.2 var(--f-num);text-align:right;transition:color .25s}
+.wl .c{font:500 11px/1.2 var(--f-num);text-align:right}
+.wl .acts{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:none;gap:4px}
+.wl li:hover .acts,.wl li:focus-within .acts{display:flex}
+.wl .acts button{width:26px;height:24px;border-radius:4px;font-weight:700;font-size:12px;color:var(--on-trade)}
+.wl .acts .b{background:var(--buy)} .wl .acts .x{background:var(--sell)}
+.flash-up{color:var(--up)!important} .flash-down{color:var(--down)!important}
+.wl-foot{padding:8px 10px;border-top:1px solid var(--line);font-size:11px;color:var(--faint)}
+
+/* ---------- center ---------- */
+.symhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.symhead h1{margin:0;font:700 20px/1 var(--f-display);letter-spacing:-.02em}
+.symhead .meta{font-size:11.5px;color:var(--muted);margin-top:3px}
+.symhead .ltp{font:600 20px/1 var(--f-num)}
+.symhead .ltpchg{font:500 12px/1 var(--f-num);margin-top:3px}
+.ohlc{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px}
+.ohlc span b{font:500 11.5px var(--f-num);color:var(--fg);margin-left:3px}
+.ohlc span{color:var(--muted)}
+.symhead .acts{display:flex;gap:6px;margin-left:auto;align-items:center}
+.chartwrap{position:relative;flex:1;min-height:220px}
+.chartwrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y}
+.depthrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.05fr);gap:0;border-top:1px solid var(--line)}
+.depth{width:100%;border-collapse:collapse;font:500 11.5px/1.25 var(--f-num)}
+.depth th{font:600 10px/1 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 10px;text-align:right}
+.depth th:first-child,.depth td:first-child{text-align:left}
+.depth td{padding:2.5px 10px;text-align:right;position:relative}
+.depth .bidp{color:var(--buy)} .depth .askp{color:var(--sell)}
+.depth tr.tot td{border-top:1px solid var(--line);padding-top:5px;color:var(--muted)}
+.depth td .bar{position:absolute;top:2px;bottom:2px;right:0;opacity:.13;border-radius:2px}
+.depthcol{padding:4px 0 6px;border-right:1px solid var(--line);min-width:0;overflow:hidden}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:4px 14px;padding:8px 12px;font-size:11.5px;align-content:start}
+.stats div{display:flex;justify-content:space-between;gap:6px;min-width:0}
+.stats span{color:var(--muted);white-space:nowrap}
+.stats b{font:500 11.5px var(--f-num);white-space:nowrap}
+
+/* ---------- blotter ---------- */
+.tabs{display:flex;gap:2px;padding:0 6px;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{padding:9px 10px 8px;font-weight:600;font-size:12.5px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tabs .ct{font:600 10.5px var(--f-num);margin-left:5px;padding:1px 5px;border-radius:8px;background:var(--panel-2);color:var(--muted)}
+.tabbody{flex:1;overflow:auto;min-height:0}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{position:sticky;top:0;background:var(--panel);font:600 10px/1 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;z-index:1}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl th.l,.tbl td.l{text-align:left}
+.tbl td.n{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.tbl tfoot td{font-weight:700;border-bottom:0}
+.tag{display:inline-block;padding:2px 6px;border-radius:3px;font:700 10px/1.2 var(--f-ui);letter-spacing:.05em;text-transform:uppercase;background:var(--panel-2);color:var(--muted)}
+.tag.buy{background:var(--buy-soft);color:var(--buy)} .tag.sell{background:var(--sell-soft);color:var(--sell)}
+.tag.ok{background:var(--up-soft);color:var(--up)} .tag.bad{background:var(--down-soft);color:var(--down)} .tag.wait{background:var(--accent-soft);color:var(--accent)}
+.empty{padding:26px 16px;text-align:center;color:var(--muted);max-width:52ch;margin:0 auto}
+.empty b{display:block;color:var(--fg);font:700 14px/1.3 var(--f-display);margin-bottom:4px}
+.rowacts{display:inline-flex;gap:4px}
+.reason{display:block;font-size:11px;color:var(--down);white-space:normal;max-width:44ch;text-align:left;margin-top:2px}
+.funds{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0}
+.funds section{padding:12px 14px;border-right:1px solid var(--line)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:12.5px}
+.kv span{color:var(--muted)} .kv b{font:500 12.5px var(--f-num)}
+.kv.big b{font:700 18px var(--f-num)}
+.kv.tot{border-top:1px solid var(--line);margin-top:4px;padding-top:7px}
+.jnote{width:100%;min-width:160px;padding:5px 7px;border:1px solid var(--line);border-radius:4px;background:var(--panel-2);font-size:12px}
+.jsel{padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--panel-2);font-size:12px}
+.toolbar{display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bars{display:flex;align-items:flex-end;gap:3px;height:56px;padding:6px 10px}
+.bars i{flex:1;max-width:18px;border-radius:2px 2px 0 0;min-height:2px}
+
+/* ---------- coach ---------- */
+.coachhead{padding:12px 14px 10px;border-bottom:1px solid var(--line)}
+.coachhead .lvl{font:700 15px/1.2 var(--f-display);letter-spacing:-.01em;margin-top:2px}
+.lvlprog{display:flex;gap:3px;margin-top:9px}
+.lvlprog i{flex:1;height:4px;border-radius:2px;background:var(--panel-2)}
+.lvlprog i.done{background:var(--accent)}
+.mcard{padding:12px 14px;border-bottom:1px solid var(--line)}
+.mcard h2{margin:2px 0 6px;font:700 16px/1.25 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.mcard .how{font-size:12.5px;margin:0 0 8px}
+.mcard .concept{font-size:12px;color:var(--muted);margin:0;padding:8px 10px;background:var(--panel-2);border-radius:var(--r)}
+.mcard .xpchip{font:600 10.5px var(--f-num);color:var(--accent)}
+.quiz{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.quiz .q{font-size:12.5px;font-weight:600}
+.quiz button{text-align:left;padding:7px 10px;border:1px solid var(--line-2);border-radius:var(--r);font:500 12.5px var(--f-num)}
+.quiz button:hover{background:var(--panel-2)}
+.quiz button.wrong{border-color:var(--down);color:var(--down)}
+.mlist{list-style:none;margin:0;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mlist li{display:flex;gap:9px;align-items:center;padding:5px 6px;border-radius:4px;font-size:12.5px}
+.mlist li.cur{background:var(--panel-2);font-weight:650}
+.mlist .chk{width:16px;height:16px;flex:none;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center}
+.mlist li.done .chk{background:var(--accent);border-color:var(--accent)}
+.mlist li.done .chk::after{content:"";width:6px;height:3.5px;border:solid var(--accent-fg);border-width:0 0 1.6px 1.6px;transform:rotate(-45deg) translate(0,-1px)}
+.mlist li.done span{color:var(--muted)}
+.mlist .x{margin-left:auto;font:500 10.5px var(--f-num);color:var(--faint)}
+.feedh{display:flex;justify-content:space-between;align-items:center;padding:9px 14px 5px}
+.feed{list-style:none;margin:0;padding:0 8px 10px;overflow:auto;flex:1;min-height:80px}
+.feed li{display:grid;grid-template-columns:52px 1fr;gap:6px;padding:5px 6px;font-size:12px;border-radius:4px}
+.feed li time{font:500 10.5px/1.6 var(--f-num);color:var(--faint)}
+.feed li.k-news{background:var(--accent-soft)}
+.feed li.k-bad span{color:var(--down)}
+.feed li.k-good span{color:var(--up)}
+.feed li.k-coach span{font-weight:600}
+
+/* ---------- overlays ---------- */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40}
+.ticket{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);z-index:50;background:var(--panel);box-shadow:var(--shadow);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.thead{padding:14px 16px;color:var(--on-trade);display:flex;align-items:center;gap:10px}
+.thead.buy{background:var(--buy)} .thead.sell{background:var(--sell)}
+.thead h2{margin:0;font:700 17px/1.1 var(--f-display)}
+.thead .sub{font:500 12px var(--f-num);opacity:.9;margin-top:3px}
+.thead .flip{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.switch{width:38px;height:22px;border-radius:11px;background:color-mix(in srgb, var(--on-trade) 30%, transparent);position:relative}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--on-trade);transition:transform .15s}
+.switch[aria-checked="true"]::after{transform:translateX(16px)}
+.thead .close{color:var(--on-trade);font-size:22px;line-height:1;padding:2px 6px;opacity:.85}
+.tbody{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.radios{display:flex;gap:6px;flex-wrap:wrap}
+.radios label{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line-2);border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer}
+.radios input{accent-color:var(--fg)}
+.radios label:has(input:checked){border-color:var(--fg);background:var(--panel-2)}
+.radios label:has(input:disabled){opacity:.4;cursor:not-allowed}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field input{width:100%;padding:8px 9px;border:1px solid var(--line-2);border-radius:var(--r);background:var(--panel);font:500 14px var(--f-num)}
+.field input:disabled{background:var(--panel-2);color:var(--faint)}
+.risk{border:1px dashed var(--line-2);border-radius:var(--r);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.risk .rr{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px}
+.risk .rr span{color:var(--muted)} .risk .rr b{font:500 12px var(--f-num);text-align:right}
+.risk .line{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.risk .line .field{flex:1;min-width:120px}
+.chk{display:flex;gap:7px;align-items:flex-start;font-size:12px}
+.chk input{margin-top:2px;accent-color:var(--accent)}
+.tsum{display:flex;flex-direction:column;gap:2px}
+.tmsg{min-height:18px;margin:0;font-size:12px}
+.tmsg.err{color:var(--down)} .tmsg.ok{color:var(--up)}
+.tfoot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.tfoot .btn{flex:1;padding:10px}
+.dialog{position:fixed;z-index:60;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 32px));max-height:calc(100% - 40px);overflow:auto;background:var(--panel);border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.dialog header{padding:16px 18px 6px}
+.dialog h2{margin:0;font:800 22px/1.15 var(--f-display);letter-spacing:-.02em;text-wrap:balance}
+.dialog .body{padding:6px 18px 16px;display:flex;flex-direction:column;gap:10px}
+.dialog footer{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.modeopt{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px;border:1px solid var(--line-2);border-radius:8px;text-align:left;width:100%}
+.modeopt:hover:not(:disabled){background:var(--panel-2)}
+.modeopt:disabled{cursor:default;opacity:.75}
+.modeopt .ic{grid-row:1/3;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font:800 13px var(--f-display)}
+.modeopt b{font:700 14px var(--f-display)}
+.modeopt p{margin:0;font-size:12px;color:var(--muted)}
+.code{font:500 12px/1.6 var(--f-num);background:var(--panel-2);border-radius:6px;padding:9px 11px;white-space:pre-wrap;word-break:break-all;user-select:all}
+.daylist{display:flex;gap:6px;flex-wrap:wrap}
+.bigpnl{font:800 34px/1 var(--f-num);letter-spacing:-.02em}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px 18px}
+.toast{position:fixed;z-index:70;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-weight:600;font-size:12.5px;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  html,body{height:auto}
+  .app{height:auto;min-height:100%}
+  .desk{grid-template-columns:240px minmax(0,1fr);grid-template-rows:minmax(560px,auto) auto auto}
+  .watch{grid-row:1/3}
+  .blotter{grid-column:2;grid-row:2;min-height:300px}
+  .coach{grid-column:1/3;grid-row:3;max-height:none}
+  .feed{max-height:260px}
+}
+@media (max-width:760px){
+  .desk{display:flex;flex-direction:column}
+  .watch{max-height:330px}
+  .chartwrap{min-height:260px;flex:none;height:260px}
+  .depthrow{grid-template-columns:1fr 1fr}
+  .stats{grid-column:1/3;border-top:1px solid var(--line)}
+  .depthcol:nth-child(2){border-right:0}
+  .idx{border-left:0;padding-left:0}
+  .fields{grid-template-columns:1fr 1fr}
+  .ticket{top:auto;width:100%;max-height:92%;border-radius:12px 12px 0 0;padding-right:0}
+  .thead{border-radius:12px 12px 0 0}
+  .wl li:hover .acts,.wl li:focus-within .acts{display:none}
+}
+</style>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand" aria-label="Dalal Dojo">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="0.5" y="0.5" width="25" height="25" rx="6" fill="var(--accent)"/><path d="M8 5v16M13 8v12M18 4v14" stroke="var(--accent-fg)" stroke-width="1.6" stroke-linecap="round"/><rect x="6" y="9" width="4" height="7" rx="1" fill="var(--accent-fg)"/><rect x="11" y="11" width="4" height="5" rx="1" fill="none" stroke="var(--accent-fg)" stroke-width="1.4"/><rect x="16" y="7" width="4" height="8" rx="1" fill="var(--accent-fg)"/></svg>
+      Dalal Dojo <small>Paper</small>
+    </div>
+    <div class="idx" id="idx0"><span class="lbl">Nifty 50</span><div class="row"><b class="v">—</b><span class="chg">—</span></div></div>
+    <div class="idx" id="idx1"><span class="lbl">Nifty Bank</span><div class="row"><b class="v">—</b><span class="chg">—</span></div></div>
+    <div class="spacer"></div>
+    <button class="modepill" id="modeBtn" data-mode="sim" title="Choose market data"><span class="dot"></span><span id="modeLbl">Practice market</span></button>
+    <div class="clock"><span class="muted" id="simDate">—</span><b id="simClock">09:00:00</b><span class="phase" id="phase" data-p="closed">Closed</span></div>
+    <div class="seg" id="speedSeg" role="group" aria-label="Market speed"></div>
+    <button class="btn primary" id="playBtn">Start trading day</button>
+  </header>
+
+  <main class="desk">
+    <section class="panel watch" aria-label="Watchlist">
+      <div class="wl-head"><input id="wlSearch" type="search" placeholder="Filter, e.g. bank" aria-label="Filter watchlist" autocomplete="off"></div>
+      <ul class="wl" id="wl" role="listbox" aria-label="Instruments"></ul>
+      <div class="wl-foot" id="wlFoot">Press B or S to trade the selected stock.</div>
+    </section>
+
+    <section class="panel center" aria-label="Chart and market depth">
+      <div class="symhead">
+        <div><h1 id="symName">RELIANCE</h1><div class="meta" id="symMeta">—</div></div>
+        <div><div class="ltp num" id="symLtp">—</div><div class="ltpchg" id="symChg">—</div></div>
+        <div class="ohlc" id="ohlc"></div>
+        <div class="acts">
+          <div class="seg" id="tfSeg" role="group" aria-label="Candle interval"><button data-tf="1" aria-pressed="true">1m</button><button data-tf="5" aria-pressed="false">5m</button><button data-tf="15" aria-pressed="false">15m</button></div>
+          <button class="btn buy sm" id="hdBuy">Buy</button><button class="btn sell sm" id="hdSell">Sell</button>
+        </div>
+      </div>
+      <div class="chartwrap"><canvas id="chart" aria-label="Candlestick chart" role="img"></canvas></div>
+      <div class="depthrow">
+        <div class="depthcol"><table class="depth" id="bidT"></table></div>
+        <div class="depthcol"><table class="depth" id="askT"></table></div>
+        <div class="stats" id="stats"></div>
+      </div>
+    </section>
+
+    <section class="panel blotter" aria-label="Positions, orders and account">
+      <nav class="tabs" role="tablist" id="tabs"></nav>
+      <div class="tabbody" id="tabBody"></div>
+    </section>
+
+    <aside class="panel coach" aria-label="Coach and missions">
+      <div class="coachhead">
+        <div class="rank" id="rank" title="Experience points from missions and trading days"><div class="lv" id="rankLv">1</div><div class="name" id="rankName">Rookie</div><div class="xpbar"><i id="xpFill" style="width:0%"></i></div><div class="xp" id="xpTxt">0 / 200 XP</div></div>
+        <div class="lvlrow"><div class="lbl" id="lvlNum">Level 1</div><div class="lvl" id="lvlName">Read the tape</div></div>
+        <div class="lvlprog" id="lvlProg"></div>
+      </div>
+      <div class="mcard" id="mcard"></div>
+      <ul class="mlist" id="mlist"></ul>
+      <div class="feedh"><span class="lbl">Desk feed</span><span class="faint" style="font-size:11px" id="feedNote"></span></div>
+      <ul class="feed" id="feed" aria-live="polite"></ul>
+    </aside>
+  </main>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="ticket" id="ticket" hidden role="dialog" aria-modal="true" aria-labelledby="tTitle">
+  <div class="thead buy" id="tHead">
+    <div><h2 id="tTitle">Buy RELIANCE</h2><div class="sub" id="tSub">NSE · ₹—</div></div>
+    <div class="flip" id="tFlipWrap">B<button class="switch" id="tFlip" role="switch" aria-checked="false" aria-label="Switch between buy and sell"></button>S</div>
+    <button class="close" id="tClose" aria-label="Close order window">×</button>
+  </div>
+  <div class="tbody">
+    <div class="radios" id="tProd" role="radiogroup" aria-label="Product">
+      <label><input type="radio" name="prod" id="pMIS" value="MIS" checked> Intraday <span class="faint">MIS · 5×</span></label>
+      <label><input type="radio" name="prod" id="pCNC" value="CNC"> Longterm <span class="faint">CNC</span></label>
+    </div>
+    <div class="fields">
+      <label class="field"><span class="lbl">Qty</span><input id="tQty" type="number" min="1" step="1" value="1" inputmode="numeric"></label>
+      <label class="field"><span class="lbl">Price</span><input id="tPrice" type="number" step="0.05" inputmode="decimal"></label>
+      <label class="field"><span class="lbl">Trigger</span><input id="tTrig" type="number" step="0.05" inputmode="decimal" disabled></label>
+    </div>
+    <div class="radios" id="tType" role="radiogroup" aria-label="Order type">
+      <label><input type="radio" name="otype" id="tyM" value="MARKET" checked> Market</label>
+      <label><input type="radio" name="otype" id="tyL" value="LIMIT"> Limit</label>
+      <label><input type="radio" name="otype" id="tySL" value="SL"> SL</label>
+      <label><input type="radio" name="otype" id="tySLM" value="SL-M"> SL-M</label>
+    </div>
+    <div class="risk" id="tRisk">
+      <div class="lbl">Risk planner</div>
+      <div class="line">
+        <label class="field"><span class="lbl">Stop-loss price</span><input id="tStop" type="number" step="0.05" inputmode="decimal" placeholder="optional"></label>
+        <button class="btn sm" id="tSize" type="button">Size for 1% risk</button>
+      </div>
+      <div class="rr" id="tRR"></div>
+      <label class="chk"><input type="checkbox" id="tAuto"> <span>Place an SL-M exit at this stop as soon as the entry fills</span></label>
+    </div>
+    <div class="tsum" id="tSum"></div>
+    <p class="tmsg" id="tMsg" role="status"></p>
+  </div>
+  <div class="tfoot"><button class="btn buy" id="tGo">Buy</button><button class="btn ghost" id="tCancel">Cancel</button></div>
+</aside>
+
+<div class="dialog" id="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="dlgTitle"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ======================================================================
+   Utilities
+   ====================================================================== */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const NF2 = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const NF0 = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+const f2 = x => (x == null || !isFinite(x)) ? '—' : NF2.format(x);
+const f0 = x => (x == null || !isFinite(x)) ? '—' : NF0.format(x);
+const rs = x => (x == null || !isFinite(x)) ? '—' : (x < 0 ? '−₹' : '₹') + NF2.format(Math.abs(x));
+const sg = x => (x == null || !isFinite(x)) ? '—' : (x > 0 ? '+' : x < 0 ? '−' : '') + NF2.format(Math.abs(x));
+const pc = x => (x == null || !isFinite(x)) ? '—' : (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(2) + '%';
+const cls = x => x > 0 ? 'up' : x < 0 ? 'down' : '';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const r2 = x => Math.round(x * 100) / 100;
+const vol0 = v => v >= 1e7 ? (v / 1e7).toFixed(2) + ' Cr' : v >= 1e5 ? (v / 1e5).toFixed(2) + ' L' : f0(v);
+
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+let rand = mulberry32((Date.now() ^ 0x9e3779b9) >>> 0);
+function gauss() { let u = 0, v = 0; while (u === 0) u = rand(); while (v === 0) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+/* NSE cash-segment tick sizes (price bands effective 15 Apr 2025). Set per stock from the previous close. */
+function tickFor(price, kind) {
+  if (kind === 'index') return 0.05;
+  if (price < 250) return 0.01;
+  if (price <= 1000) return 0.05;
+  if (price <= 5000) return 0.10;
+  if (price <= 10000) return 0.50;
+  if (price <= 20000) return 1.00;
+  return 5.00;
+}
+const roundT = (p, t) => +(Math.round(p / t) * t).toFixed(2);
+const floorT = (p, t) => +(Math.floor(p / t + 1e-9) * t).toFixed(2);
+const ceilT = (p, t) => +(Math.ceil(p / t - 1e-9) * t).toFixed(2);
+const onTick = (p, t) => Math.abs(p / t - Math.round(p / t)) < 1e-6;
+const tickDec = t => t < 0.05 ? 2 : 2;
+
+/* Market clock (IST seconds after midnight) */
+const T_PRE = 9 * 3600, T_IEP = 9 * 3600 + 8 * 60, T_OPEN = 9 * 3600 + 15 * 60, T_WARN = 15 * 3600 + 15 * 60, T_SQ = 15 * 3600 + 25 * 60, T_CLOSE = 15 * 3600 + 30 * 60;
+const DAY_S = T_CLOSE - T_OPEN; // 22,500 trading seconds
+const SEC_YEAR = 250 * DAY_S;
+const hms = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = s % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}`; };
+const hm = s => hms(s).slice(0, 5);
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const dParse = d => { const [y, m, dd] = d.split('-').map(Number); return new Date(Date.UTC(y, m - 1, dd)); };
+const dFmt = d => { const x = dParse(d); return `${DOW[x.getUTCDay()]} ${x.getUTCDate()} ${MON[x.getUTCMonth()]}`; };
+const dIso = x => x.toISOString().slice(0, 10);
+function nextWeekday(d) { const x = dParse(d); do { x.setUTCDate(x.getUTCDate() + 1); } while (x.getUTCDay() === 0 || x.getUTCDay() === 6); return dIso(x); }
+function prevWeekday(d) { const x = dParse(d); do { x.setUTCDate(x.getUTCDate() - 1); } while (x.getUTCDay() === 0 || x.getUTCDay() === 6); return dIso(x); }
+const chartTime = (d, sec) => dParse(d).getTime() / 1000 + sec;
+function phaseOf(sec) { if (sec < T_PRE) return 'closed'; if (sec < T_OPEN) return 'pre'; if (sec < T_SQ) return 'open'; if (sec < T_CLOSE) return 'closing'; return 'closed'; }
+const PHASE_LABEL = { closed: 'Closed', pre: 'Pre-open', open: 'Open', closing: 'Closing' };
+function curPhase() { if (!feed || !feed.started) return 'closed'; if (feed.mode === 'live' && feed.marketOpen === false) return 'closed'; return phaseOf(feed.sec); }
+
+/* ======================================================================
+   Instruments. Starting prices are approximate late-Sep to Oct 2026 levels
+   (NIFTY 50 closed at 22,600 on 23 Oct 2026). The practice market is a
+   simulation; live quotes come from the companion app.
+   ====================================================================== */
+const UNIVERSE = [
+  { sym: 'NIFTY 50', name: 'Nifty 50 index', kind: 'index', sector: 'Index', prev: 22600.00, beta: 1, vol: 0.16, adv: 0 },
+  { sym: 'NIFTY BANK', name: 'Nifty Bank index', kind: 'index', sector: 'Banks', prev: 55400.00, beta: 1.12, vol: 0.19, adv: 0 },
+  { sym: 'NIFTYBEES', name: 'Nifty 50 ETF (BeES)', kind: 'etf', sector: 'ETF', prev: 254.20, beta: 1, vol: 0.16, adv: 6e6, spread: 1.2 },
+  { sym: 'RELIANCE', name: 'Reliance Industries', kind: 'eq', sector: 'Energy', prev: 1224.70, beta: 1.0, vol: 0.24, adv: 9e6 },
+  { sym: 'HDFCBANK', name: 'HDFC Bank', kind: 'eq', sector: 'Banks', prev: 735.40, beta: 0.9, vol: 0.22, adv: 18e6 },
+  { sym: 'ICICIBANK', name: 'ICICI Bank', kind: 'eq', sector: 'Banks', prev: 1394.20, beta: 1.05, vol: 0.24, adv: 11e6 },
+  { sym: 'SBIN', name: 'State Bank of India', kind: 'eq', sector: 'Banks', prev: 958.60, beta: 1.25, vol: 0.28, adv: 12e6 },
+  { sym: 'INFY', name: 'Infosys', kind: 'eq', sector: 'IT', prev: 1153.80, beta: 0.75, vol: 0.28, adv: 7e6 },
+  { sym: 'TCS', name: 'Tata Consultancy Services', kind: 'eq', sector: 'IT', prev: 2080.50, beta: 0.7, vol: 0.24, adv: 2.5e6 },
+  { sym: 'ITC', name: 'ITC', kind: 'eq', sector: 'FMCG', prev: 268.90, beta: 0.6, vol: 0.20, adv: 14e6 },
+  { sym: 'LT', name: 'Larsen & Toubro', kind: 'eq', sector: 'Infra', prev: 3878.00, beta: 1.1, vol: 0.25, adv: 1.8e6 },
+  { sym: 'BHARTIARTL', name: 'Bharti Airtel', kind: 'eq', sector: 'Telecom', prev: 1867.50, beta: 0.75, vol: 0.24, adv: 5e6 },
+  { sym: 'TATASTEEL', name: 'Tata Steel', kind: 'eq', sector: 'Metals', prev: 174.04, beta: 1.4, vol: 0.36, adv: 28e6 },
+  { sym: 'ETERNAL', name: 'Eternal (Zomato)', kind: 'eq', sector: 'Consumer tech', prev: 317.40, beta: 1.35, vol: 0.45, adv: 35e6 },
+  { sym: 'MARUTI', name: 'Maruti Suzuki', kind: 'eq', sector: 'Auto', prev: 12071.00, beta: 0.9, vol: 0.25, adv: 4.5e5 },
+];
+const BYSYM = Object.fromEntries(UNIVERSE.map(u => [u.sym, u]));
+const TRADABLE = UNIVERSE.filter(u => u.kind !== 'index').map(u => u.sym);
+
+/* ======================================================================
+   Charges (Zerodha's published equity rates, Oct 2026)
+   ====================================================================== */
+const RATE = {
+  brokPct: 0.0003, brokCap: 20,            // intraday: 0.03% or ₹20 per executed order, whichever is lower; delivery: zero
+  sttIntraSell: 0.00025, sttDel: 0.001,     // STT: 0.025% sell side intraday; 0.1% buy and sell delivery
+  txn: 0.0000307,                           // NSE transaction charge 0.00307%
+  sebi: 0.000001,                           // ₹10 per crore
+  stampIntra: 0.00003, stampDel: 0.00015,   // stamp duty, buy side
+  gst: 0.18,                                // on brokerage + SEBI + transaction charges
+  dp: 15.34,                                // per scrip per day when selling from holdings
+  autoSq: 50,                               // per order squared off by the broker, plus GST
+};
+const MIS_MARGIN = 0.20;                    // up to 5x leverage for intraday equity
+function charges(side, value, delivery) {
+  const brokerage = delivery ? 0 : Math.min(RATE.brokCap, value * RATE.brokPct);
+  const stt = delivery ? value * RATE.sttDel : (side === 'SELL' ? value * RATE.sttIntraSell : 0);
+  const txn = value * RATE.txn, sebi = value * RATE.sebi;
+  const stamp = side === 'BUY' ? value * (delivery ? RATE.stampDel : RATE.stampIntra) : 0;
+  const gst = (brokerage + txn + sebi) * RATE.gst;
+  return { brokerage, stt, txn, sebi, stamp, gst, dp: 0, autosq: 0, total: brokerage + stt + txn + sebi + stamp + gst };
+}
+const addCh = (a, b) => { for (const k of Object.keys(b)) a[k] = (a[k] || 0) + b[k]; return a; };
+const zeroCh = () => ({ brokerage: 0, stt: 0, txn: 0, sebi: 0, stamp: 0, gst: 0, dp: 0, autosq: 0, total: 0 });
+
+/* ======================================================================
+   Practice market: a simulated NSE session.
+   Index factor + sector factors + stock noise, a U-shaped intraday
+   volatility curve, slow drift regimes (trend vs range days), opening
+   gaps, and occasional simulated news shocks.
+   ====================================================================== */
+const sigSec = v => v / Math.sqrt(SEC_YEAR);
+const SIG_M = 0.16;
+function volShape(sec) { const m = (sec - T_OPEN) / 60; return (0.72 + 1.15 * Math.exp(-m / 22) + 0.55 * Math.exp(-(375 - m) / 28)) / 0.83; }
+const NEWS = [
+  { scope: 'sym', dir: 1, t: s => `Large block deal in ${s}; buyers absorb the supply` },
+  { scope: 'sym', dir: -1, t: s => `Heavy selling in ${s} after a big block crosses below the market` },
+  { scope: 'sym', dir: 1, t: s => `A brokerage upgrades ${s} and raises its target` },
+  { scope: 'sym', dir: -1, t: s => `A brokerage downgrades ${s} on valuation` },
+  { scope: 'sector', key: 'Banks', dir: 1, t: () => 'Bank stocks rally on hopes of a rate cut' },
+  { scope: 'sector', key: 'Banks', dir: -1, t: () => 'Banks slip as bond yields rise' },
+  { scope: 'sector', key: 'IT', dir: 1, t: () => 'IT stocks gain as the rupee weakens against the dollar' },
+  { scope: 'sector', key: 'IT', dir: -1, t: () => 'IT stocks fall on weak US tech cues' },
+  { scope: 'sector', key: 'Metals', dir: 1, t: () => 'Metal stocks climb on firm global prices' },
+  { scope: 'market', dir: -1, t: () => 'Crude oil jumps again; the broad market comes under pressure' },
+  { scope: 'market', dir: 1, t: () => 'Foreign investors turn net buyers; buying across sectors' },
+];
+
+function mkInst(u, prev) {
+  const kind = u.kind;
+  const tick = tickFor(prev, kind);
+  const sig = sigSec(u.vol);
+  return {
+    sym: u.sym, name: u.name, kind, sector: u.sector, beta: u.beta, volA: u.vol, adv: u.adv, spreadBps: u.spread || 1.4,
+    prev, tick, p: prev, ltp: prev, open: null, high: null, low: null, volume: 0, ltq: 0, ltt: null,
+    bid: kind === 'index' ? null : floorT(prev - tick, tick), ask: kind === 'index' ? null : ceilT(prev + tick, tick),
+    lower: roundT(prev * 0.9, tick), upper: roundT(prev * 1.1, tick),
+    candles: [], prevCandles: [], pv: 0, vv: 0, vwap: null,
+    sig, idio: sigSec(Math.sqrt(Math.max(0.0036, u.vol * u.vol - (u.beta * SIG_M) ** 2))),
+    drift: 0, bias: 0, jv: 1, iep: null, depth: null, depthAt: -1,
+  };
+}
+
+class SimFeed {
+  constructor(date, closes, prevFeed) {
+    this.mode = 'sim'; this.date = date; this.sec = T_PRE; this.started = false;
+    this.inst = {};
+    for (const u of UNIVERSE) this.inst[u.sym] = mkInst(u, closes[u.sym] ?? u.prev);
+    this.m = { drift: 0, bias: 0, jv: 1 };
+    this.beesRatio = this.inst.NIFTYBEES.prev / this.inst['NIFTY 50'].prev; this.te = 0;
+    this.news = []; this.events = [];
+    if (prevFeed && prevFeed.mode === 'sim' && Object.values(prevFeed.inst).every(I => I.candles && I.candles.length > 30)) {
+      // Yesterday on the chart is the day you just traded.
+      for (const s in this.inst) { const P = prevFeed.inst[s], I = this.inst[s]; I.prevCandles = P.candles.map(c => ({ ...c })); I.prevHigh = P.high; I.prevLow = P.low; }
+    } else this.genPrevDay();
+  }
+  // Previous session's 1-minute candles, scaled to end exactly at the previous close.
+  genPrevDay() {
+    const pd = prevWeekday(this.date);
+    const xs = {}; let xm = 0; const md = { d: 0 };
+    for (const s in this.inst) xs[s] = { x: 0, d: 0, path: [] };
+    for (let m = 0; m < 375; m++) {
+      const sec0 = T_OPEN + m * 60, f = volShape(sec0 + 30);
+      md.d = md.d * 0.97 + 0.002 * sigSec(SIG_M) * gauss();
+      const rm = md.d * 60 + sigSec(SIG_M) * Math.sqrt(60) * f * gauss();
+      xm += rm;
+      for (const s in this.inst) {
+        const I = this.inst[s], X = xs[s];
+        X.d = X.d * 0.97 + 0.002 * I.sig * gauss();
+        let r = I.kind === 'index' && s === 'NIFTY 50' ? rm : I.beta * rm + X.d * 60 + I.idio * Math.sqrt(60) * f * gauss();
+        const o = X.x; X.x += r;
+        const wig = I.sig * Math.sqrt(60) * f * 0.6;
+        X.path.push([sec0, o, Math.max(o, X.x) + Math.abs(gauss()) * wig, Math.min(o, X.x) - Math.abs(gauss()) * wig, X.x]);
+      }
+    }
+    for (const s in this.inst) {
+      const I = this.inst[s], X = xs[s], end = X.x;
+      let pv = 0, vv = 0;
+      I.prevCandles = X.path.map(([sec, o, h, l, c]) => {
+        const k = v => roundT(I.prev * Math.exp(v - end), I.tick);
+        const vol = I.adv ? Math.round(I.adv / 375 * volShape(sec + 30) * Math.exp(0.4 * gauss() - 0.08)) : 0;
+        const cc = { time: chartTime(pd, sec), open: k(o), high: k(h), low: k(l), close: k(c), volume: vol };
+        cc.high = Math.max(cc.high, cc.open, cc.close); cc.low = Math.min(cc.low, cc.open, cc.close);
+        pv += (cc.high + cc.low + cc.close) / 3 * (vol || 1); vv += (vol || 1); cc.vw = pv / vv;
+        return cc;
+      });
+      I.prevHigh = Math.max(...I.prevCandles.map(c => c.high)); I.prevLow = Math.min(...I.prevCandles.map(c => c.low));
+    }
+  }
+  start() {
+    // Day regime: trend bias, opening gaps, and a news schedule.
+    this.started = true;
+    this.m.bias = 0.004 * sigSec(SIG_M) * gauss();
+    const gapM = 0.0055 * gauss();
+    for (const s in this.inst) {
+      const I = this.inst[s];
+      I.bias = 0.004 * I.sig * gauss();
+      let g = s === 'NIFTY 50' ? gapM : I.beta * gapM + 0.006 * (I.volA / 0.25) * gauss() * (I.kind === 'index' ? 0.4 : 1);
+      I.gap = g;
+      I.iep = I.kind === 'index' ? roundT(I.prev * Math.exp(g), I.tick) : roundT(I.prev * Math.exp(g), I.tick);
+    }
+    this.inst.NIFTYBEES.iep = roundT(this.inst['NIFTY 50'].iep * this.beesRatio, this.inst.NIFTYBEES.tick);
+    const n = 3 + Math.floor(rand() * 4);
+    this.news = [];
+    for (let i = 0; i < n; i++) this.news.push({ at: T_OPEN + 900 + Math.floor(rand() * (DAY_S - 2700)), tpl: NEWS[Math.floor(rand() * NEWS.length)] });
+    this.news.sort((a, b) => a.at - b.at);
+  }
+  openMarket() {
+    for (const s in this.inst) {
+      const I = this.inst[s];
+      I.p = I.iep; I.ltp = I.iep; I.open = I.iep; I.high = I.iep; I.low = I.iep;
+      I.ltt = T_OPEN;
+      if (I.kind !== 'index') { const q = Math.round(I.adv * 0.004 * Math.exp(0.3 * gauss())); I.volume = q; I.ltq = q; I.pv = I.iep * q; I.vv = q; I.vwap = I.iep; this.quote(I); }
+      I.candles = [{ time: chartTime(this.date, T_OPEN), open: I.iep, high: I.iep, low: I.iep, close: I.iep, volume: I.volume, vw: I.iep }];
+    }
+  }
+  quote(I) {
+    if (I.kind === 'index') return;
+    const half = Math.max(I.tick * 0.5, I.p * I.spreadBps / 2e4 * (0.7 + 0.6 * rand()) * Math.min(3, I.jv));
+    I.bid = floorT(I.p - half, I.tick); I.ask = ceilT(I.p + half, I.tick);
+    if (I.ask - I.bid < I.tick - 1e-9) I.ask = +(I.bid + I.tick).toFixed(2);
+  }
+  fireNews(n) {
+    const tpl = n.tpl; let targets = [], text;
+    if (tpl.scope === 'sym') { const pool = TRADABLE.filter(s => s !== 'NIFTYBEES'); const s = pool[Math.floor(rand() * pool.length)]; targets = [s]; text = tpl.t(s); }
+    else if (tpl.scope === 'sector') { targets = Object.keys(this.inst).filter(s => this.inst[s].sector === tpl.key && this.inst[s].kind === 'eq'); text = tpl.t(); }
+    else { targets = ['*']; text = tpl.t(); }
+    const mag = (0.006 + rand() * 0.016) * tpl.dir;
+    const cont = rand() < 0.62 ? 1 : -0.7; // most news follows through; some fades
+    if (targets[0] === '*') { this.m.jv = 2.2; this.mShock = mag * 0.5; this.m.drift += cont * mag * 0.5 / 2400; }
+    else for (const s of targets) { const I = this.inst[s]; I.p *= Math.exp(mag); I.jv = 2.6; I.drift += cont * mag / 2400; }
+    this.events.push({ kind: 'news', text });
+  }
+  step() {
+    this.sec++;
+    const sec = this.sec;
+    if (sec < T_OPEN) return;
+    if (sec === T_OPEN) { this.openMarket(); return; }
+    if (sec > T_CLOSE) return;
+    while (this.news.length && this.news[0].at <= sec) this.fireNews(this.news.shift());
+    const f = volShape(sec);
+    const M = this.m, sM = sigSec(SIG_M);
+    M.drift = M.drift * (1 - 1 / 2400) + 0.00023 * sM * gauss();
+    M.jv = 1 + (M.jv - 1) * 0.997;
+    let rm = M.drift + M.bias + sM * f * M.jv * gauss();
+    if (this.mShock) { rm += this.mShock; this.mShock = 0; }
+    const sz = { Banks: gauss(), IT: gauss(), Metals: gauss(), Energy: gauss(), FMCG: gauss(), Infra: gauss(), Telecom: gauss(), Auto: gauss(), 'Consumer tech': gauss(), ETF: 0, Index: 0 };
+    const minuteT = chartTime(this.date, sec - (sec - T_OPEN) % 60);
+    for (const s in this.inst) {
+      const I = this.inst[s];
+      I.drift = I.drift * (1 - 1 / 2400) + 0.00023 * I.sig * gauss();
+      I.jv = 1 + (I.jv - 1) * 0.997;
+      if (s === 'NIFTY 50') I.p *= Math.exp(rm);
+      else if (s === 'NIFTYBEES') { this.te = this.te * 0.99 + 0.00002 * gauss(); I.p = this.inst['NIFTY 50'].p * this.beesRatio * (1 + this.te); }
+      else if (s === 'NIFTY BANK') I.p *= Math.exp(I.beta * rm + 0.6 * sigSec(0.1) * f * sz.Banks);
+      else I.p *= Math.exp(I.beta * rm + I.drift + I.bias + I.idio * f * I.jv * (0.55 * (sz[I.sector] || 0) + 0.835 * gauss()));
+      I.p = clamp(I.p, I.lower, I.upper);
+      // trades this second
+      let v = 0;
+      if (I.kind !== 'index') {
+        const base = I.adv / DAY_S * f * I.jv;
+        v = base * Math.exp(0.6 * gauss() - 0.18);
+        v = v >= 1 ? Math.round(v) : (rand() < v ? 1 : 0);
+        this.quote(I);
+        if (v > 0) {
+          const upMove = I.p >= I.ltp;
+          I.ltp = (rand() < 0.7) === upMove ? I.ask : I.bid;
+          I.volume += v; I.ltq = v; I.ltt = sec; I.pv += I.ltp * v; I.vv += v; I.vwap = I.pv / I.vv;
+        }
+      } else { I.ltp = roundT(I.p, I.tick); I.ltt = sec; }
+      I.high = Math.max(I.high, I.ltp); I.low = Math.min(I.low, I.ltp);
+      const last = I.candles[I.candles.length - 1];
+      if (!last || last.time !== minuteT) {
+        if (sec < T_CLOSE) I.candles.push({ time: minuteT, open: I.ltp, high: I.ltp, low: I.ltp, close: I.ltp, volume: v, vw: I.vwap ?? I.ltp });
+      } else {
+        last.high = Math.max(last.high, I.ltp); last.low = Math.min(last.low, I.ltp); last.close = I.ltp; last.volume += v; last.vw = I.vwap ?? I.ltp;
+      }
+    }
+  }
+  snapshot() {
+    const inst = {};
+    for (const s in this.inst) { const I = this.inst[s]; inst[s] = { ...I, depth: null }; }
+    return { mode: 'sim', date: this.date, sec: this.sec, started: this.started, m: this.m, beesRatio: this.beesRatio, te: this.te, news: this.news.map(n => ({ at: n.at, i: NEWS.indexOf(n.tpl) })), inst };
+  }
+  static restore(snap) {
+    const f = Object.create(SimFeed.prototype);
+    f.mode = 'sim'; f.date = snap.date; f.sec = snap.sec; f.started = snap.started; f.m = snap.m; f.beesRatio = snap.beesRatio; f.te = snap.te;
+    f.news = (snap.news || []).map(n => ({ at: n.at, tpl: NEWS[n.i] || NEWS[0] })); f.events = []; f.inst = snap.inst;
+    return f;
+  }
+}
+
+/* Replay: a real past session from the companion app, revealed minute by minute.
+   Inside each 1-minute candle the price walks open → high/low → low/high → close. */
+class ReplayFeed {
+  constructor(day) {
+    this.mode = 'replay'; this.date = day.date; this.sec = T_PRE; this.started = false; this.events = []; this.inst = {};
+    for (const u of UNIVERSE) {
+      const d = day.instruments[u.sym]; if (!d || !d.candles || !d.candles.length) continue;
+      const I = mkInst(u, d.prev_close || d.candles[0][1]);
+      I.src = d.candles.map(([t, o, h, l, c, v]) => ({ t, o, h, l, c, v, hf: rand() < 0.5 }));
+      I.byMin = new Map(I.src.map(k => [k.t, k]));
+      if (d.prev_candles && d.prev_candles.length) {
+        I.prevCandles = d.prev_candles.map(([t, o, h, l, c, v]) => ({ time: chartTime(day.prev_date || prevWeekday(day.date), t), open: o, high: h, low: l, close: c, volume: v }));
+        I.prevHigh = Math.max(...I.prevCandles.map(c => c.high)); I.prevLow = Math.min(...I.prevCandles.map(c => c.low));
+      }
+      this.inst[u.sym] = I;
+    }
+  }
+  start() { this.started = true; for (const s in this.inst) { const I = this.inst[s]; I.iep = I.src[0].o; } }
+  priceAt(k, frac) {
+    const a = k.hf ? k.h : k.l, b = k.hf ? k.l : k.h;
+    const pts = [[0, k.o], [0.32, a], [0.68, b], [1, k.c]];
+    for (let i = 1; i < pts.length; i++) if (frac <= pts[i][0]) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; return y0 + (y1 - y0) * (frac - x0) / (x1 - x0); }
+    return k.c;
+  }
+  step() {
+    this.sec++; const sec = this.sec;
+    if (sec < T_OPEN || sec > T_CLOSE) return;
+    const mStart = sec - (sec - T_OPEN) % 60, frac = ((sec - T_OPEN) % 60) / 60;
+    const minuteT = chartTime(this.date, mStart);
+    for (const s in this.inst) {
+      const I = this.inst[s]; const k = I.byMin.get(mStart); if (!k) continue;
+      let p = this.priceAt(k, frac) + (frac > 0 && frac < 1 ? gauss() * I.tick * 0.6 : 0);
+      p = clamp(p, k.l, k.h);
+      I.p = p; const px = roundT(p, I.tick);
+      if (I.open == null) { I.open = k.o; I.high = k.o; I.low = k.o; }
+      const v = Math.round(k.v / 60 * Math.exp(0.5 * gauss() - 0.125));
+      if (I.kind !== 'index') {
+        const half = Math.max(I.tick * 0.5, p * I.spreadBps / 2e4);
+        I.bid = floorT(p - half, I.tick); I.ask = ceilT(p + half, I.tick); if (I.ask - I.bid < I.tick - 1e-9) I.ask = +(I.bid + I.tick).toFixed(2);
+        if (v > 0) { I.volume += v; I.ltq = v; I.pv += px * v; I.vv += v; I.vwap = I.pv / I.vv; }
+      }
+      I.ltp = px; I.ltt = sec; I.high = Math.max(I.high, px); I.low = Math.min(I.low, px);
+      const last = I.candles[I.candles.length - 1];
+      if (!last || last.time !== minuteT) I.candles.push({ time: minuteT, open: px, high: px, low: px, close: px, volume: Math.max(0, v), vw: I.vwap ?? px });
+      else { last.high = Math.max(last.high, px); last.low = Math.min(last.low, px); last.close = px; last.volume += Math.max(0, v); last.vw = I.vwap ?? px; }
+    }
+  }
+  openMarket() { }
+}
+
+/* Live: polls the companion app, which reads NSE quotes from Yahoo Finance (free, may lag) or Kite Connect (real-time). */
+class LiveFeed {
+  constructor(init) {
+    this.mode = 'live'; this.date = init.date; this.sec = init.now_sec; this.started = true; this.events = []; this.inst = {}; this.source = init.source;
+    for (const u of UNIVERSE) {
+      const d = init.instruments[u.sym]; if (!d) continue;
+      const I = mkInst(u, d.prev_close || d.ltp); this.inst[u.sym] = I;
+      if (d.prev_candles && d.prev_candles.length) {
+        I.prevCandles = d.prev_candles.map(([t, o, h, l, c, v]) => ({ time: chartTime(init.prev_date || prevWeekday(init.date), t), open: o, high: h, low: l, close: c, volume: v }));
+        I.prevHigh = Math.max(...I.prevCandles.map(c => c.high)); I.prevLow = Math.min(...I.prevCandles.map(c => c.low));
+      }
+    }
+    this.apply(init);
+  }
+  apply(snap) {
+    this.sec = snap.now_sec; this.marketOpen = snap.market_open; this.source = snap.source;
+    for (const s in snap.instruments) {
+      const I = this.inst[s], d = snap.instruments[s]; if (!I) continue;
+      if (d.prev_close) I.prev = d.prev_close;
+      if (d.ltp) { I.ltp = d.ltp; I.p = d.ltp; }
+      I.open = d.open ?? I.open; I.high = d.high ?? I.high; I.low = d.low ?? I.low; I.volume = d.volume ?? I.volume;
+      if (d.depth && d.depth.buy && d.depth.buy.length) { I.depth = { bids: d.depth.buy, asks: d.depth.sell, real: true }; I.bid = d.depth.buy[0][0] || null; I.ask = d.depth.sell[0][0] || null; }
+      else if (I.kind !== 'index' && I.ltp) { const half = Math.max(I.tick * 0.5, I.ltp * I.spreadBps / 2e4); I.bid = floorT(I.ltp - half, I.tick); I.ask = ceilT(I.ltp + half, I.tick); if (I.ask - I.bid < I.tick - 1e-9) I.ask = +(I.bid + I.tick).toFixed(2); I.depth = null; }
+      if (d.candles) for (const [t, o, h, l, c, v] of d.candles) {
+        const time = chartTime(this.date, t), cc = { time, open: o, high: h, low: l, close: c, volume: v };
+        const last = I.candles[I.candles.length - 1];
+        if (last && last.time === time) Object.assign(last, cc); else if (!last || last.time < time) I.candles.push(cc);
+      }
+      let pv = 0, vv = 0; for (const c of I.candles) { const w = c.volume || 0; pv += (c.high + c.low + c.close) / 3 * w; vv += w; c.vw = vv ? pv / vv : c.close; }
+      I.vwap = vv ? pv / vv : null;
+      I.lower = roundT(I.prev * 0.9, I.tick); I.upper = roundT(I.prev * 1.1, I.tick);
+    }
+  }
+  start() { }
+  step() { }
+}
+
+function depthOf(I, now) {
+  if (I.kind === 'index' || I.bid == null) return null;
+  if (I.depth && I.depth.real) return I.depth;
+  if (I.depth && I.depthAt === now) return I.depth;
+  const lq = Math.max(8, I.adv / DAY_S * 22);
+  const lvl = (p0, dir) => { const out = []; for (let i = 0; i < 5; i++) { const q = Math.max(1, Math.round(lq * (1 + 0.35 * i) * Math.exp(0.55 * gauss()))); out.push([+(p0 + dir * i * I.tick).toFixed(2), q, Math.max(1, Math.round(q / (lq / 7) * (0.6 + rand() * 0.8)))]); } return out; };
+  I.depth = { bids: lvl(I.bid, -1), asks: lvl(I.ask, 1) }; I.depthAt = now;
+  return I.depth;
+}
+
+/* ======================================================================
+   Account state (persisted). One document per viewer.
+   ====================================================================== */
+const FIRST_DATE = '2026-10-26';
+function freshAccount(capital = 100000) {
+  return {
+    v: 1, createdAt: Date.now(), savedAt: 0, capital, cash: capital, holdings: {},
+    xp: 0, missions: {}, journaledIds: [], exports: 0,
+    trips: [], history: [], lastCloses: {}, nextDate: FIRST_DATE, speed: 20,
+    seq: 1, day: null,
+  };
+}
+let A = freshAccount();
+let feed = null;
+let running = false;
+let selected = 'RELIANCE';
+let tab = 'positions';
+let tf = 1;
+let speed = 20;
+const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+let server = null; // companion app status when served locally
+
+function newDay(mode, date) {
+  return {
+    mode, date, positions: {}, orders: [], fills: [], ch: zeroCh(), dpDone: {}, autoSq: 0, warned: {},
+    startWorth: null, peak: null, maxDD: 0, tripsClosed: 0, xp0: A.xp, lastPrices: {}, noStopWarned: {}, misTraded: false,
+  };
+}
+const posKey = (sym, prod) => sym + '|' + prod;
+
+/* ======================================================================
+   Paper broker: order validation, matching, positions, margin, charges.
+   ====================================================================== */
+const Broker = {
+  inst(sym) { return feed && feed.inst[sym]; },
+  ltp(sym) { const I = this.inst(sym); return I ? I.ltp : (A.lastCloses[sym] ?? BYSYM[sym]?.prev); },
+  positions() { return A.day ? Object.values(A.day.positions) : []; },
+  pendingOrders() { return A.day ? A.day.orders.filter(o => o.status === 'OPEN' || o.status === 'TRIGGER PENDING' || o.status === 'AMO') : []; },
+  misUsed() { let m = 0; for (const p of this.positions()) if (p.product === 'MIS') m += Math.abs(p.net) * p.avg * MIS_MARGIN; return m; },
+  misUnreal() { let u = 0; for (const p of this.positions()) if (p.product === 'MIS' && p.net) u += (this.ltp(p.sym) - p.avg) * p.net; return u; },
+  reducingQty(o) {
+    const p = A.day && A.day.positions[posKey(o.sym, o.product)];
+    if (!p || !p.net) return 0;
+    const s = o.side === 'BUY' ? 1 : -1;
+    return Math.sign(p.net) !== s ? Math.min(o.qty, Math.abs(p.net)) : 0;
+  },
+  orderMargin(o) {
+    const px = o.type === 'LIMIT' || o.type === 'SL' ? o.price : (o.type === 'SL-M' ? o.trigger : (o.side === 'BUY' ? (this.inst(o.sym)?.ask ?? this.ltp(o.sym)) : (this.inst(o.sym)?.bid ?? this.ltp(o.sym))));
+    if (o.product === 'CNC' && o.side === 'SELL') return 0;
+    const newQty = o.qty - this.reducingQty(o);
+    return newQty * px * (o.product === 'MIS' ? MIS_MARGIN : 1);
+  },
+  openOrderMargin(except) { let m = 0; for (const o of this.pendingOrders()) if (o !== except) m += this.orderMargin(o); return m; },
+  available(except) { return A.cash - this.misUsed() - this.openOrderMargin(except) + Math.min(0, this.misUnreal()); },
+  holdingsQty(sym) { return A.holdings[sym]?.qty || 0; },
+  worth() {
+    let w = A.cash;
+    for (const s in A.holdings) w += A.holdings[s].qty * this.ltp(s);
+    for (const p of this.positions()) { if (p.product === 'CNC' && p.net > 0) w += p.net * this.ltp(p.sym); if (p.product === 'MIS' && p.net) w += (this.ltp(p.sym) - p.avg) * p.net; }
+    return w;
+  },
+  validate(o, isModify) {
+    const u = BYSYM[o.sym], I = this.inst(o.sym);
+    if (!u) return 'Unknown instrument.';
+    if (u.kind === 'index') return "Indices can't be bought or sold directly. Trade NIFTYBEES, an ETF that tracks the Nifty 50.";
+    if (!Number.isInteger(o.qty) || o.qty < 1) return 'Quantity must be a whole number of shares, at least 1.';
+    const tick = I ? I.tick : tickFor(this.ltp(o.sym), u.kind);
+    const ltp = this.ltp(o.sym);
+    const lower = I ? I.lower : roundT(ltp * 0.9, tick), upper = I ? I.upper : roundT(ltp * 1.1, tick);
+    if (o.type === 'LIMIT' || o.type === 'SL') {
+      if (!(o.price > 0)) return 'Enter a price for a limit order.';
+      if (!onTick(o.price, tick)) return `Tick size for ${o.sym} is ₹${tick.toFixed(2)}. Enter a price in multiples of the tick size.`;
+      if (o.price < lower || o.price > upper) return `Price is outside the day's price band (₹${f2(lower)} – ₹${f2(upper)}).`;
+    }
+    if (o.type === 'SL' || o.type === 'SL-M') {
+      if (!(o.trigger > 0)) return 'Enter a trigger price for a stop-loss order.';
+      if (!onTick(o.trigger, tick)) return `Tick size for ${o.sym} is ₹${tick.toFixed(2)}. Enter a trigger price in multiples of the tick size.`;
+      if (o.side === 'BUY' && o.trigger <= ltp) return 'Trigger price for stop-loss buy orders should be higher than the last traded price.';
+      if (o.side === 'SELL' && o.trigger >= ltp) return 'Trigger price for stop-loss sell orders should be lower than the last traded price.';
+      if (o.type === 'SL' && o.side === 'BUY' && o.trigger > o.price) return 'For a stop-loss buy, the trigger price must be lower than or equal to the limit price.';
+      if (o.type === 'SL' && o.side === 'SELL' && o.trigger < o.price) return 'For a stop-loss sell, the trigger price must be higher than or equal to the limit price.';
+    }
+    const ph = A.day ? curPhase() : 'closed';
+    if (o.product === 'MIS' && ph === 'closing' && !isModify && this.reducingQty(o) < o.qty) return 'New intraday (MIS) positions are blocked after the 15:25 auto square-off. Use CNC, or trade tomorrow.';
+    if (o.product === 'CNC' && o.side === 'SELL') {
+      const p = A.day && A.day.positions[posKey(o.sym, 'CNC')];
+      const today = p ? Math.max(0, p.net) : 0;
+      const pendingSells = this.pendingOrders().filter(x => x !== o && x.sym === o.sym && x.product === 'CNC' && x.side === 'SELL').reduce((a, x) => a + x.qty, 0);
+      if (o.qty > this.holdingsQty(o.sym) + today - pendingSells) return (this.holdingsQty(o.sym) + today) > 0 ? `You can sell at most ${this.holdingsQty(o.sym) + today - pendingSells} shares of ${o.sym} in CNC (holdings plus today's buys, minus pending sells).` : "Short selling isn't allowed in CNC (delivery). Use Intraday (MIS) to sell first and buy back the same day.";
+    }
+    const need = this.orderMargin(o), avail = this.available(isModify ? o : null);
+    if (need > avail + 1e-6) return `Insufficient funds. Required margin is ₹${f2(need)} but available margin is ₹${f2(avail)}. Check the order book for open orders.`;
+    return null;
+  },
+  place(req) {
+    if (!A.day) {
+      if (feed.mode === 'live') { if (!startDay()) return { status: 'REJECTED', reason: 'The market is closed, so there is no live session to trade in.', sym: req.sym, side: req.side, qty: req.qty }; }
+      else if (feed.mode === 'replay' && feed.sec >= T_CLOSE) return { status: 'REJECTED', reason: 'This replay has finished. Pick another day under market data, or switch to the practice market.', sym: req.sym, side: req.side, qty: req.qty };
+      else A.day = newDay(feed.mode, feed.date);
+    }
+    const o = { id: 'O' + (A.seq++), date: A.day.date, t: feed ? feed.sec : T_PRE, sym: req.sym, side: req.side, qty: req.qty | 0, type: req.type, product: req.product, price: req.price ?? null, trigger: req.trigger ?? null, status: 'OPEN', avg: null, filledAt: null, reason: '', tag: req.tag || '', stopPlan: req.stopPlan ?? null, autoStop: !!req.autoStop, resting: false };
+    if (o.type === 'MARKET' || o.type === 'SL-M') o.price = null;
+    if (o.type === 'MARKET' || o.type === 'LIMIT') o.trigger = null;
+    const err = this.validate(o, false);
+    A.day.orders.unshift(o);
+    if (err) { o.status = 'REJECTED'; o.reason = err; emit('rejected', { order: o }); markDirty(); return o; }
+    const ph = curPhase();
+    if (!feed || !feed.started || ph === 'closed') { o.status = 'AMO'; o.reason = 'After-market order: goes to the exchange at the next open.'; }
+    else if (ph === 'pre') { o.status = o.type === 'SL' || o.type === 'SL-M' ? 'TRIGGER PENDING' : 'OPEN'; }
+    else if (o.type === 'SL' || o.type === 'SL-M') o.status = 'TRIGGER PENDING';
+    emit('placed', { order: o });
+    if (o.status === 'OPEN' && ph !== 'pre') this.tryFill(o, true);
+    markDirty();
+    return o;
+  },
+  modify(o, ch) {
+    if (!['OPEN', 'TRIGGER PENDING', 'AMO'].includes(o.status)) return 'Only open orders can be modified.';
+    const test = { ...o, ...ch };
+    if (test.type === 'MARKET' || test.type === 'SL-M') test.price = null;
+    if (test.type === 'MARKET' || test.type === 'LIMIT') test.trigger = null;
+    const err = this.validate(test, true);
+    if (err) return err;
+    Object.assign(o, { qty: test.qty, price: test.price, trigger: test.trigger, type: test.type, resting: false });
+    if (o.status !== 'AMO') o.status = (o.type === 'SL' || o.type === 'SL-M') && !o.triggered ? 'TRIGGER PENDING' : 'OPEN';
+    emit('modified', { order: o });
+    if (o.status === 'OPEN' && ['open', 'closing'].includes(curPhase())) this.tryFill(o, true);
+    markDirty();
+    return null;
+  },
+  cancel(o, reason) {
+    if (!['OPEN', 'TRIGGER PENDING', 'AMO'].includes(o.status)) return;
+    o.status = 'CANCELLED'; o.reason = reason || '';
+    emit('cancelled', { order: o }); markDirty();
+  },
+  // Fill price for a market order: walk the order book.
+  marketPrice(o, I) {
+    const d = depthOf(I, feed.sec);
+    const lv = o.side === 'BUY' ? d.asks : d.bids;
+    let rem = o.qty, cost = 0, last = lv[0][0];
+    for (const [p, q] of lv) { const take = Math.min(rem, q); cost += take * p; rem -= take; last = p; if (!rem) break; }
+    if (rem > 0) { const worse = +(last + (o.side === 'BUY' ? 1 : -1) * I.tick * Math.ceil(rem / Math.max(1, lv[lv.length - 1][1]))).toFixed(2); cost += rem * worse; }
+    return cost / o.qty;
+  },
+  tryFill(o, fresh) {
+    const I = this.inst(o.sym); if (!I || I.bid == null) return;
+    if (o.status === 'TRIGGER PENDING') {
+      const hit = o.side === 'BUY' ? I.ltp >= o.trigger : I.ltp <= o.trigger;
+      if (!hit) return;
+      o.triggered = true; o.status = 'OPEN'; o.resting = false; fresh = true;
+      emit('triggered', { order: o });
+    }
+    if (o.status !== 'OPEN') return;
+    if (o.type === 'MARKET' || o.type === 'SL-M') return this.fill(o, this.marketPrice(o, I));
+    // LIMIT and triggered SL
+    if (o.side === 'BUY') {
+      if (I.ask <= o.price && (fresh || !o.resting)) return this.fill(o, I.ask);
+      if (o.resting && (I.ltp < o.price || (I.ltp === o.price && rand() < 0.3))) return this.fill(o, o.price);
+    } else {
+      if (I.bid >= o.price && (fresh || !o.resting)) return this.fill(o, I.bid);
+      if (o.resting && (I.ltp > o.price || (I.ltp === o.price && rand() < 0.3))) return this.fill(o, o.price);
+    }
+    o.resting = true;
+  },
+  // Opening match at 09:15: all eligible orders trade at the open price.
+  atOpen() {
+    for (const o of this.pendingOrders()) {
+      if (o.status === 'AMO') o.status = (o.type === 'SL' || o.type === 'SL-M') ? 'TRIGGER PENDING' : 'OPEN';
+      const I = this.inst(o.sym); if (!I) continue;
+      if (o.status === 'OPEN') {
+        if (o.type === 'MARKET') this.fill(o, I.open);
+        else if (o.type === 'LIMIT' && (o.side === 'BUY' ? o.price >= I.open : o.price <= I.open)) this.fill(o, I.open);
+        else o.resting = true;
+      }
+    }
+  },
+  onStep() { for (const o of this.pendingOrders()) if (o.status !== 'AMO') this.tryFill(o, false); },
+  fill(o, price, tag) {
+    price = r2(price);
+    const D = A.day, I = this.inst(o.sym), key = posKey(o.sym, o.product);
+    const value = price * o.qty;
+    let ch = zeroCh(), realized = 0;
+    let p = D.positions[key];
+    const holdOnly = o.product === 'CNC' && o.side === 'SELL' && (!p || p.net <= 0);
+    if (!p) p = { sym: o.sym, product: o.product, net: 0, avg: 0, buyQty: 0, buyVal: 0, sellQty: 0, sellVal: 0, realized: 0, tripId: null };
+    if (!holdOnly) D.positions[key] = p; // a sale purely from holdings doesn't open a position line
+    const before = p.net;
+    let fromHold = 0;
+    if (o.product === 'CNC' && o.side === 'SELL') {
+      const fromToday = Math.min(o.qty, Math.max(0, p.net)); fromHold = o.qty - fromToday;
+      if (fromToday) {
+        addCh(ch, charges('SELL', price * fromToday, false));
+        // Buying and selling the same day in CNC is treated as intraday: undo the delivery STT/stamp on the buy leg, add intraday brokerage.
+        const bv = p.avg * fromToday, bb = Math.min(RATE.brokCap, bv * RATE.brokPct);
+        addCh(ch, { stt: -bv * RATE.sttDel, stamp: -bv * (RATE.stampDel - RATE.stampIntra), brokerage: bb, gst: bb * RATE.gst, total: -bv * RATE.sttDel - bv * (RATE.stampDel - RATE.stampIntra) + bb * (1 + RATE.gst) });
+      }
+      if (fromHold) { addCh(ch, charges('SELL', price * fromHold, true)); if (!D.dpDone[o.sym]) { D.dpDone[o.sym] = 1; ch.dp += RATE.dp; ch.total += RATE.dp; } }
+    } else addCh(ch, charges(o.side, value, o.product === 'CNC'));
+    if (tag === 'autosq') { const a = RATE.autoSq * (1 + RATE.gst); ch.autosq += a; ch.total += a; }
+    // Position bookkeeping (average-cost method)
+    const s = o.side === 'BUY' ? 1 : -1;
+    const qtyPos = o.qty - fromHold;
+    if (qtyPos > 0) {
+      if (p.net === 0 || Math.sign(p.net) === s) { p.avg = (p.avg * Math.abs(p.net) + price * qtyPos) / (Math.abs(p.net) + qtyPos); p.net += s * qtyPos; }
+      else {
+        const cq = Math.min(qtyPos, Math.abs(p.net));
+        realized += (price - p.avg) * cq * Math.sign(p.net);
+        p.net += s * cq;
+        const rem = qtyPos - cq;
+        if (p.net === 0) p.avg = 0;
+        if (rem > 0) { p.net = s * rem; p.avg = price; }
+      }
+      if (s > 0) { p.buyQty += qtyPos; p.buyVal += qtyPos * price; } else { p.sellQty += qtyPos; p.sellVal += qtyPos * price; }
+    }
+    let holdRealized = 0, holdTrip = null;
+    if (fromHold) {
+      const h = A.holdings[o.sym];
+      holdRealized = (price - h.avg) * fromHold;
+      holdTrip = h.tripId;
+      h.qty -= fromHold; if (h.qty <= 0) delete A.holdings[o.sym];
+    }
+    p.realized += realized;
+    // Cash
+    if (o.product === 'MIS') A.cash += realized - ch.total;
+    else if (o.side === 'BUY') A.cash -= value + ch.total;
+    else A.cash += value - ch.total;
+    addCh(D.ch, ch);
+    if (o.product === 'MIS') D.misTraded = true;
+    o.status = 'COMPLETE'; o.avg = price; o.filledAt = feed ? feed.sec : T_OPEN; o.charges = ch.total;
+    const fill = { id: 'F' + (A.seq++), order: o.id, sym: o.sym, side: o.side, qty: o.qty, price, product: o.product, t: o.filledAt, date: D.date, ch: ch.total, time: chartTime(D.date, o.filledAt - (o.filledAt - T_OPEN) % 60) };
+    D.fills.push(fill);
+    this.trackTrips(o, p, before, price, realized, ch.total, fromHold, holdRealized, holdTrip);
+    emit('filled', { order: o, fill, before, after: p.net, pos: p });
+    if (o.autoStop && o.stopPlan && Math.abs(p.net) > Math.abs(before) && (o.side === 'BUY' ? o.stopPlan < price : o.stopPlan > price)) {
+      const stopSide = o.side === 'BUY' ? 'SELL' : 'BUY';
+      const I2 = this.inst(o.sym);
+      const trig = o.side === 'BUY' ? floorT(o.stopPlan, I2.tick) : ceilT(o.stopPlan, I2.tick);
+      const so = this.place({ sym: o.sym, side: stopSide, qty: o.qty, type: 'SL-M', product: o.product, trigger: trig, tag: 'auto-stop' });
+      if (so.status !== 'REJECTED') coach(`Stop placed: SL-M ${stopSide.toLowerCase()} ${o.qty} ${o.sym} at trigger ₹${f2(trig)}.`, 'coach');
+    }
+    // Cancel exit orders that no longer have a position to close
+    if (p.net === 0 && !holdOnly) for (const x of this.pendingOrders()) if (x.sym === o.sym && x.product === o.product && (x.tag === 'auto-stop' || x.tag === 'exit')) this.cancel(x, 'Position closed, so this exit order was cancelled.');
+    markDirty();
+  },
+  trackTrips(o, p, before, price, realized, chTotal, fromHold, holdRealized, holdTrip) {
+    const D = A.day;
+    const findTrip = id => A.trips.find(t => t.id === id);
+    if (fromHold && holdTrip) {
+      const t = findTrip(holdTrip);
+      if (t) {
+        const q = fromHold; t.exitVal += price * q; t.exitQty += q; t.gross += holdRealized; t.charges += chTotal * (q / o.qty);
+        if (!A.holdings[o.sym]) this.closeTrip(t, o.filledAt);
+      }
+    }
+    const qtyPos = o.qty - fromHold; if (!qtyPos) return;
+    const chPos = chTotal * (qtyPos / o.qty);
+    let t = p.tripId ? findTrip(p.tripId) : null;
+    if (before === 0 || !t) {
+      t = this.openTrip(o, p, price, qtyPos, chPos);
+      return;
+    }
+    if (Math.sign(p.net) === Math.sign(before) && Math.abs(p.net) > Math.abs(before)) {
+      t.entryVal += price * qtyPos; t.entryQty += qtyPos; t.maxQty = Math.max(t.maxQty, Math.abs(p.net)); t.charges += chPos;
+      return;
+    }
+    const cq = Math.min(qtyPos, Math.abs(before));
+    t.exitVal += price * cq; t.exitQty += cq; t.gross += realized; t.charges += chPos * (cq / qtyPos);
+    if (p.net === 0 || Math.sign(p.net) !== Math.sign(before)) {
+      this.closeTrip(t, o.filledAt);
+      p.tripId = null;
+      if (p.net !== 0) this.openTrip(o, p, price, Math.abs(p.net), chPos * (1 - cq / qtyPos));
+    }
+  },
+  openTrip(o, p, price, qty, ch) {
+    const I = this.inst(o.sym);
+    const t = { id: 'T' + (A.seq++), sym: o.sym, product: o.product, side: p.net > 0 ? 'LONG' : 'SHORT', openDate: A.day.date, openSec: o.filledAt, entryVal: price * qty, entryQty: qty, maxQty: qty, exitVal: 0, exitQty: 0, gross: 0, charges: ch, net: null, risk: null, r: null, setup: '', note: '', status: 'open', stopUsed: false, closeDate: null, closeSec: null, vwapReclaim: false };
+    if (o.stopPlan) { t.risk = Math.abs(price - o.stopPlan) * qty; t.stopUsed = !!o.autoStop; }
+    // VWAP reclaim check: price now on one side of VWAP after being on the other within 5 minutes
+    if (I && I.vwap && I.candles.length > 2) {
+      const recent = I.candles.slice(-6, -1);
+      if (t.side === 'LONG' && price > I.vwap && recent.some(c => c.close < c.vw)) t.vwapReclaim = true;
+      if (t.side === 'SHORT' && price < I.vwap && recent.some(c => c.close > c.vw)) t.vwapReclaim = true;
+    }
+    A.trips.unshift(t); if (A.trips.length > 400) A.trips.length = 400;
+    p.tripId = t.id;
+    emit('trip_open', { trip: t, order: o });
+    return t;
+  },
+  closeTrip(t, sec) {
+    t.status = 'closed'; t.closeDate = A.day.date; t.closeSec = sec;
+    t.net = t.gross - t.charges; t.r = t.risk ? t.gross / t.risk : null;
+    A.day.tripsClosed++;
+    emit('trip_closed', { trip: t });
+  },
+  squareOffMIS() {
+    let n = 0;
+    for (const o of this.pendingOrders()) if (o.product === 'MIS') this.cancel(o, 'Cancelled at the 15:25 intraday auto square-off.');
+    for (const p of this.positions()) if (p.product === 'MIS' && p.net) {
+      const I = this.inst(p.sym);
+      const o = { id: 'O' + (A.seq++), date: A.day.date, t: feed.sec, sym: p.sym, side: p.net > 0 ? 'SELL' : 'BUY', qty: Math.abs(p.net), type: 'MARKET', product: 'MIS', price: null, trigger: null, status: 'OPEN', tag: 'auto square-off', reason: 'Squared off by the broker at 15:25 (₹50 + GST charged).' };
+      A.day.orders.unshift(o);
+      this.fill(o, this.marketPrice(o, I), 'autosq'); n++;
+    }
+    if (n) { A.day.autoSq += n; coach(`Auto square-off closed ${n} intraday position${n > 1 ? 's' : ''}. That cost ₹${f2(n * RATE.autoSq * (1 + RATE.gst))} extra. Close MIS trades yourself before 15:25.`, 'bad'); }
+  },
+};
+
+/* ======================================================================
+   Missions and experience
+   ====================================================================== */
+const RANKS = [[0, 'Rookie'], [200, 'Tape Reader'], [500, 'Order Pro'], [1000, 'Margin Aware'], [1800, 'Risk Manager'], [3000, 'Quant Apprentice']];
+const LEVELS = [
+  { n: 'Read the tape', xp: 50, m: [
+    { id: 'select', t: 'Open a chart', how: 'Tap any stock in the watchlist. The chart, market depth and day stats switch to it.', c: "Each row shows the last traded price (LTP) and the change since yesterday's close. Indices such as NIFTY 50 are benchmarks: you can watch them, but you can't buy them directly." },
+    { id: 'spread', t: 'Find the spread', how: 'Read the market depth under the chart, then answer the question below.', c: 'Market depth lists the five best bids (buyers) and offers (sellers). The gap between the best bid and the best offer is the spread. You buy at the offer and sell at the bid, so every round trip starts a spread behind.', quiz: true },
+    { id: 'first_buy', t: 'Buy your first share', how: 'Start the trading day, open a stock, press Buy, choose Market and place the order.', c: 'A market order fills immediately against the best offers in the book. You get speed, not a guaranteed price: a large order walks up the book and pays more.' },
+    { id: 'first_exit', t: 'Square off', how: 'Close the position with Exit in the Positions tab, or place an opposite order for the same quantity.', c: 'Every executed order costs money: brokerage, STT, exchange transaction charges, the SEBI fee, stamp duty and GST. The Funds tab shows exactly what your round trip cost.' },
+  ] },
+  { n: 'Order types', xp: 75, m: [
+    { id: 'limit', t: 'Get filled with a limit order', how: 'Place a LIMIT buy a little below the best offer (or a sell above the best bid) and wait for the market to come to you.', c: 'A limit order sets the worst price you will accept, and it may never fill. When the price only touches your limit you may still be waiting in the queue behind earlier orders at that price.' },
+    { id: 'modify', t: 'Modify a pending order', how: 'In the Orders tab, press Modify on an open order and change its price or quantity.', c: 'Pending orders block margin until they fill or are cancelled. Changing the price sends your order to the back of the queue at the new price.' },
+    { id: 'stop', t: 'Protect a position', how: 'While you hold a position, place an SL-M order on the opposite side with the trigger beyond your entry (below it for a long).', c: 'A stop-loss sleeps until the last traded price crosses its trigger. Then it becomes a market order (SL-M) or a limit order (SL). Decide where the trade is wrong before you enter it.' },
+    { id: 'stop_hit', t: 'Let the stop do its job', how: 'Keep a stop in place until it triggers and closes the position.', c: 'Stops feel bad when they hit. They exist so one bad trade cannot erase ten good ones. An SL (limit) stop can be skipped in a fast fall; an SL-M will fill, but possibly at a worse price.' },
+  ] },
+  { n: 'Products and margin', xp: 100, m: [
+    { id: 'mis', t: 'Trade intraday with MIS', how: 'Place an order with the product set to Intraday (MIS).', c: 'MIS gives up to 5× leverage: only about 20% of the position value is blocked as margin. Profit and loss are on the full position, so a 2% move against you is 10% of the margin you put up.' },
+    { id: 'short', t: 'Short sell', how: 'With MIS selected, Sell first, then Buy back the same quantity to close.', c: 'Short selling profits from a fall. In the cash market you can only short intraday; open MIS positions are squared off automatically before the close.' },
+    { id: 'overnight', t: 'Hold overnight', how: 'Buy with the product set to Longterm (CNC) and end the day still holding it.', c: "CNC (cash and carry) needs the full amount and has no leverage. Shares reach your demat as holdings after T+1 settlement. Delivery has zero brokerage at Zerodha, but STT is 0.1% on both the buy and the sell." },
+    { id: 'bell', t: 'Beat the bell', how: 'Take at least one MIS trade and close every MIS position yourself before 15:25.', c: 'At 15:25 the broker squares off open MIS positions and charges ₹50 + GST per order. Plan your exits before the bell.' },
+  ] },
+  { n: 'Risk', xp: 150, m: [
+    { id: 'risk1', t: 'Size a trade for 1% risk', how: 'In the order window, type a stop-loss price in the risk planner, press "Size for 1% risk", then place the order.', c: 'Position size = (capital × risk per trade) ÷ (entry − stop). Risking 1% a trade means a ten-trade losing streak costs about 10% of the account, not all of it.' },
+    { id: 'two_r', t: 'Bank a 2R winner', how: 'Close a trade whose profit is at least twice the risk you planned in the risk planner.', c: 'R is the amount you planned to lose on a trade. Measuring results in R makes trades of different sizes comparable. With 2R winners you can be right only 40% of the time and still make money.' },
+    { id: 'green', t: 'Green after charges', how: 'Finish a trading day with a net profit after all charges.', c: 'Gross profit is what the chart shows. Net profit is what reaches your bank. Many small trades can be profitable gross and losing net.' },
+    { id: 'smooth', t: 'A smooth day', how: 'Finish a day with at least three completed trades and an intraday drawdown under 1% of capital.', c: "Drawdown is the fall from the day's peak account value. Keeping it small keeps your decisions calm." },
+  ] },
+  { n: 'Discipline and data', xp: 200, m: [
+    { id: 'journal', t: 'Journal five trades', how: 'In the Journal tab, give five completed trades a setup tag.', c: 'Tagging setups (breakout, pullback, VWAP, reversal) shows which ideas actually make money. It is also the dataset you will feed to a backtest.' },
+    { id: 'vwap', t: 'Trade the VWAP reclaim', how: 'Buy as price moves back above VWAP after closing below it within the last five minutes (or short the reverse).', c: 'VWAP is the volume-weighted average price for the day, drawn as the gold line on the chart. Intraday traders and execution algorithms treat it as the day’s fair value.' },
+    { id: 'pf', t: 'Positive expectancy', how: 'Over your last ten completed trades, reach a profit factor of 1.2 or more, net of charges.', c: 'Profit factor = total won ÷ total lost. Above 1 the method makes money. Judge a method on many trades, never on one.' },
+    { id: 'export', t: 'Hand it to Python', how: 'Export your trade log as a CSV file from the Journal tab.', c: 'The companion Python project reads this file, and it runs the same order logic as an automated strategy. That is the bridge from clicking buttons to algorithmic trading.' },
+  ] },
+];
+const ALLM = LEVELS.flatMap((L, li) => L.m.map(m => ({ ...m, level: li, xp: L.xp })));
+function curLevel() { for (let i = 0; i < LEVELS.length; i++) if (LEVELS[i].m.some(m => !A.missions[m.id])) return i; return LEVELS.length - 1; }
+function curMission() { const L = LEVELS[curLevel()]; return L.m.find(m => !A.missions[m.id]) || null; }
+function rankOf(xp) { let i = 0; for (let k = 0; k < RANKS.length; k++) if (xp >= RANKS[k][0]) i = k; return i; }
+function award(id) {
+  if (A.missions[id]) return;
+  const m = ALLM.find(x => x.id === id); if (!m) return;
+  const r0 = rankOf(A.xp);
+  A.missions[id] = Date.now(); A.xp += m.xp;
+  coach(`Mission complete: ${m.t} (+${m.xp} XP)`, 'good');
+  const r1 = rankOf(A.xp);
+  if (r1 > r0) toast(`New rank: ${RANKS[r1][1]}`);
+  const L = LEVELS[m.level];
+  if (L.m.every(x => A.missions[x.id])) coach(`Level ${m.level + 1} cleared: ${L.n}.`, 'good');
+  quiz = null; markDirty(); renderCoach(); renderTop();
+}
+function addXP(n, why) { const r0 = rankOf(A.xp); A.xp += n; if (why) coach(`${why} (+${n} XP)`, 'good'); if (rankOf(A.xp) > r0) toast(`New rank: ${RANKS[rankOf(A.xp)][1]}`); markDirty(); }
+
+/* Events → missions and coaching */
+function emit(type, e) {
+  const o = e.order;
+  switch (type) {
+    case 'rejected': coach(`Rejected: ${o.side} ${o.qty} ${o.sym}. ${o.reason}`, 'bad'); toast('Order rejected: ' + o.reason); break;
+    case 'placed':
+      if (o.status === 'AMO') coach(`After-market order queued: ${o.side} ${o.qty} ${o.sym} (${o.type}). It goes to the exchange at the next open.`);
+      if ((o.type === 'SL' || o.type === 'SL-M') && Broker.reducingQty(o) > 0) {
+        award('stop');
+        const p = A.day.positions[posKey(o.sym, o.product)], t = p && p.tripId && A.trips.find(x => x.id === p.tripId);
+        if (t) { t.stopUsed = true; if (!t.risk) t.risk = Math.abs(t.entryVal / t.entryQty - o.trigger) * Math.abs(p.net); }
+      }
+      break;
+    case 'modified': award('modify'); coach(`Modified ${o.id}: ${o.side} ${o.qty} ${o.sym} ${o.type}${o.price ? ' @ ₹' + f2(o.price) : ''}${o.trigger ? ' trigger ₹' + f2(o.trigger) : ''}.`); break;
+    case 'cancelled': if (o.reason) coach(`Cancelled ${o.side} ${o.qty} ${o.sym}. ${o.reason}`); break;
+    case 'triggered': coach(`Stop triggered: ${o.side} ${o.qty} ${o.sym} at trigger ₹${f2(o.trigger)}.`); break;
+    case 'filled': {
+      coach(`Executed: ${o.side} ${o.qty} ${o.sym} @ ₹${f2(e.fill.price)} (${o.product}${o.tag ? ', ' + o.tag : ''}). Charges ₹${f2(e.fill.ch)}.`, o.side === 'BUY' ? 'buy' : 'sell');
+      if (o.type === 'MARKET' && o.side === 'BUY') award('first_buy');
+      if (o.type === 'LIMIT' && o.resting) award('limit');
+      if (o.product === 'MIS') award('mis');
+      if ((o.type === 'SL' || o.type === 'SL-M') && o.triggered && Math.abs(e.after) < Math.abs(e.before)) award('stop_hit');
+      if (o.stopPlan && Math.abs(e.after) > Math.abs(e.before)) {
+        const riskAmt = Math.abs(e.fill.price - o.stopPlan) * o.qty;
+        if (riskAmt <= A.capital * 0.01 + 1e-6) award('risk1');
+      }
+      flashFill(e.fill);
+      break;
+    }
+    case 'trip_open':
+      if (e.trip.vwapReclaim) award('vwap');
+      break;
+    case 'trip_closed': {
+      const t = e.trip;
+      award('first_exit');
+      if (t.side === 'SHORT' && t.product === 'MIS') award('short');
+      if (t.r != null && t.r >= 2) award('two_r');
+      if (t.stopUsed) addXP(10, `Trade closed with a stop in place`);
+      const closed = A.trips.filter(x => x.status === 'closed').slice(0, 10);
+      if (closed.length >= 10) { const w = closed.filter(x => x.net > 0).reduce((a, x) => a + x.net, 0), l = -closed.filter(x => x.net < 0).reduce((a, x) => a + x.net, 0); if (l === 0 ? w > 0 : w / l >= 1.2) award('pf'); }
+      coach(`Trade closed: ${t.side.toLowerCase()} ${t.sym} ${sg(t.net)} net${t.r != null ? ` (${t.r.toFixed(1)}R)` : ''}.`, t.net >= 0 ? 'good' : 'bad');
+      break;
+    }
+  }
+  renderSoon();
+}
+
+/* ======================================================================
+   Session control
+   ====================================================================== */
+function startDay() {
+  if (!feed || feed.mode === 'sim' && feed.started && feed.sec >= T_CLOSE) feed = new SimFeed(A.nextDate, A.lastCloses, feed);
+  if (feed.mode === 'replay' && feed.sec >= T_CLOSE) { toast('This replay has finished. Pick another day under market data.'); return false; }
+  if (feed.mode === 'live' && (feed.marketOpen === false || feed.sec >= T_CLOSE || feed.sec < T_PRE)) { toast('The market is closed. Live paper trading runs 09:00–15:30 IST on trading days.'); return false; }
+  const D = A.day && A.day.date === feed.date ? A.day : null;
+  if (!D) {
+    const keepAmo = A.day ? A.day.orders.filter(o => o.status === 'AMO') : [];
+    A.day = newDay(feed.mode, feed.date);
+    A.day.orders = keepAmo;
+  }
+  A.day.mode = feed.mode;
+  if (!feed.started) feed.start();
+  A.day.startWorth = A.day.startWorth ?? Broker.worth(); A.day.peak = A.day.peak ?? A.day.startWorth;
+  running = true;
+  coach(feed.mode === 'live' ? 'Joined the live market. Orders are paper only; nothing reaches the exchange.' : `Trading day ${dFmt(feed.date)} started. Pre-open runs 09:00–09:15; orders placed now match at the open.`);
+  if (feed.mode === 'sim' && (curMission()?.id === 'first_buy')) coach('Tip: wait for 09:15, open a stock and press Buy.', 'coach');
+  markDirty(); render();
+  return true;
+}
+function carryToHoldings(p, date) {
+  const h = A.holdings[p.sym];
+  if (!h) { A.holdings[p.sym] = { qty: p.net, avg: p.avg, since: date, tripId: p.tripId }; return; }
+  h.avg = (h.avg * h.qty + p.avg * p.net) / (h.qty + p.net); h.qty += p.net;
+  // One open journal entry per holding: fold today's entry into the existing one.
+  const keep = A.trips.find(t => t.id === h.tripId), add = A.trips.find(t => t.id === p.tripId);
+  if (keep && add && keep !== add) { keep.entryVal += add.entryVal; keep.entryQty += add.entryQty; keep.maxQty += add.maxQty; keep.charges += add.charges; A.trips.splice(A.trips.indexOf(add), 1); }
+  else if (!keep) h.tripId = p.tripId;
+}
+function endDay() {
+  running = false;
+  const D = A.day; if (!D) return;
+  for (const o of Broker.pendingOrders()) Broker.cancel(o, 'Expired at the close (DAY validity).');
+  // Carry CNC positions to holdings
+  const end = Broker.worth(); // value before positions move to holdings (counting both would double it)
+  let carried = 0;
+  for (const p of Broker.positions()) if (p.product === 'CNC' && p.net > 0) { carryToHoldings(p, D.date); p.net = 0; carried++; }
+  for (const s in feed.inst) A.lastCloses[s] = feed.inst[s].ltp;
+  const closedToday = A.trips.filter(t => t.status === 'closed' && t.closeDate === D.date);
+  const rep = { date: D.date, mode: D.mode, start: D.startWorth, end, net: end - D.startWorth, charges: D.ch.total, gross: end - D.startWorth + D.ch.total, trips: closedToday.length, wins: closedToday.filter(t => t.net > 0).length, maxDD: D.maxDD, autoSq: D.autoSq, carried, ch: D.ch, xp: 0 };
+  // Missions resolved at the close
+  if (carried) award('overnight');
+  if (D.misTraded && !D.autoSq) award('bell');
+  if (rep.net > 0 && rep.trips >= 1) award('green');
+  if (rep.trips >= 3 && rep.maxDD < 0.01 * A.capital) award('smooth');
+  addXP(40, 'Trading day completed');
+  if (rep.net > 0 && rep.trips) addXP(30, 'Green day');
+  rep.xp = A.xp - D.xp0;
+  A.history.unshift({ ...rep, ch: undefined }); if (A.history.length > 120) A.history.length = 120;
+  if (D.mode === 'sim') A.nextDate = nextWeekday(D.date);
+  A.day = null;
+  try { localStorage.removeItem('dojo.feed'); } catch (e) {}
+  if (feed.mode === 'sim') feed = new SimFeed(A.nextDate, A.lastCloses, feed); // next day waits in pre-open; today becomes "yesterday" on the chart
+  markDirty(true);
+  showReport(rep);
+  render();
+}
+function onTimeEvents(prevSec, sec) {
+  if (!A.day) return;
+  const crossed = t => prevSec < t && sec >= t;
+  if (crossed(T_IEP) && feed.mode === 'sim') coach('Pre-open order matching. The opening price is being discovered from the orders placed since 09:00.');
+  if (crossed(T_OPEN)) { Broker.atOpen(); coach('Market open. Continuous trading until 15:30.'); }
+  if (crossed(T_WARN) && Broker.positions().some(p => p.product === 'MIS' && p.net)) coach('10 minutes to the 15:25 auto square-off. Close your intraday positions yourself to avoid the ₹59 charge per order.', 'coach');
+  if (crossed(T_SQ)) Broker.squareOffMIS();
+  if (crossed(T_CLOSE) || (sec >= T_CLOSE && running)) endDay();
+}
+function trackWorth() {
+  const D = A.day; if (!D || D.startWorth == null) return;
+  const w = Broker.worth();
+  if (w > D.peak) D.peak = w;
+  D.maxDD = Math.max(D.maxDD, D.peak - w);
+}
+function noStopCheck() {
+  if (!A.day || !feed) return;
+  for (const p of Broker.positions()) {
+    if (!p.net || !p.tripId) continue;
+    const t = A.trips.find(x => x.id === p.tripId); if (!t || t.stopUsed || A.day.noStopWarned[t.id]) continue;
+    if (feed.sec - t.openSec > 120) { A.day.noStopWarned[t.id] = 1; coach(`No stop-loss on your ${p.sym} ${p.net > 0 ? 'long' : 'short'}. Where would this trade be wrong?`, 'coach'); }
+  }
+}
+
+let acc = 0, lastFrame = performance.now();
+function loop(now) {
+  const dt = Math.min(1000, now - lastFrame); lastFrame = now;
+  if (running && feed && feed.mode !== 'live') {
+    acc += dt / 1000 * speed;
+    let n = Math.floor(acc); acc -= n;
+    n = Math.min(n, 600);
+    if (n) advance(n);
+  }
+  requestAnimationFrame(loop);
+}
+function advance(n) {
+  for (let i = 0; i < n && running; i++) {
+    const prev = feed.sec;
+    feed.step();
+    if (feed.sec >= T_OPEN && feed.sec > prev && A.day) {
+      if (prev !== T_OPEN - 1) Broker.onStep();
+      onTimeEvents(prev, feed.sec);
+      if (feed.sec % 5 === 0) trackWorth();
+    } else onTimeEvents(prev, feed.sec);
+    if (feed.events) for (const ev of feed.events.splice(0)) if (ev.kind === 'news') coach('Simulated news: ' + ev.text, 'news');
+  }
+  noStopCheck(); renderSoon();
+}
+
+/* Live mode polling */
+let liveTimer = null;
+async function pollLive() {
+  try {
+    const last = feed && feed.mode === 'live' ? (feed.sec - 120) : 0;
+    const r = await fetch('/api/live/snapshot?since=' + last, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const snap = await r.json();
+    if (snap.error) throw new Error(snap.error);
+    const prev = feed.sec;
+    feed.apply(snap);
+    if (A.day && running) { if (feed.sec >= T_OPEN) Broker.onStep(); onTimeEvents(prev, feed.sec); trackWorth(); noStopCheck(); }
+    renderSoon();
+  } catch (e) { $('#feedNote').textContent = 'Live feed: ' + e.message; }
+}
+
+/* ======================================================================
+   Persistence: viewer's own document when the page runs on claude.ai,
+   browser storage otherwise (for example on the local companion app).
+   ====================================================================== */
+const Store = {
+  db: null, uid: null, dirty: false, writing: false, last: 0,
+  loadLocal() { try { const s = localStorage.getItem('dojo.account'); return s ? JSON.parse(s) : null; } catch (e) { return null; } },
+  saveLocal(acc) { try { localStorage.setItem('dojo.account', JSON.stringify(acc)); } catch (e) {} },
+  async connect() {
+    if (!window.claude || typeof window.claude.use !== 'function') return null;
+    try {
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (!db || !user) return null;
+      const uid = await user.id(); if (!uid) return null;
+      this.db = db; this.uid = uid;
+      const snap = await db.doc('data/users/' + uid + '/account').get();
+      return snap.exists ? snap.data() : null;
+    } catch (e) { return null; }
+  },
+  async flush(force) {
+    if (!this.dirty || this.writing) return;
+    if (!force && Date.now() - this.last < 8000) return;
+    this.dirty = false; this.last = Date.now();
+    A.savedAt = Date.now();
+    const copy = JSON.parse(JSON.stringify(A));
+    this.saveLocal(copy);
+    if (feed && feed.mode === 'sim' && A.day) { try { localStorage.setItem('dojo.feed', JSON.stringify(feed.snapshot())); } catch (e) {} }
+    if (this.db && this.uid) {
+      this.writing = true;
+      try { await this.db.doc('data/users/' + this.uid + '/account').set(trimForDb(copy)); }
+      catch (e) { if (e && e.code === 'quota_exceeded') toast('Your progress is too large to sync; it is still saved in this browser.'); }
+      finally { this.writing = false; }
+    }
+  },
+};
+function trimForDb(acc) { if (acc.day) { acc.day.fills = acc.day.fills.slice(-200); acc.day.orders = acc.day.orders.slice(0, 200); } acc.trips = acc.trips.slice(0, 300); return acc; }
+function markDirty(force) { Store.dirty = true; if (force) Store.flush(true); }
+setInterval(() => Store.flush(false), 2000);
+window.addEventListener('pagehide', () => { if (Store.dirty) { Store.dirty = true; A.savedAt = Date.now(); Store.saveLocal(JSON.parse(JSON.stringify(A))); } });
+
+/* Settle a day that can't be resumed (for example opened on another device). */
+function settleStale() {
+  const D = A.day; if (!D) return;
+  const px = s => D.lastPrices[s] ?? A.lastCloses[s] ?? BYSYM[s]?.prev;
+  for (const o of D.orders) if (['OPEN', 'TRIGGER PENDING', 'AMO'].includes(o.status)) { o.status = 'CANCELLED'; o.reason = 'Expired: the trading day ended while you were away.'; }
+  for (const p of Object.values(D.positions)) {
+    if (!p.net) continue;
+    if (p.product === 'MIS') {
+      const pr = px(p.sym), q = Math.abs(p.net), real = (pr - p.avg) * p.net;
+      const ch = charges(p.net > 0 ? 'SELL' : 'BUY', pr * q, false);
+      A.cash += real - ch.total;
+      const t = A.trips.find(x => x.id === p.tripId); if (t) { t.exitVal += pr * q; t.exitQty += q; t.gross += real; t.charges += ch.total; t.status = 'closed'; t.closeDate = D.date; t.net = t.gross - t.charges; t.r = t.risk ? t.gross / t.risk : null; }
+    } else if (p.net > 0) carryToHoldings(p, D.date);
+  }
+  for (const s in D.lastPrices) A.lastCloses[s] = D.lastPrices[s];
+  if (D.mode === 'sim') A.nextDate = nextWeekday(D.date);
+  A.day = null;
+  coach(`The ${dFmt(D.date)} session ended while you were away. Intraday positions were settled at their last prices.`);
+}
+setInterval(() => { if (A.day && feed) { for (const s in feed.inst) A.day.lastPrices[s] = feed.inst[s].ltp; } }, 5000);
+setInterval(() => { if (running && A.day) markDirty(); }, 30000); // keep a resumable copy of the session
+
+/* ======================================================================
+   Chart (canvas): candles, volume, VWAP, fills, crosshair
+   ====================================================================== */
+const Chart = {
+  cv: null, ctx: null, w: 0, h: 0, barW: 8, offset: 0, hover: null, drag: null, colors: {},
+  init(cv) {
+    this.cv = cv; this.ctx = cv.getContext('2d');
+    new ResizeObserver(() => this.resize()).observe(cv.parentElement);
+    cv.addEventListener('mousemove', e => { const r = cv.getBoundingClientRect(); this.hover = { x: e.clientX - r.left, y: e.clientY - r.top }; if (this.drag) { const dx = e.clientX - this.drag.x; this.offset = Math.max(0, this.drag.o + Math.round(dx / this.barW)); } this.draw(); });
+    cv.addEventListener('mouseleave', () => { this.hover = null; this.drag = null; this.draw(); });
+    cv.addEventListener('mousedown', e => { this.drag = { x: e.clientX, o: this.offset }; });
+    window.addEventListener('mouseup', () => { this.drag = null; });
+    cv.addEventListener('wheel', e => { e.preventDefault(); this.barW = clamp(this.barW * (e.deltaY > 0 ? 0.88 : 1.14), 3, 26); this.draw(); }, { passive: false });
+    cv.addEventListener('dblclick', () => { this.offset = 0; this.barW = 8; this.draw(); });
+    this.readColors();
+  },
+  readColors() { const cs = getComputedStyle(document.documentElement); for (const k of ['bg', 'panel', 'line', 'fg', 'muted', 'faint', 'up', 'down', 'accent', 'buy', 'sell', 'panel-2']) this.colors[k] = cs.getPropertyValue('--' + k).trim(); this.draw(); },
+  resize() { const r = this.cv.parentElement.getBoundingClientRect(), d = window.devicePixelRatio || 1; this.w = r.width; this.h = r.height; this.cv.width = Math.max(1, Math.round(r.width * d)); this.cv.height = Math.max(1, Math.round(r.height * d)); this.ctx.setTransform(d, 0, 0, d, 0, 0); this.draw(); },
+  data() {
+    const I = feed && feed.inst[selected]; if (!I) return { c: [], I: null };
+    let c = (I.prevCandles || []).concat(I.candles || []);
+    if (tf > 1) {
+      const out = []; const span = tf * 60;
+      for (const k of c) { const b = Math.floor(k.time / span) * span, last = out[out.length - 1]; if (last && last.time === b) { last.high = Math.max(last.high, k.high); last.low = Math.min(last.low, k.low); last.close = k.close; last.volume += k.volume; last.vw = k.vw; } else out.push({ ...k, time: b }); }
+      c = out;
+    }
+    return { c, I };
+  },
+  draw() {
+    const g = this.ctx, W = this.w, H = this.h, C = this.colors; if (!g || !W) return;
+    g.clearRect(0, 0, W, H);
+    const { c, I } = this.data();
+    const axW = 66, axH = 20, top = 22, plotW = W - axW, plotH = H - axH - top, volH = plotH * 0.18;
+    g.font = '500 10.5px ' + getComputedStyle(document.body).getPropertyValue('--f-num');
+    if (!c.length || !I) { g.fillStyle = C.muted; g.textAlign = 'center'; g.fillText('The chart fills in as the market trades.', W / 2, H / 2); return; }
+    const n = Math.max(5, Math.floor(plotW / this.barW));
+    this.offset = Math.min(this.offset, Math.max(0, c.length - 5));
+    const end = c.length - this.offset, start = Math.max(0, end - n), vis = c.slice(start, end);
+    let hi = -Infinity, lo = Infinity, vmax = 1;
+    for (const k of vis) { hi = Math.max(hi, k.high); lo = Math.min(lo, k.low); vmax = Math.max(vmax, k.volume || 0); if (k.vw) { hi = Math.max(hi, k.vw); lo = Math.min(lo, k.vw); } }
+    if (this.offset === 0) { hi = Math.max(hi, I.ltp); lo = Math.min(lo, I.ltp); }
+    const pad = (hi - lo) * 0.08 || hi * 0.002; hi += pad; lo -= pad;
+    const priceH = plotH - volH - 6;
+    const y = p => top + (hi - p) / (hi - lo) * priceH;
+    const x0 = plotW - vis.length * this.barW;
+    const xi = i => x0 + i * this.barW + this.barW / 2;
+    // grid + price labels
+    const raw = (hi - lo) / 5, mag = Math.pow(10, Math.floor(Math.log10(raw))), step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || raw;
+    g.strokeStyle = C.line; g.lineWidth = 1; g.fillStyle = C.muted; g.textAlign = 'left'; g.textBaseline = 'middle';
+    for (let p = Math.ceil(lo / step) * step; p <= hi; p += step) { const yy = Math.round(y(p)) + 0.5; g.beginPath(); g.moveTo(0, yy); g.lineTo(plotW, yy); g.stroke(); g.fillText(f2(p), plotW + 8, yy); }
+    // time labels
+    g.textAlign = 'center'; g.textBaseline = 'top';
+    const every = [5, 10, 15, 30, 60, 120, 240].find(m => m / tf * this.barW >= 64) || 240;
+    let lastDay = null, lastLbl = -1e9;
+    vis.forEach((k, i) => {
+      const d = new Date(k.time * 1000), mins = d.getUTCHours() * 60 + d.getUTCMinutes(), day = d.getUTCDate();
+      if (lastDay !== null && day !== lastDay) { g.strokeStyle = C.line; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(Math.round(xi(i) - this.barW / 2) + 0.5, top); g.lineTo(Math.round(xi(i) - this.barW / 2) + 0.5, top + plotH); g.stroke(); g.setLineDash([]); g.fillStyle = C.faint; g.fillText(`${day} ${MON[d.getUTCMonth()]}`, xi(i), H - axH + 4); lastLbl = xi(i); }
+      else if (mins % every === 0 && xi(i) - lastLbl > 48) { g.fillStyle = C.muted; g.fillText(`${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`, xi(i), H - axH + 4); lastLbl = xi(i); }
+      lastDay = day;
+    });
+    // volume
+    const vb = top + plotH;
+    vis.forEach((k, i) => { const vh = (k.volume || 0) / vmax * volH; g.fillStyle = (k.close >= k.open ? C.up : C.down); g.globalAlpha = 0.28; g.fillRect(xi(i) - this.barW * 0.35, vb - vh, Math.max(1, this.barW * 0.7), vh); g.globalAlpha = 1; });
+    // candles
+    const bw = Math.max(1, this.barW * 0.66);
+    vis.forEach((k, i) => {
+      const up = k.close >= k.open; g.strokeStyle = g.fillStyle = up ? C.up : C.down;
+      const xx = Math.round(xi(i)) + 0.5;
+      g.beginPath(); g.moveTo(xx, y(k.high)); g.lineTo(xx, y(k.low)); g.stroke();
+      const yo = y(k.open), yc = y(k.close); g.fillRect(xi(i) - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yc - yo)));
+    });
+    // VWAP (today only)
+    const today = feed ? chartTime(feed.date, 0) : 0;
+    g.strokeStyle = C.accent; g.lineWidth = 1.4; g.beginPath(); let started = false;
+    vis.forEach((k, i) => { if (k.time < today || !k.vw) { started = false; return; } const yy = y(k.vw); if (!started) { g.moveTo(xi(i), yy); started = true; } else g.lineTo(xi(i), yy); });
+    g.stroke(); g.lineWidth = 1;
+    // fills
+    if (A.day) {
+      const span = tf * 60;
+      for (const f of A.day.fills.filter(f => f.sym === selected)) {
+        const b = Math.floor(f.time / span) * span, i = vis.findIndex(k => k.time === b); if (i < 0) continue;
+        const k = vis[i], buy = f.side === 'BUY', xx = xi(i), yy = buy ? y(k.low) + 9 : y(k.high) - 9;
+        g.fillStyle = buy ? C.buy : C.sell; g.beginPath();
+        if (buy) { g.moveTo(xx, yy - 5); g.lineTo(xx - 5, yy + 4); g.lineTo(xx + 5, yy + 4); } else { g.moveTo(xx, yy + 5); g.lineTo(xx - 5, yy - 4); g.lineTo(xx + 5, yy - 4); }
+        g.fill();
+      }
+      // open-order lines
+      for (const o of Broker.pendingOrders().filter(o => o.sym === selected)) {
+        const p = o.status === 'TRIGGER PENDING' ? o.trigger : o.price; if (!p || p < lo || p > hi) continue;
+        const yy = Math.round(y(p)) + 0.5; g.strokeStyle = o.side === 'BUY' ? C.buy : C.sell; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(0, yy); g.lineTo(plotW, yy); g.stroke(); g.setLineDash([]);
+        g.fillStyle = o.side === 'BUY' ? C.buy : C.sell; g.textAlign = 'left'; g.textBaseline = 'bottom'; g.fillText(`${o.type} ${o.side} ${o.qty}`, 6, yy - 2);
+      }
+    }
+    // last price
+    if (this.offset === 0) {
+      const yy = Math.round(y(I.ltp)) + 0.5, col = I.ltp >= I.prev ? C.up : C.down;
+      g.strokeStyle = col; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(0, yy); g.lineTo(plotW, yy); g.stroke(); g.setLineDash([]);
+      g.fillStyle = col; g.fillRect(plotW + 1, yy - 9, axW - 2, 18); g.fillStyle = C.panel; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(f2(I.ltp), plotW + 7, yy);
+    }
+    // crosshair + readout
+    let rk = vis[vis.length - 1];
+    if (this.hover && this.hover.x < plotW && this.hover.y > top && this.hover.y < top + plotH) {
+      const i = clamp(Math.floor((this.hover.x - x0) / this.barW), 0, vis.length - 1); rk = vis[i];
+      g.strokeStyle = C.faint; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(Math.round(xi(i)) + 0.5, top); g.lineTo(Math.round(xi(i)) + 0.5, top + plotH); g.moveTo(0, Math.round(this.hover.y) + 0.5); g.lineTo(plotW, Math.round(this.hover.y) + 0.5); g.stroke(); g.setLineDash([]);
+      if (this.hover.y < top + priceH) { const pv = hi - (this.hover.y - top) / priceH * (hi - lo); g.fillStyle = C.fg; g.fillRect(plotW + 1, this.hover.y - 9, axW - 2, 18); g.fillStyle = C.panel; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(f2(pv), plotW + 7, this.hover.y); }
+    }
+    if (rk) {
+      const d = new Date(rk.time * 1000);
+      g.textAlign = 'left'; g.textBaseline = 'top'; g.fillStyle = C.muted;
+      const txt = `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}   O ${f2(rk.open)}  H ${f2(rk.high)}  L ${f2(rk.low)}  C ${f2(rk.close)}  Vol ${vol0(rk.volume || 0)}${rk.vw && rk.time >= today ? '  VWAP ' + f2(rk.vw) : ''}`;
+      g.fillText(txt, 8, 5);
+    }
+  },
+};
+
+/* ======================================================================
+   Rendering
+   ====================================================================== */
+let renderQueued = false, lastFull = 0;
+function renderSoon() { if (!renderQueued) { renderQueued = true; setTimeout(() => { renderQueued = false; render(); }, 120); } }
+function render() { renderTop(); renderWatch(); renderSym(); Chart.draw(); renderTabs(); renderTab(); renderCoach(); }
+
+function renderTop() {
+  const sec = feed ? feed.sec : T_PRE;
+  const ph = !feed || !A.day && !running ? 'closed' : phaseOf(sec);
+  $('#simClock').textContent = hms(sec);
+  $('#simDate').textContent = feed ? dFmt(feed.date) : dFmt(A.nextDate);
+  const pe = $('#phase'); pe.dataset.p = ph; pe.textContent = PHASE_LABEL[ph];
+  for (const [i, s] of [[0, 'NIFTY 50'], [1, 'NIFTY BANK']]) {
+    const I = feed && feed.inst[s], el = $('#idx' + i);
+    if (!I) continue; const ch = I.ltp - I.prev;
+    $('.v', el).textContent = f2(I.ltp); const c = $('.chg', el); c.textContent = `${sg(ch)} (${pc(ch / I.prev * 100)})`; c.className = 'chg ' + cls(ch);
+  }
+  const pb = $('#playBtn');
+  if (feed && feed.mode === 'live') { pb.textContent = A.day ? 'Live session on' : 'Join live session'; pb.disabled = !!A.day; }
+  else if (!A.day || !feed || !feed.started) { pb.textContent = 'Start trading day'; pb.disabled = false; }
+  else { pb.textContent = running ? 'Pause' : 'Resume'; pb.disabled = false; }
+  const seg = $('#speedSeg');
+  seg.hidden = !!(feed && feed.mode === 'live');
+  $$('button', seg).forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === speed)));
+  const ri = rankOf(A.xp), next = RANKS[ri + 1];
+  $('#rankLv').textContent = ri + 1; $('#rankName').textContent = RANKS[ri][1];
+  $('#xpTxt').textContent = next ? `${A.xp} / ${next[0]} XP` : `${A.xp} XP`;
+  $('#xpFill').style.width = (next ? (A.xp - RANKS[ri][0]) / (next[0] - RANKS[ri][0]) * 100 : 100) + '%';
+  $('#wlFoot').textContent = !feed || feed.mode === 'sim' ? 'Practice prices are simulated, starting near recent NSE levels. Press B or S to trade.' : feed.mode === 'replay' ? 'Real 1-minute prices from a past session. Press B or S to trade.' : 'Live NSE prices via the companion app. Paper orders only.';
+  const mb = $('#modeBtn'); mb.dataset.mode = feed ? feed.mode : 'sim';
+  $('#modeLbl').textContent = !feed || feed.mode === 'sim' ? 'Practice market' : feed.mode === 'replay' ? `Replay · ${dFmt(feed.date)}` : `Live · ${feed.source === 'kite' ? 'Kite' : 'Yahoo'}`;
+}
+
+let wlBuilt = false; const wlPrev = {};
+function renderWatch() {
+  const ul = $('#wl'), q = $('#wlSearch').value.trim().toLowerCase();
+  if (!wlBuilt) {
+    ul.innerHTML = UNIVERSE.map(u => `<li role="option" data-sym="${esc(u.sym)}" tabindex="0" aria-selected="false"><div><div class="s ${u.kind === 'index' ? 'idx-s' : ''}">${esc(u.sym)}</div><div class="n">${esc(u.name)}</div></div><div><div class="p num">—</div><div class="c">—</div></div>${u.kind === 'index' ? '' : '<div class="acts"><button class="b" data-act="BUY" aria-label="Buy ' + esc(u.sym) + '">B</button><button class="x" data-act="SELL" aria-label="Sell ' + esc(u.sym) + '">S</button></div>'}</li>`).join('');
+    wlBuilt = true;
+  }
+  for (const li of ul.children) {
+    const s = li.dataset.sym, u = BYSYM[s];
+    li.hidden = !!q && !(s.toLowerCase().includes(q) || u.name.toLowerCase().includes(q) || u.sector.toLowerCase().includes(q));
+    li.setAttribute('aria-selected', String(s === selected));
+    const I = feed && feed.inst[s]; if (!I) continue;
+    const pe = $('.p', li), ce = $('.c', li), ch = I.ltp - I.prev;
+    const txt = f2(I.ltp);
+    if (pe.textContent !== txt) {
+      const dir = wlPrev[s] != null ? Math.sign(I.ltp - wlPrev[s]) : 0;
+      pe.textContent = txt; pe.classList.remove('flash-up', 'flash-down');
+      if (dir) { void pe.offsetWidth; pe.classList.add(dir > 0 ? 'flash-up' : 'flash-down'); clearTimeout(pe._t); pe._t = setTimeout(() => pe.classList.remove('flash-up', 'flash-down'), 450); }
+      wlPrev[s] = I.ltp;
+    }
+    ce.textContent = pc(ch / I.prev * 100); ce.className = 'c ' + cls(ch);
+  }
+}
+
+function renderSym() {
+  const I = feed && feed.inst[selected], u = BYSYM[selected];
+  $('#symName').textContent = selected;
+  $('#symMeta').textContent = `${u.name} · ${u.sector} · NSE${I && u.kind !== 'index' ? ' · tick ₹' + I.tick.toFixed(2) : ''}`;
+  if (!I) return;
+  const ch = I.ltp - I.prev;
+  $('#symLtp').textContent = f2(I.ltp); $('#symLtp').className = 'ltp num ' + cls(ch);
+  const ce = $('#symChg'); ce.textContent = `${sg(ch)} (${pc(ch / I.prev * 100)})`; ce.className = 'ltpchg ' + cls(ch);
+  $('#ohlc').innerHTML = `<span>O<b>${f2(I.open)}</b></span><span>H<b>${f2(I.high)}</b></span><span>L<b>${f2(I.low)}</b></span><span>Prev<b>${f2(I.prev)}</b></span>`;
+  $('#hdBuy').disabled = $('#hdSell').disabled = u.kind === 'index';
+  const d = depthOf(I, feed.sec);
+  if (!d) {
+    $('#bidT').innerHTML = `<tr><th>Bid</th></tr><tr><td class="muted" style="text-align:left;white-space:normal">Indices have no order book. Trade NIFTYBEES to trade the Nifty.</td></tr>`;
+    $('#askT').innerHTML = '';
+  } else {
+    const mx = Math.max(...d.bids.map(x => x[1]), ...d.asks.map(x => x[1]));
+    const rows = (lv, cl, col) => lv.map(([p, q, o]) => `<tr><td class="${cl}">${f2(p)}</td><td>${o}</td><td>${f0(q)}<span class="bar" style="width:${(q / mx * 100).toFixed(0)}%;background:var(${col})"></span></td></tr>`).join('');
+    const tb = d.bids.reduce((a, x) => a + x[1], 0), ta = d.asks.reduce((a, x) => a + x[1], 0);
+    $('#bidT').innerHTML = `<tr><th>Bid</th><th>Orders</th><th>Qty</th></tr>${rows(d.bids, 'bidp', '--buy')}<tr class="tot"><td>Total</td><td></td><td>${f0(tb)}</td></tr>`;
+    $('#askT').innerHTML = `<tr><th>Offer</th><th>Orders</th><th>Qty</th></tr>${rows(d.asks, 'askp', '--sell')}<tr class="tot"><td>Total</td><td></td><td>${f0(ta)}</td></tr>`;
+  }
+  const st = [['Volume', u.kind === 'index' ? '—' : vol0(I.volume)], ['Avg price', I.vwap ? f2(I.vwap) : '—'], ['Spread', I.ask != null ? '₹' + f2(I.ask - I.bid) : '—'], ['LTQ', u.kind === 'index' ? '—' : f0(I.ltq)], ['Band low', f2(I.lower)], ['Band high', f2(I.upper)], ['Prev high', f2(I.prevHigh)], ['Prev low', f2(I.prevLow)]];
+  $('#stats').innerHTML = st.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('');
+}
+
+const TABS = [['positions', 'Positions'], ['orders', 'Orders'], ['holdings', 'Holdings'], ['funds', 'Funds'], ['journal', 'Journal'], ['days', 'Trading days']];
+let tabsHtml = '';
+function renderTabs() {
+  const counts = { positions: Broker.positions().filter(p => p.net).length, orders: Broker.pendingOrders().length, holdings: Object.keys(A.holdings).length, journal: A.trips.filter(t => t.status === 'closed').length, days: A.history.length };
+  const h = TABS.map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}${counts[k] ? `<span class="ct">${counts[k]}</span>` : ''}</button>`).join('');
+  if (h !== tabsHtml) { tabsHtml = h; $('#tabs').innerHTML = h; }
+}
+// Don't swap table rows out from under the pointer or an input: clicks would be lost.
+let journalHash = '', bodyHtml = '', pointerIn = false, resetAsk = false;
+function renderTab() {
+  const B = $('#tabBody');
+  if (pointerIn || (B.contains(document.activeElement) && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))) return;
+  if (tab === 'journal') { const h = A.trips.map(t => t.id + t.status + t.setup).join('|'); if (h === journalHash && B.dataset.tab === 'journal') return; journalHash = h; }
+  B.dataset.tab = tab;
+  const html = tab === 'positions' ? viewPositions() : tab === 'orders' ? viewOrders() : tab === 'holdings' ? viewHoldings() : tab === 'funds' ? viewFunds() : tab === 'journal' ? viewJournal() : viewDays();
+  if (html !== bodyHtml) { bodyHtml = html; B.innerHTML = html; }
+}
+function viewPositions() {
+  const ps = Broker.positions();
+  if (!ps.length) return `<div class="empty"><b>No positions yet</b>${A.day ? 'Press Buy or Sell on a stock to open one.' : 'Start the trading day, then press Buy on a stock.'}</div>`;
+  let tot = 0;
+  const rows = ps.map(p => {
+    const ltp = Broker.ltp(p.sym), pnl = (p.sellVal - p.buyVal) + p.net * ltp; tot += pnl;
+    const chg = p.net ? (ltp - p.avg) / p.avg * 100 * Math.sign(p.net) : 0;
+    return `<tr><td class="l"><span class="tag ${p.product === 'MIS' ? 'wait' : ''}">${p.product}</span></td><td class="l"><b>${esc(p.sym)}</b></td><td class="n ${p.net > 0 ? 'up' : p.net < 0 ? 'down' : 'muted'}">${p.net}</td><td class="n">${p.net ? f2(p.avg) : '—'}</td><td class="n">${f2(ltp)}</td><td class="n ${cls(pnl)}">${sg(pnl)}</td><td class="n ${cls(chg)}">${p.net ? pc(chg) : '—'}</td><td>${p.net ? `<span class="rowacts"><button class="btn sm" data-exit="${esc(posKey(p.sym, p.product))}">Exit</button><button class="btn sm" data-sl="${esc(posKey(p.sym, p.product))}">Stop</button></span>` : '<span class="faint">Closed</span>'}</td></tr>`;
+  }).join('');
+  return `<table class="tbl"><thead><tr><th class="l">Product</th><th class="l">Instrument</th><th>Qty</th><th>Avg</th><th>LTP</th><th>P&amp;L</th><th>Chg</th><th></th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td class="l" colspan="5">Total (before charges ₹${f2(A.day ? A.day.ch.total : 0)})</td><td class="n ${cls(tot)}">${sg(tot)}</td><td colspan="2"></td></tr></tfoot></table>`;
+}
+function statusTag(o) { const m = { COMPLETE: 'ok', REJECTED: 'bad', CANCELLED: '', OPEN: 'wait', 'TRIGGER PENDING': 'wait', AMO: 'wait' }; return `<span class="tag ${m[o.status] ?? ''}">${o.status}</span>`; }
+function viewOrders() {
+  const os = A.day ? A.day.orders : [];
+  if (!os.length) return `<div class="empty"><b>No orders today</b>Orders you place appear here with their status. Rejections explain what to fix.</div>`;
+  const open = os.filter(o => ['OPEN', 'TRIGGER PENDING', 'AMO'].includes(o.status)), done = os.filter(o => !open.includes(o));
+  const row = (o, act) => `<tr><td class="l n">${hms(o.t)}</td><td class="l"><span class="tag ${o.side === 'BUY' ? 'buy' : 'sell'}">${o.side}</span></td><td class="l"><b>${esc(o.sym)}</b> <span class="faint">${o.product}</span>${o.tag ? ` <span class="faint">· ${esc(o.tag)}</span>` : ''}${o.reason && o.status !== 'COMPLETE' ? `<span class="reason" style="${o.status === 'REJECTED' ? '' : 'color:var(--muted)'}">${esc(o.reason)}</span>` : ''}</td><td class="l">${o.type}</td><td class="n">${o.qty}</td><td class="n">${o.price ? f2(o.price) : (o.avg ? f2(o.avg) : '—')}${o.trigger ? `<div class="faint">trg ${f2(o.trigger)}</div>` : ''}</td><td class="n">${o.avg ? f2(o.avg) : '—'}</td><td>${statusTag(o)}</td><td>${act ? `<span class="rowacts"><button class="btn sm" data-mod="${o.id}">Modify</button><button class="btn sm" data-can="${o.id}">Cancel</button></span>` : ''}</td></tr>`;
+  const head = `<thead><tr><th class="l">Time</th><th class="l">Side</th><th class="l">Instrument</th><th class="l">Type</th><th>Qty</th><th>Price</th><th>Avg</th><th>Status</th><th></th></tr></thead>`;
+  return `<table class="tbl">${head}<tbody>${open.map(o => row(o, true)).join('')}${done.map(o => row(o, false)).join('')}</tbody></table>`;
+}
+function viewHoldings() {
+  const hs = Object.entries(A.holdings);
+  if (!hs.length) return `<div class="empty"><b>No holdings</b>Buy with the product set to Longterm (CNC) and keep it past the close. It shows up here the next day.</div>`;
+  let inv = 0, cur = 0, day = 0;
+  const rows = hs.map(([s, h]) => { const I = feed && feed.inst[s], ltp = Broker.ltp(s), v = h.qty * ltp, pnl = (ltp - h.avg) * h.qty, dch = I ? (ltp - I.prev) * h.qty : 0; inv += h.qty * h.avg; cur += v; day += dch; return `<tr><td class="l"><b>${esc(s)}</b> <span class="faint">since ${dFmt(h.since)}</span></td><td class="n">${h.qty}</td><td class="n">${f2(h.avg)}</td><td class="n">${f2(ltp)}</td><td class="n">${f2(v)}</td><td class="n ${cls(pnl)}">${sg(pnl)}</td><td class="n ${cls(dch)}">${sg(dch)}</td><td><button class="btn sm" data-hsell="${esc(s)}">Sell</button></td></tr>`; }).join('');
+  return `<table class="tbl"><thead><tr><th class="l">Instrument</th><th>Qty</th><th>Avg cost</th><th>LTP</th><th>Cur. value</th><th>P&amp;L</th><th>Day chg</th><th></th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td class="l" colspan="4">Invested ₹${f2(inv)}</td><td class="n">${f2(cur)}</td><td class="n ${cls(cur - inv)}">${sg(cur - inv)}</td><td class="n ${cls(day)}">${sg(day)}</td><td></td></tr></tfoot></table>`;
+}
+function viewFunds() {
+  const D = A.day, ch = D ? D.ch : zeroCh();
+  const lines = [['Brokerage', ch.brokerage], ['STT', ch.stt], ['Exchange transaction charges', ch.txn], ['SEBI turnover fee', ch.sebi], ['Stamp duty', ch.stamp], ['GST (18%)', ch.gst], ['DP charges', ch.dp], ['Auto square-off', ch.autosq]];
+  const allCh = A.history.reduce((a, h) => a + (h.charges || 0), 0) + (D ? D.ch.total : 0);
+  return `<div class="funds">
+    <section><div class="lbl" style="margin-bottom:6px">Equity margin</div>
+      <div class="kv big"><span>Available margin</span><b>${rs(Broker.available())}</b></div>
+      <div class="kv"><span>Cash balance</span><b>${rs(A.cash)}</b></div>
+      <div class="kv"><span>MIS margin used</span><b>${rs(Broker.misUsed())}</b></div>
+      <div class="kv"><span>Blocked by open orders</span><b>${rs(Broker.openOrderMargin())}</b></div>
+      <div class="kv"><span>Unrealised MIS P&amp;L</span><b class="${cls(Broker.misUnreal())}">${sg(Broker.misUnreal())}</b></div>
+      <div class="kv tot"><span>Account value</span><b>${rs(Broker.worth())}</b></div>
+      <div class="kv"><span>Starting capital</span><b>${rs(A.capital)}</b></div>
+      <div class="kv"><span>All-time charges</span><b>${rs(allCh)}</b></div>
+    </section>
+    <section><div class="lbl" style="margin-bottom:6px">Today's charges (contract note)</div>
+      ${lines.map(([k, v]) => `<div class="kv"><span>${k}</span><b>${rs(v || 0)}</b></div>`).join('')}
+      <div class="kv tot"><span>Total</span><b>${rs(ch.total)}</b></div>
+    </section>
+    <section><div class="lbl" style="margin-bottom:6px">How charges work</div>
+      <p class="muted" style="margin:0 0 6px;font-size:12px">Intraday: brokerage 0.03% or ₹20 per executed order, whichever is lower; STT 0.025% on the sell side; stamp duty 0.003% on the buy side.</p>
+      <p class="muted" style="margin:0 0 6px;font-size:12px">Delivery (CNC): zero brokerage; STT 0.1% on buy and sell; stamp duty 0.015% on the buy side; ₹15.34 DP charge per stock on the day you sell from holdings.</p>
+      <p class="muted" style="margin:0 0 10px;font-size:12px">Both: NSE transaction charge 0.00307%, SEBI fee ₹10 per crore, and 18% GST on brokerage + transaction + SEBI charges. Rates follow Zerodha's published equity schedule.</p>
+      <div id="resetBox">${resetAsk ? `<p style="margin:0 0 6px;font-size:12px">This erases trades, holdings, missions and XP. Start again with:</p><div class="rowacts" style="flex-wrap:wrap"><button class="btn sm" data-reset="100000">₹1 lakh</button><button class="btn sm" data-reset="500000">₹5 lakh</button><button class="btn sm" data-reset="1000000">₹10 lakh</button><button class="btn sm ghost" data-reset="no">Keep my account</button></div>` : '<button class="btn sm" data-reset="ask">Reset paper account</button>'}</div>
+    </section></div>`;
+}
+const SETUPS = ['', 'Breakout', 'Pullback', 'VWAP', 'Reversal', 'Gap', 'News', 'Range', 'Other'];
+function viewJournal() {
+  const ts = A.trips.filter(t => t.status === 'closed');
+  const open = A.trips.filter(t => t.status === 'open');
+  if (!ts.length && !open.length) return `<div class="empty"><b>Your trade journal</b>Each round trip (entry to exit) lands here with its net result and R multiple. Tag the setup and add a note while it's fresh.</div>`;
+  const wins = ts.filter(t => t.net > 0), losses = ts.filter(t => t.net <= 0);
+  const W = wins.reduce((a, t) => a + t.net, 0), L = -losses.reduce((a, t) => a + t.net, 0);
+  const rs_ = ts.filter(t => t.r != null).map(t => t.r);
+  const bar = `<div class="toolbar"><span class="muted">${ts.length} trades · win rate <b class="num">${ts.length ? (wins.length / ts.length * 100).toFixed(0) : 0}%</b> · profit factor <b class="num">${L ? (W / L).toFixed(2) : (W ? '∞' : '—')}</b> · avg R <b class="num">${rs_.length ? (rs_.reduce((a, b) => a + b, 0) / rs_.length).toFixed(2) : '—'}</b> · net <b class="num ${cls(W - L)}">${sg(W - L)}</b></span><span class="spacer"></span><button class="btn sm" data-export="1">Export CSV</button></div>`;
+  const row = t => `<tr><td class="l n">${dFmt(t.closeDate || t.openDate)} ${hm(t.closeSec || t.openSec)}</td><td class="l"><b>${esc(t.sym)}</b> <span class="faint">${t.product}</span></td><td class="l"><span class="tag ${t.side === 'LONG' ? 'buy' : 'sell'}">${t.side}</span></td><td class="n">${t.maxQty}</td><td class="n">${f2(t.entryVal / t.entryQty)}</td><td class="n">${t.exitQty ? f2(t.exitVal / t.exitQty) : '—'}</td><td class="n">${f2(t.charges)}</td><td class="n ${cls(t.net ?? 0)}">${t.status === 'closed' ? sg(t.net) : '<span class="faint">open</span>'}</td><td class="n ${cls(t.r ?? 0)}">${t.r != null ? t.r.toFixed(2) + 'R' : '—'}</td><td class="l"><select class="jsel" data-jset="${t.id}" aria-label="Setup">${SETUPS.map(s => `<option ${s === t.setup ? 'selected' : ''} value="${s}">${s || 'Tag setup…'}</option>`).join('')}</select></td><td class="l"><input class="jnote" data-jnote="${t.id}" value="${esc(t.note)}" placeholder="What did you see?" aria-label="Note"></td></tr>`;
+  return bar + `<table class="tbl"><thead><tr><th class="l">Closed</th><th class="l">Instrument</th><th class="l">Side</th><th>Qty</th><th>Entry</th><th>Exit</th><th>Charges</th><th>Net</th><th>R</th><th class="l">Setup</th><th class="l">Note</th></tr></thead><tbody>${open.map(row).join('')}${ts.map(row).join('')}</tbody></table>`;
+}
+function viewDays() {
+  const hs = A.history;
+  if (!hs.length) return `<div class="empty"><b>No completed trading days</b>Finish a day (it ends at 15:30) to get a report card with net P&amp;L, charges, win rate and drawdown.</div>`;
+  const mx = Math.max(...hs.map(h => Math.abs(h.net)), 1);
+  const bars = hs.slice(0, 40).reverse().map(h => `<i title="${dFmt(h.date)} ${sg(h.net)}" style="height:${Math.max(3, Math.abs(h.net) / mx * 48)}px;background:var(${h.net >= 0 ? '--up' : '--down'})"></i>`).join('');
+  const tot = hs.reduce((a, h) => a + h.net, 0);
+  return `<div class="toolbar"><span class="muted">${hs.length} days · net <b class="num ${cls(tot)}">${sg(tot)}</b> · green days <b class="num">${hs.filter(h => h.net > 0).length}</b></span></div><div class="bars" aria-label="Net P&L by day">${bars}</div>
+  <table class="tbl"><thead><tr><th class="l">Day</th><th class="l">Data</th><th>Trades</th><th>Win rate</th><th>Gross</th><th>Charges</th><th>Net</th><th>Max drawdown</th><th>Auto sq-off</th><th>XP</th></tr></thead><tbody>${hs.map(h => `<tr><td class="l">${dFmt(h.date)}</td><td class="l faint">${h.mode === 'sim' ? 'Practice' : h.mode === 'replay' ? 'Replay' : 'Live'}</td><td class="n">${h.trips}</td><td class="n">${h.trips ? (h.wins / h.trips * 100).toFixed(0) + '%' : '—'}</td><td class="n ${cls(h.gross)}">${sg(h.gross)}</td><td class="n">${f2(h.charges)}</td><td class="n ${cls(h.net)}">${sg(h.net)}</td><td class="n">${f2(h.maxDD)}</td><td class="n">${h.autoSq || 0}</td><td class="n">+${h.xp}</td></tr>`).join('')}</tbody></table>`;
+}
+
+/* Coach panel */
+let quiz = null;
+function renderCoach() {
+  const li = curLevel(), L = LEVELS[li], m = curMission();
+  $('#lvlNum').textContent = `Level ${li + 1} of ${LEVELS.length}`;
+  $('#lvlName').textContent = L.n;
+  $('#lvlProg').innerHTML = L.m.map(x => `<i class="${A.missions[x.id] ? 'done' : ''}"></i>`).join('');
+  const card = $('#mcard');
+  const key = m ? m.id + (quiz ? quiz.key : '') : 'all';
+  if (card.dataset.key !== key) {
+    card.dataset.key = key;
+    if (!m) card.innerHTML = `<div class="lbl">All missions complete</div><h2>Graduate: take it to Python</h2><p class="how">You've worked through every mission. Keep trading days to refine your edge, then run the companion app's backtester on your exported journal.</p>`;
+    else {
+      let qz = '';
+      if (m.quiz) {
+        if (!quiz) makeQuiz();
+        if (quiz) qz = `<div class="quiz"><div class="q">${esc(quiz.q)}</div>${quiz.opts.map((o, i) => `<button data-quiz="${i}">${esc(o)}</button>`).join('')}</div>`;
+      }
+      card.innerHTML = `<div class="lbl">Mission <span class="xpchip">+${LEVELS[li].xp} XP</span></div><h2>${esc(m.t)}</h2><p class="how">${esc(m.how)}</p><p class="concept">${esc(m.c)}</p>${qz}`;
+    }
+  }
+  $('#mlist').innerHTML = L.m.map(x => `<li class="${A.missions[x.id] ? 'done' : ''} ${m && x.id === m.id ? 'cur' : ''}"><span class="chk"></span><span>${esc(x.t)}</span><span class="x">+${L.xp}</span></li>`).join('');
+}
+function makeQuiz() {
+  const s = selected !== 'NIFTY 50' && selected !== 'NIFTY BANK' ? selected : 'RELIANCE';
+  const I = feed && feed.inst[s]; if (!I || I.bid == null) return;
+  const sp = r2(I.ask - I.bid), mid = r2((I.ask + I.bid) / 2);
+  const opts = [`₹${f2(sp)}`, `₹${f2(mid)}`, `₹${f2(r2(sp * 2 + I.tick))}`];
+  const order = [0, 1, 2].sort(() => rand() - 0.5);
+  quiz = { key: s + sp, q: `${s}: best bid ₹${f2(I.bid)}, best offer ₹${f2(I.ask)}. What is the spread?`, opts: order.map(i => opts[i]), ans: order.indexOf(0) };
+}
+const feedItems = [];
+function coach(text, kind = '') {
+  const t = feed ? hm(feed.sec) : '—';
+  feedItems.unshift({ t, text, kind }); if (feedItems.length > 80) feedItems.length = 80;
+  const ul = $('#feed');
+  const li = document.createElement('li'); li.className = kind ? 'k-' + kind : ''; li.innerHTML = `<time>${t}</time><span>${esc(text)}</span>`;
+  ul.prepend(li); while (ul.children.length > 80) ul.lastChild.remove();
+}
+
+/* ======================================================================
+   Order window
+   ====================================================================== */
+const T = { side: 'BUY', sym: 'RELIANCE', modify: null };
+function openTicket(side, sym, preset = {}) {
+  const u = BYSYM[sym]; if (!u || u.kind === 'index') { toast("Indices can't be traded directly. Try NIFTYBEES."); return; }
+  T.side = side; T.sym = sym; T.modify = preset.modify || null;
+  const I = feed && feed.inst[sym], ltp = Broker.ltp(sym), tick = I ? I.tick : tickFor(ltp, u.kind);
+  $('#tQty').value = preset.qty ?? 1;
+  $('#tPrice').value = preset.price ?? f2n(ltp); $('#tPrice').step = tick;
+  $('#tTrig').value = preset.trigger ?? ''; $('#tTrig').step = tick; $('#tStop').step = tick;
+  $('#tStop').value = ''; $('#tAuto').checked = false;
+  (preset.product === 'CNC' ? $('#pCNC') : $('#pMIS')).checked = true;
+  const ty = preset.type || 'MARKET'; $$('input[name=otype]').forEach(r => r.checked = r.value === ty);
+  $('#tProd').querySelectorAll('input').forEach(x => x.disabled = !!T.modify);
+  $('#tFlip').disabled = !!T.modify;
+  $('#tRisk').hidden = !!T.modify || !!preset.exit;
+  $('#tMsg').textContent = ''; $('#tMsg').className = 'tmsg';
+  $('#scrim').hidden = false; $('#ticket').hidden = false;
+  syncTicket();
+  setTimeout(() => $('#tQty').focus(), 30);
+}
+const f2n = x => (+x).toFixed(2);
+function closeTicket() { $('#ticket').hidden = true; $('#scrim').hidden = true; T.modify = null; }
+function readTicket() {
+  const type = $('input[name=otype]:checked').value, product = $('input[name=prod]:checked').value;
+  return { sym: T.sym, side: T.side, qty: Math.floor(+$('#tQty').value), type, product, price: type === 'LIMIT' || type === 'SL' ? +$('#tPrice').value : null, trigger: type === 'SL' || type === 'SL-M' ? +$('#tTrig').value : null, stopPlan: +$('#tStop').value || null, autoStop: $('#tAuto').checked };
+}
+function syncTicket() {
+  if ($('#ticket').hidden) return;
+  const r = readTicket(), I = feed && feed.inst[T.sym], ltp = Broker.ltp(T.sym), buy = T.side === 'BUY';
+  $('#tHead').className = 'thead ' + (buy ? 'buy' : 'sell');
+  $('#tTitle').textContent = `${T.modify ? 'Modify ' : ''}${buy ? 'Buy' : 'Sell'} ${T.sym}`;
+  $('#tSub').textContent = `NSE · LTP ₹${f2(ltp)}${I && I.bid != null ? ` · bid ${f2(I.bid)} / offer ${f2(I.ask)}` : ''}`;
+  $('#tFlip').setAttribute('aria-checked', String(!buy));
+  $('#tPrice').disabled = !(r.type === 'LIMIT' || r.type === 'SL');
+  $('#tTrig').disabled = !(r.type === 'SL' || r.type === 'SL-M');
+  const go = $('#tGo'); go.className = 'btn ' + (buy ? 'buy' : 'sell'); go.textContent = T.modify ? 'Modify' : (buy ? 'Buy' : 'Sell');
+  const px = r.type === 'LIMIT' || r.type === 'SL' ? r.price : r.type === 'SL-M' ? r.trigger : (buy ? (I?.ask ?? ltp) : (I?.bid ?? ltp));
+  const fake = { ...r, status: 'NEW' };
+  const need = (r.qty > 0 && px > 0) ? Broker.orderMargin({ ...fake, price: r.type === 'LIMIT' || r.type === 'SL' ? r.price : null, trigger: r.trigger }) : 0;
+  const value = (r.qty || 0) * (px || 0);
+  const delivery = r.product === 'CNC';
+  const est = charges('BUY', value, delivery).total + charges('SELL', value, delivery).total + (delivery ? RATE.dp : 0);
+  const be = r.qty > 0 ? est / r.qty : 0;
+  $('#tSum').innerHTML = `<div class="kv"><span>Order value</span><b>${rs(value)}</b></div><div class="kv"><span>Margin required${r.product === 'MIS' ? ' (20%)' : ''}</span><b>${rs(need)}</b></div><div class="kv"><span>Available margin</span><b>${rs(Broker.available(T.modify && A.day ? A.day.orders.find(x => x.id === T.modify) : null))}</b></div><div class="kv"><span>Round-trip charges (est.)</span><b>${rs(est)}</b></div><div class="kv"><span>Breakeven move</span><b>₹${f2(be)} / share</b></div>`;
+  // risk planner
+  const stop = r.stopPlan, entry = px;
+  if (stop && entry) {
+    const ok = buy ? stop < entry : stop > entry;
+    const per = Math.abs(entry - stop), tot = per * (r.qty || 0), pctCap = tot / A.capital * 100;
+    $('#tRR').innerHTML = ok ? `<span>Risk per share</span><b>₹${f2(per)}</b><span>Total risk</span><b>₹${f2(tot)}</b><span>Of capital</span><b class="${pctCap > 1.0001 ? 'down' : 'up'}">${pctCap.toFixed(2)}%</b><span>2R target</span><b>₹${f2(buy ? entry + 2 * per : entry - 2 * per)}</b>` : `<span class="down" style="grid-column:1/3">For a ${buy ? 'buy' : 'sell'}, the stop must be ${buy ? 'below' : 'above'} the entry price.</span>`;
+  } else $('#tRR').innerHTML = `<span style="grid-column:1/3">Type where you'd be wrong. The planner shows your risk and sizes the trade.</span>`;
+}
+function sizeOnePct() {
+  const r = readTicket(), I = feed && feed.inst[T.sym], buy = T.side === 'BUY', ltp = Broker.ltp(T.sym);
+  const entry = r.type === 'LIMIT' || r.type === 'SL' ? r.price : r.type === 'SL-M' ? r.trigger : (buy ? (I?.ask ?? ltp) : (I?.bid ?? ltp));
+  if (!r.stopPlan || !entry) { msg('Enter a stop-loss price first.', 'err'); return; }
+  const per = Math.abs(entry - r.stopPlan);
+  if ((buy && r.stopPlan >= entry) || (!buy && r.stopPlan <= entry)) { msg(`For a ${buy ? 'buy' : 'sell'}, the stop must be ${buy ? 'below' : 'above'} the entry.`, 'err'); return; }
+  let q = Math.floor(A.capital * 0.01 / per);
+  const cap = Math.floor(Broker.available() / (entry * (r.product === 'MIS' ? MIS_MARGIN : 1)));
+  if (q > cap) { q = cap; msg(`Capped at ${cap} shares by available margin.`, ''); } else msg(`${q} shares risks ₹${f2(q * per)}, about 1% of capital.`, 'ok');
+  $('#tQty').value = Math.max(1, q); $('#tAuto').checked = true; syncTicket();
+}
+function msg(t, k) { const e = $('#tMsg'); e.textContent = t; e.className = 'tmsg ' + (k || ''); }
+function submitTicket() {
+  const r = readTicket();
+  if (T.modify) {
+    const o = A.day && A.day.orders.find(x => x.id === T.modify);
+    if (!o) { closeTicket(); return; }
+    const err = Broker.modify(o, { qty: r.qty, price: r.price, trigger: r.trigger, type: r.type });
+    if (err) { msg(err, 'err'); return; }
+    closeTicket(); toast('Order modified'); render(); return;
+  }
+  const o = Broker.place(r);
+  if (o.status === 'REJECTED') { msg(o.reason, 'err'); render(); return; }
+  closeTicket();
+  toast(o.status === 'COMPLETE' ? `Executed ${o.side} ${o.qty} ${o.sym} @ ₹${f2(o.avg)}` : o.status === 'AMO' ? 'After-market order placed' : `Order placed: ${o.status.toLowerCase()}`);
+  render();
+}
+
+/* ======================================================================
+   Dialogs
+   ====================================================================== */
+function openDlg(html) { const d = $('#dlg'); d.innerHTML = html; d.hidden = false; $('#scrim').hidden = false; const f = d.querySelector('button, input'); if (f) f.focus(); }
+function closeDlg() { $('#dlg').hidden = true; if ($('#ticket').hidden) $('#scrim').hidden = true; }
+function showReport(rep) {
+  const wr = rep.trips ? (rep.wins / rep.trips * 100).toFixed(0) + '%' : '—';
+  const c = rep.ch || zeroCh();
+  openDlg(`<header><div class="lbl">Day report · ${dFmt(rep.date)}</div><h2>${rep.net >= 0 ? 'Closed green' : 'Closed red'}</h2></header>
+  <div class="body"><div><div class="bigpnl ${cls(rep.net)}">${sg(rep.net)}</div><div class="muted">net after ₹${f2(rep.charges)} in charges (gross ${sg(rep.gross)})</div></div>
+  <div class="rgrid"><div class="kv"><span>Trades closed</span><b>${rep.trips}</b></div><div class="kv"><span>Win rate</span><b>${wr}</b></div><div class="kv"><span>Max drawdown</span><b>₹${f2(rep.maxDD)}</b></div><div class="kv"><span>Auto square-offs</span><b>${rep.autoSq}</b></div><div class="kv"><span>Carried to holdings</span><b>${rep.carried}</b></div><div class="kv"><span>XP earned</span><b>+${rep.xp}</b></div></div>
+  <div class="rgrid"><div class="kv"><span>Brokerage</span><b>₹${f2(c.brokerage)}</b></div><div class="kv"><span>STT</span><b>₹${f2(c.stt)}</b></div><div class="kv"><span>Exchange + SEBI</span><b>₹${f2(c.txn + c.sebi)}</b></div><div class="kv"><span>Stamp + GST</span><b>₹${f2(c.stamp + c.gst)}</b></div></div>
+  <p class="muted" style="margin:0">${rep.trips === 0 ? 'No trades today. Watching the tape is practice too; next day, try one small trade with a stop.' : rep.net < 0 && rep.gross > 0 ? 'Profitable before charges, losing after them. Fewer, better trades fix this.' : rep.maxDD > 0.02 * A.capital ? 'Big swings today. Smaller size or tighter stops would smooth the ride.' : 'Review your journal: which setup paid, which one cost you?'}</p></div>
+  <footer><button class="btn" data-close="1">Review the day</button>${feed && feed.mode === 'sim' ? '<button class="btn primary" data-nextday="1">Start next day</button>' : ''}</footer>`);
+}
+function showModes() {
+  const can = LOCAL && server;
+  const yahoo = can && server.feeds && server.feeds.yahoo, kite = can && server.feeds && server.feeds.kite;
+  openDlg(`<header><div class="lbl">Market data</div><h2>Where should prices come from?</h2></header><div class="body">
+    <button class="modeopt" data-mode="sim"><span class="ic">P</span><b>Practice market</b><p>A simulated NSE day built from recent price levels. Runs anywhere, at any hour, at up to 120× speed.</p></button>
+    <button class="modeopt" data-mode="replay" ${can && (yahoo || kite) ? '' : 'disabled'}><span class="ic">R</span><b>Replay a real day</b><p>Real 1-minute prices from a recent NSE session, revealed minute by minute so you can't peek ahead.</p></button>
+    <button class="modeopt" data-mode="live" ${can && (yahoo || kite) ? '' : 'disabled'}><span class="ic">L</span><b>Live market</b><p>Today's real NSE prices during market hours (09:15–15:30 IST). Paper orders fill against live quotes.</p></button>
+    <div id="dayPick"></div>
+    ${can ? (yahoo || kite ? `<p class="muted" style="margin:0">Companion app connected · data from ${kite ? 'Kite Connect (real-time)' : 'Yahoo Finance (free; may lag the exchange slightly)'}.</p>` : `<p class="muted" style="margin:0">Companion app connected, but no data source is installed. Run <span class="num">pip install yfinance</span> and restart it.</p>`)
+      : `<p class="muted" style="margin:0">Replay and live data need the companion app running on your computer. A web page can't reach market data feeds by itself. Run this in the project folder, then open <span class="num">http://localhost:8000</span>:</p><div class="code">pip install yfinance\npython server.py</div>`}
+  </div><footer><button class="btn" data-close="1">Close</button></footer>`);
+}
+async function pickReplay() {
+  const box = $('#dayPick'); box.innerHTML = '<p class="muted" style="margin:0">Loading recent sessions…</p>';
+  try {
+    const r = await (await fetch('/api/replay/days')).json();
+    if (!r.days || !r.days.length) throw new Error(r.error || 'No recent sessions available.');
+    box.innerHTML = `<div class="lbl">Pick a session</div><div class="daylist">${r.days.map(d => `<button class="btn sm" data-rday="${d}">${dFmt(d)}</button>`).join('')}</div>`;
+  } catch (e) { box.innerHTML = `<p class="down" style="margin:0">${esc(e.message)}</p>`; }
+}
+async function startReplay(date) {
+  if (A.day && running) { toast('Finish or reset the current day first.'); return; }
+  try {
+    const day = await (await fetch('/api/replay/day?date=' + date)).json();
+    if (day.error) throw new Error(day.error);
+    if (A.day) settleStale();
+    feed = new ReplayFeed(day); running = false; closeDlg();
+    if (!feed.inst[selected]) selected = Object.keys(feed.inst).find(s => BYSYM[s].kind !== 'index') || selected;
+    coach(`Replay loaded: ${dFmt(date)}. Press Start trading day.`); render();
+  } catch (e) { toast('Replay failed: ' + e.message); }
+}
+async function startLive() {
+  try {
+    const snap = await (await fetch('/api/live/snapshot?since=0')).json();
+    if (snap.error) throw new Error(snap.error);
+    if (A.day && A.day.mode !== 'live') settleStale();
+    feed = new LiveFeed(snap); closeDlg();
+    if (A.day && A.day.date === feed.date) { running = true; coach('Resumed today’s live session.'); }
+    else { if (A.day) settleStale(); }
+    clearInterval(liveTimer); liveTimer = setInterval(pollLive, 2000);
+    render();
+  } catch (e) { toast('Live feed failed: ' + e.message); }
+}
+function useSim() {
+  if (feed && feed.mode === 'sim') { closeDlg(); return; }
+  if (A.day && running) { toast('Finish or reset the current day first.'); return; }
+  clearInterval(liveTimer); if (A.day) settleStale();
+  feed = new SimFeed(A.nextDate, A.lastCloses); running = false; closeDlg(); render();
+}
+let toastT;
+function toast(t) { const e = $('#toast'); e.textContent = t; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => e.hidden = true, 2600); }
+function flashFill() { Chart.draw(); }
+
+function exportCSV() {
+  const ts = A.trips.filter(t => t.status === 'closed').slice().reverse();
+  const head = ['trip_id', 'symbol', 'product', 'side', 'open_date', 'open_time', 'close_date', 'close_time', 'qty', 'entry_avg', 'exit_avg', 'gross_pnl', 'charges', 'net_pnl', 'risk_rupees', 'r_multiple', 'setup', 'note'];
+  const rows = ts.map(t => [t.id, t.sym, t.product, t.side, t.openDate, hms(t.openSec), t.closeDate, hms(t.closeSec), t.maxQty, (t.entryVal / t.entryQty).toFixed(2), (t.exitVal / t.exitQty).toFixed(2), t.gross.toFixed(2), t.charges.toFixed(2), t.net.toFixed(2), t.risk ? t.risk.toFixed(2) : '', t.r != null ? t.r.toFixed(3) : '', t.setup, (t.note || '').replace(/"/g, '""')]);
+  const csv = [head.join(',')].concat(rows.map(r => r.map((v, i) => i === 17 || i === 16 ? `"${v}"` : v).join(','))).join('\n');
+  const name = `dalal-dojo-trades-${new Date().toISOString().slice(0, 10)}.csv`;
+  const done = () => { A.exports++; award('export'); markDirty(true); };
+  (async () => {
+    const dl = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('downloads').catch(() => null) : null;
+    if (dl) { try { await dl.save({ filename: name, data: csv }); done(); toast('Trade log saved'); } catch (e) { if (e && e.code !== 'declined') toast('Download unavailable here.'); } return; }
+    try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); done(); toast('Trade log downloaded'); }
+    catch (e) { toast('Download unavailable here.'); }
+  })();
+}
+
+/* ======================================================================
+   Events
+   ====================================================================== */
+function wire() {
+  $('#speedSeg').innerHTML = [1, 5, 20, 60, 120].map(s => `<button data-s="${s}" aria-pressed="false">${s}×</button>`).join('');
+  $('#speedSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; speed = +b.dataset.s; A.speed = speed; markDirty(); renderTop(); });
+  $('#playBtn').addEventListener('click', () => {
+    if (feed && feed.mode === 'live') { if (!A.day) startDay(); return; }
+    if (!A.day || !feed || !feed.started) startDay();
+    else { running = !running; coach(running ? 'Resumed.' : 'Paused. Orders still work while paused.'); renderTop(); }
+  });
+  $('#modeBtn').addEventListener('click', showModes);
+  $('#wl').addEventListener('click', e => {
+    const li = e.target.closest('li'); if (!li) return;
+    const act = e.target.closest('button[data-act]');
+    selectSym(li.dataset.sym);
+    if (act) openTicket(act.dataset.act, li.dataset.sym);
+  });
+  $('#wl').addEventListener('keydown', e => { if (e.key === 'Enter') { const li = e.target.closest('li'); if (li) selectSym(li.dataset.sym); } });
+  $('#wlSearch').addEventListener('input', renderWatch);
+  $('#hdBuy').addEventListener('click', () => openTicket('BUY', selected));
+  $('#hdSell').addEventListener('click', () => openTicket('SELL', selected));
+  $('#tfSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tf = +b.dataset.tf; $$('#tfSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); Chart.offset = 0; Chart.draw(); });
+  $('#tabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (!b) return; tab = b.dataset.tab; journalHash = ''; renderTabs(); renderTab(); });
+  $('#tabBody').addEventListener('click', e => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.exit) { const p = A.day.positions[t.dataset.exit]; if (p && p.net) { const o = Broker.place({ sym: p.sym, side: p.net > 0 ? 'SELL' : 'BUY', qty: Math.abs(p.net), type: 'MARKET', product: p.product, tag: 'exit' }); if (o.status === 'REJECTED') toast(o.reason); render(); } }
+    if (t.dataset.sl) { const p = A.day.positions[t.dataset.sl]; if (p && p.net) { const I = feed.inst[p.sym], away = Math.max(I.tick, roundT(I.ltp * 0.006, I.tick)); openTicket(p.net > 0 ? 'SELL' : 'BUY', p.sym, { qty: Math.abs(p.net), type: 'SL-M', product: p.product, trigger: f2n(p.net > 0 ? floorT(I.ltp - away, I.tick) : ceilT(I.ltp + away, I.tick)), exit: true }); } }
+    if (t.dataset.mod) { const o = A.day.orders.find(x => x.id === t.dataset.mod); if (o) openTicket(o.side, o.sym, { modify: o.id, qty: o.qty, price: o.price ? f2n(o.price) : undefined, trigger: o.trigger ? f2n(o.trigger) : '', type: o.type, product: o.product }); }
+    if (t.dataset.can) { const o = A.day.orders.find(x => x.id === t.dataset.can); if (o) { Broker.cancel(o, ''); toast('Order cancelled'); render(); } }
+    if (t.dataset.hsell) openTicket('SELL', t.dataset.hsell, { qty: A.holdings[t.dataset.hsell].qty, product: 'CNC', exit: true });
+    if (t.dataset.export) exportCSV();
+    if (t.dataset.reset === 'ask') { resetAsk = true; pointerIn = false; renderTab(); }
+    else if (t.dataset.reset === 'no') { resetAsk = false; pointerIn = false; renderTab(); }
+    else if (t.dataset.reset) { const cap = +t.dataset.reset; resetAsk = false; running = false; clearInterval(liveTimer); A = freshAccount(cap); feed = new SimFeed(A.nextDate, A.lastCloses); try { localStorage.removeItem('dojo.feed'); } catch (e2) {} quiz = null; markDirty(true); coach(`Paper account reset with ₹${f0(cap)}.`); toast('Account reset'); pointerIn = false; render(); }
+  });
+  $('#tabBody').addEventListener('pointerdown', () => { pointerIn = true; });
+  window.addEventListener('pointerup', () => { if (pointerIn) setTimeout(() => { pointerIn = false; renderSoon(); }, 0); });
+  window.addEventListener('pointercancel', () => { pointerIn = false; });
+  $('#tabBody').addEventListener('change', e => {
+    const s = e.target.closest('select[data-jset]');
+    if (s) { const t = A.trips.find(x => x.id === s.dataset.jset); if (t) { t.setup = s.value; if (s.value && !A.journaledIds.includes(t.id)) A.journaledIds.push(t.id); if (A.journaledIds.length >= 5) award('journal'); markDirty(); } }
+    const n = e.target.closest('input[data-jnote]');
+    if (n) { const t = A.trips.find(x => x.id === n.dataset.jnote); if (t) { t.note = n.value.slice(0, 400); markDirty(); } }
+  });
+  // ticket
+  $('#tClose').addEventListener('click', closeTicket); $('#tCancel').addEventListener('click', closeTicket);
+  $('#scrim').addEventListener('click', () => { closeTicket(); closeDlg(); });
+  $('#tFlip').addEventListener('click', () => { T.side = T.side === 'BUY' ? 'SELL' : 'BUY'; syncTicket(); });
+  $('#ticket').addEventListener('input', syncTicket);
+  $('#ticket').addEventListener('change', e => {
+    if (e.target.name === 'otype') { const I = feed && feed.inst[T.sym]; const ty = e.target.value; if ((ty === 'SL' || ty === 'SL-M') && !$('#tTrig').value && I) { const away = Math.max(I.tick, roundT(I.ltp * 0.004, I.tick)); $('#tTrig').value = f2n(T.side === 'BUY' ? ceilT(I.ltp + away, I.tick) : floorT(I.ltp - away, I.tick)); if (ty === 'SL') $('#tPrice').value = f2n(T.side === 'BUY' ? +$('#tTrig').value + I.tick * 2 : +$('#tTrig').value - I.tick * 2); } }
+    syncTicket();
+  });
+  $('#tSize').addEventListener('click', sizeOnePct);
+  $('#tGo').addEventListener('click', submitTicket);
+  $('#ticket').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') submitTicket(); });
+  // dialogs
+  $('#dlg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.close) closeDlg();
+    if (b.dataset.nextday) { closeDlg(); startDay(); }
+    if (b.dataset.mode === 'sim') useSim();
+    if (b.dataset.mode === 'replay') pickReplay();
+    if (b.dataset.mode === 'live') startLive();
+    if (b.dataset.rday) startReplay(b.dataset.rday);
+  });
+  $('#mcard').addEventListener('click', e => {
+    const b = e.target.closest('button[data-quiz]'); if (!b || !quiz) return;
+    if (+b.dataset.quiz === quiz.ans) { award('spread'); }
+    else { b.classList.add('wrong'); coach('Not quite. Spread = best offer − best bid.', 'coach'); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeTicket(); closeDlg(); return; }
+    if (e.target.closest('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!$('#ticket').hidden || !$('#dlg').hidden) return;
+    if (e.key === 'b' || e.key === 'B') { e.preventDefault(); openTicket('BUY', selected); }
+    if (e.key === 's' || e.key === 'S') { e.preventDefault(); openTicket('SELL', selected); }
+    if (e.key === ' ' && feed && feed.mode !== 'live' && A.day && feed.started) { e.preventDefault(); running = !running; renderTop(); }
+  });
+  // theme changes → chart colors
+  const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq.addEventListener('change', () => Chart.readColors());
+  new MutationObserver(() => Chart.readColors()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  setInterval(() => { renderTop(); if (!$('#ticket').hidden) syncTicket(); }, 500);
+}
+function selectSym(s) {
+  selected = s; Chart.offset = 0;
+  if (BYSYM[s].kind !== 'index') award('select');
+  if (curMission()?.id === 'spread') { quiz = null; }
+  render();
+}
+
+/* ======================================================================
+   Boot
+   ====================================================================== */
+function boot(hot) {
+  wire();
+  Chart.init($('#chart'));
+  const local = hot && hot.A ? hot.A : Store.loadLocal();
+  if (local && local.v === 1) A = local;
+  speed = A.speed || 20;
+  // Resume a practice day from this browser, or settle a stale one.
+  if (A.day) {
+    let resumed = false;
+    if (A.day.mode === 'sim') {
+      try { const snap = JSON.parse(localStorage.getItem('dojo.feed') || 'null'); if (snap && snap.date === A.day.date) { feed = SimFeed.restore(snap); resumed = true; } } catch (e) {}
+    }
+    if (!resumed && !(A.day.mode !== 'sim' && LOCAL)) settleStale();
+  }
+  if (!feed) feed = new SimFeed(A.day && A.day.mode === 'sim' ? A.day.date : A.nextDate, A.lastCloses);
+  if (A.day && feed.mode === 'sim' && feed.started) coach(`Resumed ${dFmt(A.day.date)} at ${hm(feed.sec)}. Press Resume to continue.`);
+  else coach('Welcome to the dojo. You have ₹' + f0(A.capital) + ' of paper money. Work through the missions on the right; press Start trading day when ready.');
+  render();
+  requestAnimationFrame(loop);
+  // Sync with the viewer's saved account on claude.ai
+  Store.connect().then(remote => {
+    if (remote && remote.v === 1 && (remote.savedAt || 0) > (A.savedAt || 0) && !running) {
+      A = JSON.parse(JSON.stringify(remote)); speed = A.speed || 20;
+      const canResume = A.day && feed && feed.mode === 'sim' && feed.date === A.day.date && feed.started;
+      if (A.day && !canResume) settleStale();
+      if (!canResume) feed = new SimFeed(A.nextDate, A.lastCloses);
+      quiz = null; journalHash = ''; coach('Loaded your saved progress.'); render();
+    } else if (Store.db) { markDirty(); }
+  });
+  // Companion app (local)
+  if (LOCAL) fetch('/api/status').then(r => r.json()).then(s => {
+    server = s;
+    $('#feedNote').textContent = s.feeds && (s.feeds.kite || s.feeds.yahoo) ? 'Companion app connected' : 'Companion app: practice only';
+    if (A.day && A.day.mode === 'live' && s.feeds && (s.feeds.kite || s.feeds.yahoo)) startLive();
+    else if (A.day && A.day.mode === 'replay') settleStale();
+  }).catch(() => {});
+  window.claude?.hot?.snapshot?.(() => ({ A }));
+  window.dojo = { get A() { return A; }, get feed() { return feed; }, Broker, startDay, endDay, advance, setSpeed: s => { speed = s; }, pause: () => { running = false; } };
+}
+if (window.claude?.hot?.ready) window.claude.hot.ready(boot); else boot(window.claude?.hot?.data ?? null);
+})();
+</script>
+
+</body></html>

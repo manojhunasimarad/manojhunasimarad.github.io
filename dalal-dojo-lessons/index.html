@@ -1,0 +1,2303 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Dalal Dojo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Hind:wght@400;500;600&family=Zilla+Slab:wght@600;700&display=swap">
+<style>
+/* Layout: phone-first app shell — sticky belt bar on top, one scrolling view, fixed five-tab bar, bottom sheets. */
+:root {
+  --bg: #F1F2F7;
+  --surface: #FFFFFF;
+  --sunk: #E7E9F1;
+  --ink: #161A2E;
+  --muted: #5B617E;
+  --line: #D8DBE6;
+  --accent: #3442B0;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E2E5FA;
+  --gold: #B87A06;
+  --gold-soft: #FBEFD3;
+  --up: #0F7D57;
+  --up-soft: #DCF2E8;
+  --down: #C0392F;
+  --down-soft: #FAE2DF;
+  --slip: #FCFBF7;
+  --slip-ink: #2A2E40;
+  --on-solid: #FFFFFF;
+  --s1: #3442B0; --s2: #C9800F; --s3: #17857F; --s4: #A9407F; --s5: #6A7088; --s6: #7B5A2A;
+  --shadow: 0 1px 2px rgba(22,26,46,.06), 0 6px 20px rgba(22,26,46,.06);
+  --display: "Zilla Slab", Rockwell, "Roboto Slab", Georgia, serif;
+  --body: "Hind", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r: 14px;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1020; --surface: #161A2D; --sunk: #0A0C18; --ink: #E6E8F3; --muted: #9BA1BF; --line: #272D46;
+    --accent: #909CFF; --accent-ink: #0D1020; --accent-soft: #222A55;
+    --gold: #F1B53F; --gold-soft: #3A2D10;
+    --up: #3CCB8F; --up-soft: #10301F; --down: #FF7166; --down-soft: #3B1714;
+    --slip: #1D2236; --slip-ink: #DADDEB; --on-solid: #0D1020;
+    --s1: #909CFF; --s2: #F1B53F; --s3: #45C8BE; --s4: #E77FBF; --s5: #A3A9C2; --s6: #D2A262;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1020; --surface: #161A2D; --sunk: #0A0C18; --ink: #E6E8F3; --muted: #9BA1BF; --line: #272D46;
+  --accent: #909CFF; --accent-ink: #0D1020; --accent-soft: #222A55;
+  --gold: #F1B53F; --gold-soft: #3A2D10;
+  --up: #3CCB8F; --up-soft: #10301F; --down: #FF7166; --down-soft: #3B1714;
+  --slip: #1D2236; --slip-ink: #DADDEB; --on-solid: #0D1020;
+  --s1: #909CFF; --s2: #F1B53F; --s3: #45C8BE; --s4: #E77FBF; --s5: #A3A9C2; --s6: #D2A262;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 15px; line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+body.noscroll { overflow: hidden; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+.num, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--muted); }
+.muted { color: var(--muted); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h2 { font-size: 1.35rem; } h3 { font-size: 1.1rem; }
+.eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 600; }
+
+.app { max-width: 560px; margin: 0 auto; }
+
+/* Top bar */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  display: flex; align-items: center; gap: 12px;
+  padding-block: 10px; padding-left: var(--gutter-l); padding-right: var(--gutter-r);
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.belt-btn { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 0; text-align: left; min-width: 0; }
+.belt-band { position: relative; width: 38px; height: 12px; border-radius: 3px; background: var(--belt, #eee); border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent); flex: none; }
+.belt-band::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 18px; transform: translate(-50%, -50%) rotate(14deg); background: var(--belt, #eee); border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); border-radius: 3px; }
+.belt-meta { display: grid; line-height: 1.15; min-width: 0; }
+.belt-meta b { font-family: var(--display); font-size: 1rem; }
+.belt-meta small { color: var(--muted); font-size: 0.75rem; }
+.xpbar { height: 4px; border-radius: 4px; background: var(--sunk); overflow: hidden; margin-top: 3px; width: 96px; }
+.xpbar i { display: block; height: 100%; background: var(--gold); border-radius: 4px; }
+.top .nw { margin-left: auto; text-align: right; line-height: 1.1; min-width: 0; }
+.top .nw small { display: block; color: var(--muted); font-size: 0.72rem; }
+.top .nw b { font-family: var(--mono); font-size: 1rem; font-weight: 500; }
+.top .nw span { font-family: var(--mono); font-size: 0.75rem; margin-left: 4px; }
+.icon-btn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; flex: none; }
+.icon-btn svg { width: 20px; height: 20px; }
+
+/* Main */
+.main { padding-left: var(--gutter-l); padding-right: var(--gutter-r); padding-block: 14px calc(84px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.main > *, .sheet-body > *, .stack > *, .hero > *, .reader > *, .q > *, .module > * { min-width: 0; }
+.view-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.view-title h1 { font-size: 1.6rem; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+.card.flush { padding: 0; overflow: hidden; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+
+/* Status strip */
+.status { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.open { background: var(--up-soft); color: var(--up); }
+.pill.closed { background: var(--down-soft); color: var(--down); }
+.pill.sim { background: var(--gold-soft); color: var(--gold); }
+.pill.accent { background: var(--accent-soft); color: var(--accent); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 0.92rem; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.buy { background: var(--up); border-color: var(--up); color: var(--on-solid); }
+.btn.sell { background: var(--down); border-color: var(--down); color: var(--on-solid); }
+.btn.ghost { background: transparent; }
+.btn.small { min-height: 32px; padding: 4px 10px; font-size: 0.84rem; border-radius: 8px; }
+.btn.block { width: 100%; }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn svg { width: 16px; height: 16px; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-row > .btn { flex: 1 1 auto; }
+
+/* Hero account card */
+.hero { display: grid; gap: 12px; }
+.hero .big { font-family: var(--display); font-size: 2.2rem; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kv div { min-width: 0; }
+.kv small { display: block; color: var(--muted); font-size: 0.75rem; }
+.kv b { font-family: var(--mono); font-weight: 500; font-size: 0.92rem; overflow-wrap: anywhere; }
+.curve { width: 100%; height: 56px; display: block; }
+
+/* Sim controls */
+.simbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.simbar .clock { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); margin-right: auto; }
+
+/* Next up */
+.steps { display: grid; gap: 0; }
+.step { display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.step:first-child { border-top: 0; padding-top: 2px; }
+.step .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-size: 0.8rem; background: var(--accent-soft); color: var(--accent); }
+.step .n.act { background: var(--gold-soft); color: var(--gold); }
+.step b { display: block; font-weight: 600; line-height: 1.25; }
+.step small { color: var(--muted); font-size: 0.8rem; }
+
+/* Ticker tape */
+.tape { overflow: hidden; border-block: 1px solid var(--line); margin-inline: calc(-1 * var(--gutter-l)) calc(-1 * var(--gutter-r)); background: var(--surface); }
+.tape-inner { display: flex; width: max-content; animation: tape 60s linear infinite; }
+.tape span { padding: 8px 14px; font-family: var(--mono); font-size: 0.8rem; white-space: nowrap; border-right: 1px solid var(--line); }
+.tape span b { font-weight: 500; margin-right: 6px; color: var(--ink); }
+@keyframes tape { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .tape { overflow-x: auto; } .tape-inner { animation: none; } }
+
+/* Badges */
+.badges { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.badge { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; background: var(--sunk); color: var(--muted); border: 1px dashed var(--line); }
+.badge.on { background: var(--gold-soft); color: var(--gold); border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); }
+.badge svg { width: 22px; height: 22px; }
+
+/* Chips / filters */
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 0.85rem; font-weight: 600; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+/* Instrument rows */
+.rows { display: grid; }
+.row { display: grid; grid-template-columns: minmax(0,1fr) 64px auto; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; width: 100%; }
+.row:first-child { border-top: 0; }
+.row .sym { font-weight: 600; font-size: 0.98rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.row .name { color: var(--muted); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .px { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.row .px small { display: block; font-size: 0.78rem; }
+.tag { font-size: 0.66rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 5px; background: var(--sunk); color: var(--muted); }
+.tag.gold { background: var(--gold-soft); color: var(--gold); }
+.spark { width: 64px; height: 26px; display: block; }
+
+/* Holdings */
+.hold { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 12px; padding: 12px 16px; border-top: 1px solid var(--line); width: 100%; text-align: left; background: none; border-left: 0; border-right: 0; border-bottom: 0; }
+.hold:first-child { border-top: 0; }
+.hold .l small, .hold .r small { display: block; color: var(--muted); font-size: 0.78rem; font-family: var(--mono); }
+.hold .r { text-align: right; font-family: var(--mono); }
+
+/* Allocation bars */
+.alloc { display: grid; gap: 8px; }
+.alloc-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--sunk); }
+.alloc-bar i { display: block; height: 100%; }
+.alloc-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.82rem; }
+.alloc-legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; background: var(--c); }
+.c-equity { --c: var(--s1); } .c-gold { --c: var(--s2); } .c-debt { --c: var(--s3); } .c-cash { --c: var(--s5); }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.tbl th { text-align: left; font-weight: 600; color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 8px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl td:first-child { font-family: var(--body); font-weight: 600; white-space: normal; }
+.tbl th:not(:first-child), .tbl td:not(:first-child) { text-align: right; }
+
+/* Learn */
+.module { display: grid; gap: 10px; }
+.module-head { display: flex; gap: 12px; align-items: flex-start; background: none; border: 0; padding: 0; text-align: left; width: 100%; }
+.module-head .mn { font-family: var(--display); font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1; width: 28px; flex: none; }
+.module-head h3 { margin-bottom: 2px; }
+.module-head p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+.prog { height: 6px; background: var(--sunk); border-radius: 6px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--accent); }
+.lesson-row { display: grid; grid-template-columns: 26px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; text-align: left; }
+.lesson-row .tick { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; }
+.lesson-row .tick.done { background: var(--up); border-color: var(--up); color: var(--on-solid); }
+.lesson-row .tick svg { width: 14px; height: 14px; }
+.lesson-row small { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+.source { font-size: 0.82rem; color: var(--muted); border-left: 3px solid var(--gold); padding: 2px 0 2px 10px; }
+
+/* Reader */
+.reader { display: grid; gap: 14px; max-width: 65ch; }
+.reader p { margin: 0; }
+.reader ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.callout { background: var(--accent-soft); border-radius: 10px; padding: 12px 14px; font-size: 0.93rem; }
+.takeaway { background: var(--gold-soft); border-radius: 10px; padding: 12px 14px; }
+.takeaway b { display: block; font-family: var(--display); margin-bottom: 2px; }
+
+/* Contract-note slip: the perforated edge is the receipt you'd get from a broker */
+.slip { position: relative; background: var(--slip); color: var(--slip-ink); border-radius: 0 0 12px 12px; padding: 16px; margin-top: 10px; font-family: var(--mono); font-size: 0.84rem; font-variant-numeric: tabular-nums; border: 1px solid var(--line); border-top: 0; }
+.slip::before { content: ""; position: absolute; left: -1px; right: -1px; top: -9px; height: 9px; background: radial-gradient(circle at 7px 0, transparent 5.5px, var(--slip) 6px) repeat-x; background-size: 14px 9px; }
+.slip h4 { margin: 0 0 8px; font-family: var(--body); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+.slip .ln { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+.slip .ln span:first-child { color: color-mix(in srgb, var(--slip-ink) 72%, transparent); }
+.slip .ln.total { border-top: 1px dashed color-mix(in srgb, var(--slip-ink) 35%, transparent); margin-top: 6px; padding-top: 8px; font-weight: 500; }
+.slip .ln.total span:first-child { color: var(--slip-ink); }
+
+/* Quiz */
+.q { display: grid; gap: 10px; }
+.q h3 { font-family: var(--body); font-weight: 600; font-size: 1.05rem; line-height: 1.35; }
+.opt { display: block; width: 100%; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); line-height: 1.35; }
+.opt.right { border-color: var(--up); background: var(--up-soft); }
+.opt.wrong { border-color: var(--down); background: var(--down-soft); }
+.opt[disabled] { cursor: default; }
+.explain { font-size: 0.92rem; padding: 10px 12px; border-radius: 10px; background: var(--sunk); }
+.qprog { display: flex; gap: 4px; }
+.qprog i { flex: 1; height: 4px; border-radius: 4px; background: var(--sunk); }
+.qprog i.done { background: var(--accent); }
+
+/* Sheet */
+.sheet { position: fixed; inset: 0; z-index: 50; }
+.sheet-scrim { position: absolute; inset: 0; background: rgba(8, 10, 22, 0.45); opacity: 0; transition: opacity .2s; border: 0; width: 100%; }
+.sheet.open .sheet-scrim { opacity: 1; }
+.sheet-panel {
+  position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 560px;
+  max-height: calc(100% - env(safe-area-inset-top, 0px) - 24px); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--bg); border-radius: 18px 18px 0 0; border: 1px solid var(--line); border-bottom: 0;
+  padding-top: 8px; padding-left: var(--gutter-l); padding-right: var(--gutter-r);
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateY(100%); transition: transform .26s cubic-bezier(.2,.8,.2,1);
+}
+.sheet.full .sheet-panel { height: calc(100% - env(safe-area-inset-top, 0px) - 12px); }
+.sheet.open .sheet-panel { transform: none; }
+@media (prefers-reduced-motion: reduce) { .sheet-panel, .sheet-scrim { transition: none; } }
+.grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: 0 auto 10px; }
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sheet-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+
+/* Forms */
+.field { display: grid; gap: 4px; }
+.field label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+.input { width: 100%; min-height: 44px; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); font-family: var(--mono); font-size: 1rem; }
+.input:focus { border-color: var(--accent); outline: none; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--sunk); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg button { border: 0; background: none; padding: 8px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.seg.buy-sell button[aria-pressed="true"][data-v="B"] { background: var(--up); color: var(--on-solid); }
+.seg.buy-sell button[aria-pressed="true"][data-v="S"] { background: var(--down); color: var(--on-solid); }
+.stepper { display: grid; grid-template-columns: 44px minmax(0,1fr) 44px; gap: 6px; }
+.stepper .btn { padding: 0; font-size: 1.2rem; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.err { color: var(--down); font-size: 0.88rem; }
+.hint { color: var(--muted); font-size: 0.84rem; }
+textarea.input { min-height: 90px; font-size: 0.8rem; }
+
+/* Tabs */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.tabs-inner { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+.tab { display: grid; justify-items: center; gap: 2px; padding: 8px 0 7px; background: none; border: 0; color: var(--muted); font-size: 0.72rem; font-weight: 600; }
+.tab svg { width: 23px; height: 23px; }
+.tab[aria-current="page"] { color: var(--accent); }
+
+/* Toasts */
+.toasts { position: fixed; left: 0; right: 0; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: grid; justify-items: center; gap: 6px; pointer-events: none; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.toast { pointer-events: auto; max-width: 520px; background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: center; animation: toast-in .2s ease-out; }
+.toast button { background: none; border: 0; color: var(--accent-soft); font-weight: 700; padding: 0; }
+@keyframes toast-in { from { transform: translateY(8px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+/* Belt-up moment */
+.beltup { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.beltup-card { text-align: center; display: grid; gap: 14px; justify-items: center; max-width: 340px; }
+.beltup-belt { position: relative; width: 240px; height: 34px; border-radius: 6px; background: var(--belt); border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent); animation: tie .7s cubic-bezier(.2,.9,.3,1.2) both; }
+.beltup-belt::before, .beltup-belt::after { content: ""; position: absolute; top: 24px; width: 26px; height: 64px; background: var(--belt); border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent); border-radius: 4px; }
+.beltup-belt::before { left: 92px; transform: rotate(18deg); transform-origin: top; }
+.beltup-belt::after { left: 122px; transform: rotate(-14deg); transform-origin: top; }
+@keyframes tie { from { transform: scaleX(0.2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .beltup-belt { animation: none; } }
+.beltup h2 { font-size: 2rem; margin-top: 54px; }
+
+/* Lab */
+.lab-chart { width: 100%; height: 240px; display: block; }
+.code { background: var(--sunk); border-radius: 10px; padding: 12px; overflow-x: auto; font-family: var(--mono); font-size: 0.76rem; line-height: 1.5; white-space: pre; max-height: 360px; }
+details > summary { cursor: pointer; font-weight: 600; }
+.checklist { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.checklist li { display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 8px; align-items: start; font-size: 0.92rem; }
+.checklist .tick { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--line); display: grid; place-items: center; margin-top: 2px; }
+.checklist .tick.done { background: var(--up); border-color: var(--up); color: var(--on-solid); }
+.checklist .tick svg { width: 13px; height: 13px; }
+.insight { font-size: 0.95rem; }
+.insight p { margin: 0 0 8px; }
+
+.foot { font-size: 0.78rem; color: var(--muted); text-align: center; padding: 6px 8px 0; }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.empty { text-align: center; color: var(--muted); padding: 22px 12px; font-size: 0.92rem; }
+@media (max-width: 380px) { .kv { grid-template-columns: repeat(2, minmax(0,1fr)); } .hero .big { font-size: 1.9rem; } }
+
+</style>
+<div class="app">
+  <header class="top" id="top"></header>
+  <main class="main" id="main"></main>
+</div>
+<nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<div class="sheet" id="sheet" hidden>
+  <button class="sheet-scrim" data-act="close-sheet" aria-label="Close" tabindex="-1"></button>
+  <section class="sheet-panel" id="sheet-panel" role="dialog" aria-modal="true" aria-label="Details"></section>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="beltup" id="beltup" hidden></div>
+<script>
+const PY_SRC = "\"\"\"Dalal Dojo Lab: does market timing beat a plain monthly SIP in the Nifty 50?\n\nEvery strategy gets the same money at the start of each month. Only the timing of\npurchases differs. Uses monthly Nifty 50 closes from Yahoo Finance (^NSEI).\n\n    pip install yfinance pandas matplotlib\n    python dalal_dojo_lab.py --amount 10000 --start 2008 --dip 10 --cash 6\n\nLimits: the Nifty price index leaves out dividends (roughly 1-1.5% a year), and\nno strategy pays charges or tax. Both affect all strategies, so the comparison\nholds, but absolute returns are understated. For dividends, download the\nNifty 50 TRI from niftyindices.com and pass it with --csv (columns Date, Close).\n\"\"\"\nimport argparse\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd\n\n\ndef load_monthly(csv=None):\n    if csv:\n        df = pd.read_csv(csv)\n        date_col = next(c for c in df.columns if \"date\" in c.lower())\n        close_col = next(c for c in df.columns if \"close\" in c.lower())\n        s = pd.Series(\n            pd.to_numeric(df[close_col].astype(str).str.replace(\",\", \"\"), errors=\"coerce\").values,\n            index=pd.to_datetime(df[date_col], dayfirst=True, errors=\"coerce\"),\n        ).dropna()\n    else:\n        import yfinance as yf\n        s = yf.download(\"^NSEI\", period=\"max\", interval=\"1mo\", auto_adjust=False, progress=False)[\"Close\"]\n        s = s.squeeze().dropna()\n    s = s.sort_index()\n    return s.groupby(s.index.to_period(\"M\")).last()  # last close of each month\n\n\ndef xirr(months, flows):\n    t = np.asarray(months, dtype=float) / 12.0\n    f = np.asarray(flows, dtype=float)\n    lo, hi = -0.99, 5.0\n    npv = lambda r: np.sum(f / (1 + r) ** t)\n    if npv(lo) * npv(hi) > 0:\n        return float(\"nan\")\n    for _ in range(200):\n        mid = (lo + hi) / 2\n        if npv(lo) * npv(mid) <= 0:\n            hi = mid\n        else:\n            lo = mid\n    return (lo + hi) / 2\n\n\ndef max_drawdown(values):\n    v = np.asarray(values, dtype=float)\n    peak = np.maximum.accumulate(v)\n    return float(np.max((peak - v) / peak))\n\n\ndef backtest(prices, amount, dip, cash_rate, prior_peak=0.0):\n    c = prices.values.astype(float)\n    years = prices.index.year.values\n    n = len(c)\n    rc = (1 + cash_rate / 100) ** (1 / 12) - 1\n    out = {}\n\n    units = np.cumsum(amount / c)\n    out[\"Monthly SIP\"] = units * c\n\n    out[\"Lump sum\"] = (amount * n / c[0]) * c\n\n    cash = np.zeros(n)\n    bal = 0.0\n    for i in range(n):\n        bal = bal * (1 + rc) + amount\n        cash[i] = bal\n    out[\"Cash only\"] = cash\n\n    peak, u, bal, vals, idle = prior_peak, 0.0, 0.0, [], 0\n    for i in range(n):\n        peak = max(peak, c[i])\n        bal = bal * (1 + rc) + amount\n        if c[i] <= peak * (1 - dip / 100):\n            u += bal / c[i]\n            bal = 0.0\n        else:\n            idle += 1\n        vals.append(u * c[i] + bal)\n    out[\"Dip buyer\"] = np.array(vals)\n\n    def timer(best):\n        add_units, waiting = np.zeros(n), np.zeros(n)\n        for i in range(n):\n            end = i\n            while end + 1 < n and years[end + 1] == years[i]:\n                end += 1\n            window = c[i:end + 1]\n            j = i + int(np.argmin(window) if best else np.argmax(window))\n            for k in range(i, j):\n                waiting[k] += amount * (1 + rc) ** (k - i)\n            add_units[j] += amount * (1 + rc) ** (j - i) / c[j]\n        return np.cumsum(add_units) * c + waiting\n\n    out[\"Perfect timer\"] = timer(True)\n    out[\"Worst timer\"] = timer(False)\n\n    months = list(range(n))\n    rows = []\n    for name, v in out.items():\n        if name == \"Lump sum\":\n            r = xirr([0, n - 1], [-amount * n, v[-1]])\n        else:\n            r = xirr(months + [n - 1], [-amount] * n + [v[-1]])\n        rows.append({\"strategy\": name, \"final_value\": v[-1], \"xirr_pct\": 100 * r,\n                     \"worst_fall_pct\": 100 * max_drawdown(v) if name != \"Cash only\" else 0.0})\n    table = pd.DataFrame(rows).set_index(\"strategy\")\n    return out, table, idle\n\n\ndef main():\n    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)\n    ap.add_argument(\"--amount\", type=float, default=10000, help=\"rupees invested each month\")\n    ap.add_argument(\"--start\", type=int, default=None, help=\"first calendar year to include\")\n    ap.add_argument(\"--dip\", type=float, default=10, help=\"dip buyer waits for a fall of this %% from the high\")\n    ap.add_argument(\"--cash\", type=float, default=6, help=\"yearly %% earned by cash waiting to be invested\")\n    ap.add_argument(\"--csv\", default=None, help=\"optional CSV with Date and Close columns\")\n    args = ap.parse_args()\n\n    monthly = load_monthly(args.csv)\n    prior_peak = 0.0\n    if args.start:\n        before = monthly[monthly.index.year < args.start]\n        prior_peak = float(before.max()) if len(before) else 0.0\n        monthly = monthly[monthly.index.year >= args.start]\n    if len(monthly) < 24:\n        raise SystemExit(\"Need at least 24 months of data.\")\n\n    series, table, idle = backtest(monthly, args.amount, args.dip, args.cash, prior_peak)\n    invested = args.amount * len(monthly)\n    pd.set_option(\"display.float_format\", lambda x: f\"{x:,.2f}\")\n    print(f\"{monthly.index[0]} to {monthly.index[-1]}: {len(monthly)} months, Rs {invested:,.0f} invested\\n\")\n    print(table)\n    gap = table.loc[\"Perfect timer\", \"xirr_pct\"] - table.loc[\"Monthly SIP\", \"xirr_pct\"]\n    print(f\"\\nPerfect hindsight added {gap:.2f} points a year over a plain SIP.\")\n    print(f\"The dip buyer had uninvested cash in {idle} of {len(monthly)} months.\")\n\n    x = monthly.index.to_timestamp()\n    fig, ax = plt.subplots(figsize=(10, 5.5))\n    for name, v in series.items():\n        ax.plot(x, v / 1e5, label=name, linewidth=2.4 if name == \"Monthly SIP\" else 1.5)\n    ax.plot(x, args.amount * np.arange(1, len(x) + 1) / 1e5, \"--\", color=\"grey\", label=\"Money put in\")\n    ax.set_ylabel(\"Value (Rs lakh)\")\n    ax.set_title(f\"Rs {args.amount:,.0f} a month into the Nifty 50: does timing help?\")\n    ax.grid(alpha=0.3)\n    ax.legend()\n    fig.tight_layout()\n    fig.savefig(\"dalal_dojo_lab.png\", dpi=150)\n    print(\"\\nSaved chart to dalal_dojo_lab.png\")\n\n\nif __name__ == \"__main__\":\n    main()\n";
+</script>
+<script>
+/* Dalal Dojo lesson content.
+   All text is original to this app. Modules 2 and 3 introduce themes from two books
+   (credited by name) in our own words; they are not summaries of the books' chapters.
+   Body blocks: a string is a paragraph; {list:[...]} is a bullet list; {note:"..."} is a callout;
+   {slip:{title, rows:[[label,value]], total:[label,value]}} is a contract-note style table.
+   **text** renders bold. */
+
+const MODULES = [
+{
+  id: "m1",
+  title: "Market Basics",
+  blurb: "Shares, exchanges, orders, settlement and the charges on every trade.",
+  source: "Covers the same ground as the opening modules of Zerodha Varsity, written fresh for this app. Varsity is free and goes much deeper.",
+  links: [{ label: "Zerodha Varsity (free)", url: "https://zerodha.com/varsity/" }],
+  lessons: [
+    {
+      id: "m1l1",
+      title: "What you own when you buy a share",
+      mins: 3,
+      body: [
+        `A company splits its ownership into equal pieces called **shares**. If a company has 100 crore shares and you hold one, you own one part in 100 crore of the business: a claim on its future profits and a vote at its meetings.`,
+        `The price moves because buyers and sellers keep re-estimating what those future profits are worth. Over weeks, mood and news dominate. Over decades, the price tends to follow the growth in the company's earnings.`,
+        { list: [
+          `**Price gain:** you sell later for more than you paid.`,
+          `**Dividends:** the company pays out part of its profit in cash.`,
+          `**Loss:** the business disappoints, and the price can fall a long way, even to near zero.`
+        ]},
+        `An **ETF** (exchange-traded fund) is a basket you buy like a share. One unit of a Nifty 50 ETF such as NIFTYBEES gives you a small slice of all 50 companies in the index, in the same proportions as the index.`,
+        { note: `In this game every rupee is pretend money, but the mechanics are real: the same order types, the same charges, the same settlement rules.` }
+      ],
+      takeaway: "A share is a part of a real business. Before buying, ask whether you'd be happy to own that business for five years.",
+      quiz: [
+        { q: "When you buy one share of a company, what do you own?", o: ["A loan you have given the company", "A tiny part of the business", "A deposit held by the exchange", "A promise to buy more shares later"], a: 1, e: "Shares are ownership. A loan to a company is a bond or debenture, which is a different instrument." },
+        { q: "Over decades, what mainly drives a company's share price?", o: ["Daily news headlines", "How many people own the stock", "Growth in the company's earnings", "Which broker app people use"], a: 2, e: "News moves prices in the short run. Over long periods, prices tend to track what the business earns." },
+        { q: "What does one unit of a Nifty 50 ETF give you?", o: ["A slice of all 50 Nifty companies", "One share of NSE itself", "A fixed yearly return", "A share of the best Nifty stock"], a: 0, e: "An index ETF holds every company in its index, so one unit spreads your money across all of them." }
+      ]
+    },
+    {
+      id: "m1l2",
+      title: "Who's who: SEBI, exchanges, depositories, brokers",
+      mins: 3,
+      body: [
+        `Four kinds of institution sit behind every trade you place.`,
+        { list: [
+          `**Exchanges (NSE, BSE)** run the order books where buy and sell orders meet and get matched electronically.`,
+          `**SEBI** is the regulator. It writes the rules for exchanges, brokers and mutual funds and handles investor complaints.`,
+          `**Depositories (CDSL, NSDL)** hold your shares electronically in your **demat account**, in your name.`,
+          `**Your broker** sends your orders to the exchange and usually also acts as your **depository participant (DP)**, the link between you and the depository.`
+        ]},
+        `A **clearing corporation** stands in the middle of every trade and guarantees it settles, so you never depend on the honesty of the unknown person on the other side.`,
+        `Because shares sit in your name at the depository, they can't leave your demat without your permission. That's why a sale asks for your CDSL TPIN and an OTP, unless you have signed a one-time authorisation called DDPI.`,
+        `It's also why the **DP charge** exists. Each time shares leave your demat on a sale, the depository and your DP charge a flat fee per stock. At Zerodha it is ₹15.34 per stock per day, whatever the quantity.`
+      ],
+      takeaway: "Your shares belong to you at the depository, not to your broker. The flat DP charge on sales comes from that arrangement.",
+      quiz: [
+        { q: "Where are your shares actually held?", o: ["In your broker's bank account", "At the company's registered office", "In your demat account at a depository", "With SEBI"], a: 2, e: "CDSL and NSDL hold shares electronically in your name. The broker is only your participant in that system." },
+        { q: "Who regulates India's securities markets?", o: ["RBI", "SEBI", "NSE", "CDSL"], a: 1, e: "SEBI regulates securities markets. RBI regulates banks and monetary policy." },
+        { q: "Why does selling ask for a TPIN and OTP?", o: ["To calculate your tax", "To confirm the price", "To pay brokerage", "To authorise shares leaving your demat"], a: 3, e: "The depository needs your permission before shares leave your account. DDPI is a standing version of that permission." }
+      ]
+    },
+    {
+      id: "m1l3",
+      title: "Order types: market, limit and after-hours",
+      mins: 4,
+      body: [
+        `When you place an order you choose how it should be filled.`,
+        { list: [
+          `**Market order:** fill now at the best price available. It's fast but you don't control the price.`,
+          `**Limit order:** you name the worst price you'll accept. A buy limit at ₹250 fills only at ₹250 or lower, and it may never fill.`,
+          `**After-market order (AMO):** placed while the market is closed and sent to the exchange when the next session opens.`
+        ]},
+        `Every stock has a **bid** (the highest price buyers offer) and an **ask** (the lowest price sellers want). The gap is the **spread**. For busy stocks it's a few paise. For thinly traded ETFs it can be much wider, and a market order pays the whole gap. Limit orders protect you there.`,
+        `Orders are also either **delivery** (CNC: the shares come into your demat and you can hold them for years) or **intraday** (MIS: borrowed buying power, closed the same day). This game uses delivery only, because that's how investing works.`,
+        `NSE's normal session runs **9:15 am to 3:30 pm IST** on trading days, with a short pre-open session from 9:00 am.`
+      ],
+      takeaway: "Use limit orders when the spread is wide or the price matters to you. Market orders are fine for very liquid stocks and ETFs.",
+      quiz: [
+        { q: "A stock trades at ₹255. You place a buy limit at ₹250. What happens?", o: ["It fills at ₹255 straight away", "It waits and fills only if the price reaches ₹250 or lower", "It is rejected", "It fills at ₹250 straight away"], a: 1, e: "A limit sets the worst price you accept. Until a seller offers ₹250 or less, the order waits." },
+        { q: "Why prefer a limit order for a thinly traded ETF?", o: ["It has lower brokerage", "It avoids STT", "A wide bid-ask spread can make a market order fill at a poor price", "Market orders aren't allowed for ETFs"], a: 2, e: "Thin trading means a wide spread. A market order buys at whatever the best ask is, even if it's far above fair value." },
+        { q: "When does NSE's normal trading session run?", o: ["9:15 am to 3:30 pm IST", "9:00 am to 5:00 pm IST", "10:00 am to 4:00 pm IST", "Around the clock"], a: 0, e: "The normal session is 9:15 am to 3:30 pm IST, with a pre-open session from 9:00 am." }
+      ]
+    },
+    {
+      id: "m1l4",
+      title: "After you tap Buy: settlement and charges",
+      mins: 5,
+      body: [
+        `Indian equities settle on **T+1**: shares you buy today arrive in your demat on the next trading day, and money from a sale arrives the next trading day too.`,
+        `The same day you get a **contract note**, the legal bill for the trade. It lists the price, the quantity and every charge. Delivery charges at a typical discount broker look like this:`,
+        { list: [
+          `**Brokerage:** often ₹0 for delivery.`,
+          `**STT (securities transaction tax):** 0.1% on both buy and sell for shares. Most equity ETFs pay 0.001% on the sell side only. Gold and liquid ETFs pay none.`,
+          `**Exchange transaction charges and the SEBI fee:** tiny percentages of the trade value.`,
+          `**Stamp duty:** 0.015% on purchases.`,
+          `**GST:** 18% on brokerage plus exchange and SEBI charges.`,
+          `**DP charge:** a flat fee on every sale, per stock per day. ₹15.34 at Zerodha.`
+        ]},
+        { slip: { title: "Buy and later sell ₹10,000 of a stock", rows: [["Buy: STT", "₹10.00"], ["Buy: stamp duty", "₹1.50"], ["Buy: exchange, SEBI, GST", "₹0.36"], ["Sell: STT", "₹10.00"], ["Sell: exchange, SEBI, GST", "₹0.36"], ["Sell: DP charge", "₹15.34"]], total: ["Round trip", "₹37.56 (0.38%)"] } },
+        `Now shrink the trade. A ₹1,000 round trip costs about ₹17.56, or 1.76%, mostly the DP charge. Selling a single ₹120 ETF unit loses about 13% to that one flat fee.`
+      ],
+      takeaway: "Flat fees punish small sales. Buy in sensible sizes and sell rarely.",
+      quiz: [
+        { q: "You sell shares on a Monday that is a trading day. When does the money settle?", o: ["The same day", "Tuesday (T+1)", "Wednesday (T+2)", "After a week"], a: 1, e: "India moved to T+1 settlement for equities, so the money settles the next trading day." },
+        { q: "Which charge is a flat amount rather than a percentage of the trade?", o: ["STT", "Stamp duty", "Exchange charges", "DP charge"], a: 3, e: "The DP charge is per stock per day, whatever the quantity. That's why it hurts small sales most." },
+        { q: "Which of these ETFs pays no STT?", o: ["A gold ETF", "A Nifty 50 ETF", "A bank index ETF", "All ETFs pay 0.1%"], a: 0, e: "Gold and liquid ETFs pay no STT. Most equity ETFs pay 0.001% on the sell side." },
+        { q: "Roughly what does a ₹10,000 stock round trip cost in charges with zero brokerage?", o: ["About ₹2", "About ₹38", "About ₹200", "About ₹1,000"], a: 1, e: "STT on both sides (₹20), the DP charge (₹15.34) and small fees add up to about ₹37.56." }
+      ]
+    },
+    {
+      id: "m1l5",
+      title: "Indices: Nifty 50 and friends",
+      mins: 3,
+      body: [
+        `An **index** tracks a basket of stocks to measure part of the market. The **Nifty 50** follows 50 large companies listed on NSE. It started at 1,000 points in November 1995.`,
+        `Each company's weight comes from its **free-float market capitalisation**: the value of the shares available to the public, leaving out promoter holdings. Bigger companies move the index more.`,
+        { list: [
+          `**Nifty Next 50:** the next 50 companies by size. Bumpier, and the place future Nifty 50 members often come from.`,
+          `**Sensex:** BSE's 30-stock index.`,
+          `**Nifty Bank:** the largest banking stocks.`
+        ]},
+        `Index points aren't rupees. If the Nifty is at 23,000 and falls 230 points, that's a 1% fall. The percentage is what matters.`,
+        `NSE reviews index membership twice a year. Index funds and ETFs copy these changes so you don't have to do anything.`
+      ],
+      takeaway: "Read index moves in percent, not points. A broad index is the simplest way to own a diversified piece of India Inc.",
+      quiz: [
+        { q: "How does the Nifty 50 weight its companies?", o: ["Equally", "By free-float market capitalisation", "By profits", "Alphabetically"], a: 1, e: "Weights follow the market value of freely traded shares, so the largest companies have the most influence." },
+        { q: "The Nifty is at 23,000 and falls 230 points. What is the percentage change?", o: ["-0.1%", "-2.3%", "-1%", "-10%"], a: 2, e: "230 ÷ 23,000 = 1%." },
+        { q: "Compared with the Nifty 50, the Nifty Next 50 is usually:", o: ["More volatile", "Risk-free", "Made of foreign companies", "Exactly the same"], a: 0, e: "Smaller companies tend to swing more, so the Next 50 is typically bumpier." }
+      ]
+    }
+  ]
+},
+{
+  id: "m2",
+  title: "Index Investing",
+  blurb: "Why owning the whole market cheaply is hard to beat, and how ETFs and gold fit in.",
+  source: "Introduces ideas John C. Bogle argued for in The Little Book of Common Sense Investing, applied to India and written in our own words. Read the book for his full case.",
+  links: [{ label: "The Little Book of Common Sense Investing (book)", url: "https://www.google.com/search?q=The+Little+Book+of+Common+Sense+Investing+Bogle" }, { label: "SPIVA India scorecards", url: "https://www.spglobal.com/spdji/en/spiva/article/spiva-india" }],
+  lessons: [
+    {
+      id: "m2l1",
+      title: "Own the whole haystack",
+      mins: 4,
+      body: [
+        `John Bogle founded Vanguard and in 1976 launched the first index fund for ordinary investors. His central argument: rather than hunting for the few stocks that will win, own the entire market at the lowest possible cost and hold it.`,
+        `The reasoning is arithmetic. All investors together own the whole market, so **before costs** the average rupee invested must earn the market's return. **After costs** (fees, trading, taxes) the average investor has to earn less. The index investor pays the least, so keeps the most.`,
+        `This doesn't depend on fund managers being unskilled. Some will beat the market, but picking them in advance is hard, and many winners don't stay winners.`,
+        `Indian data agrees. S&P's SPIVA India scorecard for year-end 2025 found that about **76% of large-cap funds** trailed their benchmark over 10 years.`,
+        { note: `What you give up with an index fund is the chance to beat the market. What you gain is near-certainty of getting close to the market's return.` }
+      ],
+      takeaway: "Before costs, investing is a zero-sum split of the market's return. After costs, the cheapest participant comes out ahead.",
+      quiz: [
+        { q: "Before costs, the average investor's return equals:", o: ["More than the market", "Zero", "The market's return", "The return of the best fund"], a: 2, e: "All investors together are the market, so on average they earn exactly its return before costs." },
+        { q: "Why must the average active investor trail the market after costs?", o: ["Active managers are unskilled", "They pay more costs out of the same average return", "Index funds take their profits", "SEBI rules require it"], a: 1, e: "Same average return before costs, higher costs, so a lower return after costs." },
+        { q: "Per SPIVA India year-end 2025, about what share of large-cap funds trailed their benchmark over 10 years?", o: ["About 10%", "About half", "None", "About three-quarters"], a: 3, e: "About 76% of large-cap funds underperformed over 10 years." }
+      ]
+    },
+    {
+      id: "m2l2",
+      title: "Costs compound too",
+      mins: 4,
+      body: [
+        `Returns compound, and so do costs. A 1% yearly fee sounds tiny, but it's taken from your whole balance every year, including everything it has already grown into.`,
+        { slip: { title: "₹10,000 a month for 25 years (₹30 lakh invested)", rows: [["At 12% a year", "₹1.70 crore"], ["At 11% a year (1% in costs)", "₹1.45 crore"]], total: ["Lost to a 1% cost", "≈ ₹24.9 lakh (15%)"] } },
+        `In India the same fund often comes in two plans. A **regular plan** includes a distributor's commission. A **direct plan** doesn't, so its expense ratio is lower. The portfolio inside is identical.`,
+        `Many index funds charge well under 0.5% a year, while regular plans of active funds often charge 1.5% or more. Check the expense ratio (TER) on the fund's factsheet.`,
+        `Costs also hide outside the expense ratio: bid-ask spreads, STT and DP charges on frequent trades, and tax every time you sell at a gain.`
+      ],
+      takeaway: "You can't control returns, but you can control costs. Every 1% saved compounds in your favour.",
+      quiz: [
+        { q: "Over 25 years of ₹10,000 a month, how much does an extra 1% yearly cost shrink the final value?", o: ["About 1%", "About 15%", "About 50%", "It makes no difference"], a: 1, e: "₹1.70 crore at 12% against ₹1.45 crore at 11%: about 15% less." },
+        { q: "How does a direct plan differ from a regular plan of the same fund?", o: ["It holds different stocks", "It's riskier", "It has a lower expense ratio because no commission is paid", "It can only be bought offline"], a: 2, e: "Same portfolio. The regular plan pays a distributor commission out of the fund's expenses." },
+        { q: "Which of these is a hidden cost of frequent trading?", o: ["DP charges and STT", "The index level", "Dividends", "The company's profit"], a: 0, e: "Each round trip pays STT, and each sale pays a DP charge, on top of any tax on gains." }
+      ]
+    },
+    {
+      id: "m2l3",
+      title: "ETF or index mutual fund?",
+      mins: 4,
+      body: [
+        `Both track an index. They differ in how you buy them.`,
+        { list: [
+          `**ETF:** trades on the exchange through your demat account, like a share. The price moves during the day. You pay STT and DP charges, and you need someone on the other side to trade with.`,
+          `**Index mutual fund:** you buy from the fund house at the day's closing NAV. No demat needed, no DP charge, automatic SIPs are easy. Expense ratios are often slightly higher than the cheapest ETFs.`
+        ]},
+        `An ETF's market price can drift from the value of what it holds. That value, updated live during market hours, is called the **iNAV** (indicative NAV) and is published by the fund house. If the ETF trades at ₹265 while its iNAV is ₹261, buying means paying a premium of about 1.5%.`,
+        `**Tracking difference** is how far the fund's return falls short of the index over a year. Lower is better.`,
+        { note: `A simple rule: for automatic monthly investing, an index fund SIP is easiest. ETFs suit occasional purchases if you check liquidity and iNAV and use limit orders.` }
+      ],
+      takeaway: "Before buying an ETF, compare its price with its iNAV and use a limit order.",
+      quiz: [
+        { q: "What does an ETF's iNAV tell you?", o: ["The live value of the ETF's underlying holdings", "Last year's return", "The fund manager's fee", "The number of investors"], a: 0, e: "iNAV is the indicative value of what the ETF holds, updated during market hours." },
+        { q: "An ETF trades at ₹265 while its iNAV is ₹261. Buying now means:", o: ["Getting a discount", "Paying a premium of about 1.5%", "Paying no charges", "Nothing unusual"], a: 1, e: "(265 − 261) ÷ 261 ≈ 1.5% above the value of the holdings." },
+        { q: "Which of the two needs a demat account?", o: ["Index mutual fund", "Neither", "Both", "ETF"], a: 3, e: "ETFs trade on the exchange and settle into your demat. Mutual fund units don't need one." }
+      ]
+    },
+    {
+      id: "m2l4",
+      title: "Where gold fits",
+      mins: 3,
+      body: [
+        `A **gold ETF** holds physical gold of high purity in a vault, and each unit represents a small fraction of a gram.`,
+        `Gold earns no profits or interest. Its return comes only from price changes. It has often moved differently from shares and has tended to hold up in crises, which is why it's used as a **diversifier** rather than a main growth engine. Many planners suggest a modest slice, often in the 5–15% range.`,
+        `In India, gold's rupee price also reflects the exchange rate. When the rupee weakens against the dollar, gold in rupees tends to rise.`,
+        { list: [
+          `**STT:** none on gold ETFs.`,
+          `**Tax:** held more than 12 months, gains are taxed at 12.5% without indexation. Held 12 months or less, they're added to your income and taxed at your slab rate.`
+        ]},
+        `Holding two different gold ETFs adds nothing. They track the same metal, so it's the same bet twice, with an extra DP charge whenever you sell both.`
+      ],
+      takeaway: "Treat gold as ballast for the portfolio, sized deliberately, and hold one fund for it.",
+      quiz: [
+        { q: "Gold's usual role in a long-term portfolio is:", o: ["The main growth engine", "A source of dividends", "A diversifier", "A replacement for an emergency fund"], a: 2, e: "Gold produces no earnings. It earns its place by behaving differently from equities." },
+        { q: "What do two different gold ETFs give you?", o: ["Double diversification", "The same exposure twice", "Lower tax", "Exposure to mining companies"], a: 1, e: "Both track the price of gold. Extra funds only add extra sale charges." },
+        { q: "How is a gain on a gold ETF held for 14 months taxed?", o: ["12.5% long-term capital gains tax", "At your slab rate", "20%", "It's tax-free"], a: 0, e: "Over 12 months counts as long term for listed gold ETFs, taxed at 12.5% without indexation." }
+      ]
+    },
+    {
+      id: "m2l5",
+      title: "Stay the course",
+      mins: 3,
+      body: [
+        `Bogle's other theme was discipline. Index investing pays off only if you keep holding through the bad years.`,
+        `Studies of fund flows repeatedly find that investors earn less than the funds they own. People tend to buy after prices have risen and sell after they have fallen, which is the reverse of what works.`,
+        { list: [
+          `Automate a monthly SIP so investing doesn't depend on your mood.`,
+          `Review once or twice a year, not daily.`,
+          `Rebalance when your mix drifts more than about 5 percentage points from your target.`,
+          `Ignore forecasts. Nobody reliably knows next month's market.`
+        ]},
+        `In this game, fast-forward the simulated market through a few bad months without selling and watch what happens to your account.`
+      ],
+      takeaway: "The plan you can stick with beats the clever plan you abandon in a crash.",
+      quiz: [
+        { q: "Why do investors often earn less than the funds they own?", o: ["Funds misreport returns", "They buy after rises and sell after falls", "Taxes on dividends", "Index funds are slow"], a: 1, e: "Chasing performance and panic selling move money in at high prices and out at low ones." },
+        { q: "A sensible review schedule for a long-term portfolio is:", o: ["Every hour", "Daily at market close", "Once or twice a year", "Never"], a: 2, e: "Frequent checking invites action. A scheduled review keeps the plan on track." },
+        { q: "When is rebalancing usually considered?", o: ["When your mix drifts about 5 points from target", "Every day", "When a friend gives a tip", "Only after a crash"], a: 0, e: "A drift band avoids constant small trades while keeping risk where you chose it." }
+      ]
+    }
+  ]
+},
+{
+  id: "m3",
+  title: "Money Foundations",
+  blurb: "Emergency fund, insurance, goals, allocation and tax: the groundwork before investing.",
+  source: "Introduces personal-finance themes that Monika Halan's Let's Talk Money is known for in India, such as getting the foundations right before chasing returns, written in our own words. Read the book for her full system.",
+  links: [{ label: "Let's Talk Money (book)", url: "https://www.google.com/search?q=Let%27s+Talk+Money+Monika+Halan" }, { label: "SEBI investor education", url: "https://investor.sebi.gov.in/" }],
+  lessons: [
+    {
+      id: "m3l1",
+      title: "The order of operations",
+      mins: 3,
+      body: [
+        `Investing is the fourth step, not the first.`,
+        { list: [
+          `**1. A cash buffer.** Know what you spend, and build an emergency fund.`,
+          `**2. Insurance.** Health cover for yourself, and term life cover if anyone depends on your income.`,
+          `**3. Expensive debt.** Credit-card balances often cost over 30% a year. No investment reliably beats that.`,
+          `**4. Investing** for goals.`
+        ]},
+        `The order matters because without a buffer, a job loss or a hospital bill forces you to sell investments at whatever price the market offers that week, often a bad one.`,
+        `A simple structure helps: salary lands in one account, and on payday fixed amounts move automatically to a spending account and to investments. Investing first and spending what's left beats saving whatever is left over.`
+      ],
+      takeaway: "Buffer, insurance, expensive debt, then investing. Skipping ahead makes every market fall a personal crisis.",
+      quiz: [
+        { q: "Which comes first?", o: ["Buying stocks", "An emergency fund", "Buying gold", "Trading options"], a: 1, e: "A cash buffer keeps emergencies from forcing you to sell investments at a bad time." },
+        { q: "Why pay off a credit-card balance before investing?", o: ["Its interest often exceeds 30% a year", "Banks require it", "It improves market returns", "It isn't necessary"], a: 0, e: "Clearing a 30%+ debt is a guaranteed 30%+ return. No investment offers that reliably." },
+        { q: "What does paying yourself first mean?", o: ["Taking a salary advance", "Spending first and saving the remainder", "Moving money to investments on payday, before spending", "Keeping all money in cash"], a: 2, e: "Automating the investment on payday makes saving the default." }
+      ]
+    },
+    {
+      id: "m3l2",
+      title: "Building the emergency fund",
+      mins: 3,
+      body: [
+        `An emergency fund covers essential expenses if income stops or a big bill arrives. A common guide is **six months of essential spending**: more if your income is irregular or people depend on you, less while you're a student with low fixed costs.`,
+        `It must be **safe and quick to reach**:`,
+        { list: [
+          `A savings account or a sweep-in fixed deposit.`,
+          `A liquid mutual fund or liquid ETF, which hold very short-term debt.`,
+          `Not shares, equity funds or gold, which can be down 20–40% exactly when you need the money.`
+        ]},
+        `The emergency fund's job is to be there, not to earn much. A lower return is the price of certainty.`,
+        { note: `In this game, LIQUIDBEES stands in for the emergency-fund bucket. The real LIQUIDBEES stays near ₹1,000 and pays its return as extra units. Here it's shown as a slowly rising price to keep things simple.` }
+      ],
+      takeaway: "Six months of essentials, kept somewhere boring and reachable.",
+      quiz: [
+        { q: "A common guide for emergency-fund size is:", o: ["One week of spending", "Six months of essential expenses", "Ten years of salary", "Whatever is left at month-end"], a: 1, e: "Around six months of essentials, adjusted for how stable your income is." },
+        { q: "Which is a poor place for an emergency fund?", o: ["Savings account", "Liquid fund", "Sweep-in FD", "A small-cap stock"], a: 3, e: "Stocks can fall sharply just when you need the money." },
+        { q: "What is the emergency fund's main job?", o: ["Being available when needed", "Earning the highest return", "Saving tax", "Beating inflation by a wide margin"], a: 0, e: "Certainty and access come before returns." }
+      ]
+    },
+    {
+      id: "m3l3",
+      title: "Insurance is not an investment",
+      mins: 4,
+      body: [
+        `Insurance moves a risk you can't afford onto an insurer. Investing grows money. Mixing the two usually does both badly.`,
+        { list: [
+          `**Term life insurance** pays only if you die during the term. Premiums are low, so large cover is affordable. A commonly suggested size is 10–15 times your annual income, if someone depends on that income.`,
+          `**Health insurance** protects your savings from hospital bills. Employer cover ends when the job does, so a personal policy matters too.`
+        ]},
+        `**Endowment, money-back and many ULIP policies** combine cover with investment. They tend to offer small cover, high costs, long lock-ins and modest returns. A common alternative is to buy term cover and invest the difference yourself.`,
+        `A student with no dependants usually doesn't need life cover yet, but does benefit from health cover.`
+      ],
+      takeaway: "Buy insurance for protection and investments for growth, separately.",
+      quiz: [
+        { q: "What does term life insurance do?", o: ["Pays a guaranteed return at maturity", "Pays only if the insured person dies during the term", "Invests in the stock market", "Covers hospital bills"], a: 1, e: "Term cover is pure protection, which is why it's cheap." },
+        { q: "Why are endowment-style policies often criticised?", o: ["They are illegal", "They give too much cover", "Small cover, high costs and modest returns", "They can't be cancelled"], a: 2, e: "Mixing cover with investment tends to shortchange both." },
+        { q: "Who most needs term life cover?", o: ["Someone whose income others depend on", "A retired person with no dependants", "A child", "Everyone equally"], a: 0, e: "Life cover replaces income for dependants. With no dependants, the need is small." }
+      ]
+    },
+    {
+      id: "m3l4",
+      title: "Goals and time horizons",
+      mins: 3,
+      body: [
+        `Match each rupee to when you'll need it.`,
+        { list: [
+          `**Under 3 years** (a laptop, a course fee): fixed deposits, liquid or short-term debt funds. Equity is too unpredictable over this span.`,
+          `**3–7 years** (a car, a home down payment): a mix of debt and equity.`,
+          `**7+ years** (retirement, long-term wealth): mostly diversified equity, such as index funds.`
+        ]},
+        `Equity markets have fallen 30–60% in bad years. Money needed next year shouldn't be exposed to that. Money needed in 15 years has time to recover.`,
+        `Write each goal as an **amount and a date**: "₹6 lakh down payment by March 2030" is a goal. "Get rich" isn't.`
+      ],
+      takeaway: "The date you need the money decides where it should sit.",
+      quiz: [
+        { q: "Money you need in 18 months is best kept in:", o: ["A small-cap fund", "Fixed deposits or a short-term debt fund", "Gold only", "A single stock"], a: 1, e: "Short horizons can't ride out an equity crash." },
+        { q: "Which is a well-defined goal?", o: ["Be comfortable", "Make lots of money", "₹6 lakh by March 2030", "Beat my friends"], a: 2, e: "An amount and a date let you plan the monthly saving and the right product." },
+        { q: "Why does a long horizon suit equity?", o: ["There's time to recover from falls", "Equity never falls over long periods", "Tax is zero", "Brokerage is lower"], a: 0, e: "Equity can fall hard, but long horizons have historically given it time to recover." }
+      ]
+    },
+    {
+      id: "m3l5",
+      title: "Asset allocation and rebalancing",
+      mins: 4,
+      body: [
+        `**Asset allocation** is your split between equity, debt and gold. It decides most of how your portfolio behaves: how far it can fall and how fast it can grow.`,
+        `Choose a split you could hold through a crash. An 80% equity portfolio feels fine in a boom. In a 40% market fall it drops about 32%. Ask yourself honestly whether you'd stay put.`,
+        `Markets move your mix away from target over time. **Rebalancing** brings it back. The cheapest way is to point new money at whatever is underweight, which avoids sale charges and tax. Selling the overweight part is the fallback when drift is large.`,
+        { note: `Set a target allocation in the Portfolio tab. The game then shows your drift and what new money would bring you back to target.` }
+      ],
+      takeaway: "Pick a mix you'll keep in bad times, then steer back to it with new money.",
+      quiz: [
+        { q: "An 80% equity portfolio faces a 40% market fall. Roughly how much does the portfolio fall?", o: ["8%", "32%", "40%", "80%"], a: 1, e: "80% × 40% = 32%, assuming the other 20% holds steady." },
+        { q: "What's the cheapest way to rebalance?", o: ["Sell everything and rebuy", "Direct new money to the underweight asset", "Trade every day", "Ignore it"], a: 1, e: "Buying the underweight asset needs no sale, so no DP charge and no capital gains tax." },
+        { q: "What does asset allocation mainly decide?", o: ["The broker you use", "Your tax slab", "How the portfolio behaves, including how far it can fall", "Which stock wins"], a: 2, e: "The equity, debt and gold mix drives most of the ride." }
+      ]
+    },
+    {
+      id: "m3l6",
+      title: "Tax on your investments",
+      mins: 4,
+      body: [
+        `India taxes gains when you sell. These were the rates for listed shares, equity funds and ETFs as of 2026:`,
+        { list: [
+          `**Held more than 12 months (long term):** 12.5% on gains above ₹1.25 lakh in a financial year.`,
+          `**Held 12 months or less (short term):** 20%.`,
+          `**Gold ETFs:** 12.5% if held more than 12 months, otherwise added to your income at your slab rate.`
+        ]},
+        `Losses help. Short-term capital losses can be set off against both short- and long-term gains. Long-term losses only against long-term gains. Unused losses carry forward for 8 years if you file your return on time.`,
+        `Because tax is charged on selling, a buy-and-hold investor defers tax for years, while a frequent trader pays it every time, at the higher short-term rate.`,
+        { note: `Budgets change these rules. Check the current rates on the Income Tax Department's site or with a CA before acting.` }
+      ],
+      takeaway: "Holding longer than 12 months lowers the rate and lets the first ₹1.25 lakh of yearly long-term equity gains go untaxed.",
+      quiz: [
+        { q: "You sell equity ETF units after 8 months at a gain. Which rate applies?", o: ["12.5%", "20%", "Slab rate", "0%"], a: 1, e: "12 months or less counts as short term for listed equity: 20%." },
+        { q: "Long-term equity gains up to what amount per year are untaxed?", o: ["₹50,000", "₹1.25 lakh", "₹5 lakh", "No limit"], a: 1, e: "The first ₹1.25 lakh of long-term equity gains in a financial year is exempt." },
+        { q: "A long-term capital loss can be set off against:", o: ["Long-term gains only", "Salary income", "Any income", "Short-term gains only"], a: 0, e: "Long-term losses offset only long-term gains. Short-term losses can offset both kinds." }
+      ]
+    }
+  ]
+},
+{
+  id: "m4",
+  title: "Your Brain on Markets",
+  blurb: "Volatility, loss aversion, tips and leverage: why behaviour matters more than stock picking.",
+  source: "Draws on well-documented behavioural research and SEBI data.",
+  links: [{ label: "SEBI investor education", url: "https://investor.sebi.gov.in/" }],
+  lessons: [
+    {
+      id: "m4l1",
+      title: "Volatility is the price of admission",
+      mins: 3,
+      body: [
+        `Daily swings of 1% in the Nifty are routine. A red "Day's P&L" is the normal texture of owning equities, not a signal.`,
+        `Bigger falls happen too. In 2008 the Nifty fell roughly 60% from its peak. In early 2020 it fell almost 40% in about two months. In both cases it later climbed back above its old high: by late 2010 after the 2008 crash, and by late 2020 after the Covid fall.`,
+        `**Volatility isn't the same as permanent loss.** For a diversified index, losses become permanent mainly when you sell near the bottom. For a single company, they can become permanent if the business fails.`,
+        `Expected returns from equity exist precisely because the ride is uncomfortable. Without volatility there would be no premium for bearing it.`
+      ],
+      takeaway: "Expect falls of 10–20% every few years and occasionally far worse. Plan for them before they happen.",
+      quiz: [
+        { q: "Roughly how far did the Nifty fall from peak in 2008?", o: ["About 5%", "About 60%", "About 15%", "It didn't fall"], a: 1, e: "It fell roughly 60% from its early-2008 peak before recovering." },
+        { q: "For a diversified index, when do losses usually become permanent?", o: ["When the price dips for a day", "When you sell near the bottom", "Whenever the index is red", "Never"], a: 1, e: "A broad index has historically recovered. Selling at the low turns a temporary fall into a realised loss." },
+        { q: "Why does equity offer higher expected returns than a fixed deposit?", o: ["Banks are inefficient", "Investors are paid for bearing the swings", "SEBI guarantees it", "Equity has no risk"], a: 1, e: "The extra return compensates for the discomfort and uncertainty." }
+      ]
+    },
+    {
+      id: "m4l2",
+      title: "Checking too often",
+      mins: 3,
+      body: [
+        `Look at an equity portfolio daily and you'll see a loss on many of those days. Look once a year and losses show up far less often, because the long-term upward drift has time to outweigh the noise.`,
+        `Psychologists Daniel Kahneman and Amos Tversky documented **loss aversion**: a loss feels roughly twice as bad as an equal gain feels good. More looking means more pain, and more pain pushes people to act.`,
+        `Acting usually means selling, which brings charges, tax and the risk of missing the recovery.`,
+        { list: [
+          `Turn off price notifications for long-term holdings.`,
+          `Pick review dates and look then.`,
+          `Judge the plan on years, not days.`
+        ]}
+      ],
+      takeaway: "The less often you look, the better your decisions tend to be.",
+      quiz: [
+        { q: "What is loss aversion?", o: ["Avoiding all investments", "Feeling losses more strongly than equal gains", "A tax rule", "A type of order"], a: 1, e: "Losses hurt roughly twice as much as equal gains please, which pushes people to over-react." },
+        { q: "Checking a portfolio more often tends to:", o: ["Raise returns", "Show more losses and invite more trading", "Lower charges", "Make no difference to behaviour"], a: 1, e: "Short windows are noisy, so you see more red, and that urges action." },
+        { q: "A healthier habit is to:", o: ["Review on scheduled dates", "Check every hour", "Trade on every dip", "Follow social-media tips"], a: 0, e: "Scheduled reviews keep you engaged without reacting to noise." }
+      ]
+    },
+    {
+      id: "m4l3",
+      title: "Tips, FOMO and F&O",
+      mins: 3,
+      body: [
+        `Futures and options (F&O) let you trade large positions with a small margin. Leverage magnifies gains and losses equally, and the losses come fast.`,
+        `SEBI's own studies are blunt. In FY2024-25, **91% of individual traders in equity F&O lost money**. An earlier study found 93% lost money over the three years to FY2024.`,
+        `Tips follow the same logic. If someone had a reliable way to know which stock would rise, they wouldn't share it free in a group chat. Many "hot tips" exist so that the person sharing can sell to the people buying.`,
+        `**FOMO** (fear of missing out) is strongest after a big rally, exactly when prices are least attractive.`
+      ],
+      takeaway: "When something promises fast money, ask who's on the other side of the trade.",
+      quiz: [
+        { q: "Per SEBI's study, what share of individual equity F&O traders lost money in FY2024-25?", o: ["About 10%", "About 50%", "About 91%", "About 25%"], a: 2, e: "SEBI found 91% lost money that year." },
+        { q: "What does leverage do?", o: ["Magnifies gains and losses", "Only magnifies gains", "Removes risk", "Lowers charges"], a: 0, e: "Borrowed exposure scales both directions." },
+        { q: "When is FOMO usually strongest?", o: ["After a crash", "After a big rally", "On weekends", "When markets are flat"], a: 1, e: "Rising prices create the urge to jump in, often near short-term highs." }
+      ]
+    },
+    {
+      id: "m4l4",
+      title: "Diversification and position size",
+      mins: 3,
+      body: [
+        `Individual companies can collapse. Yes Bank shares, for example, lost more than 90% of their value between 2018 and 2020. Investors who'd put most of their money into one such stock never recovered that money.`,
+        `**Diversification** means no single holding can wreck your plan. An index ETF does this automatically across 50 companies.`,
+        `If you do buy individual stocks, many investors cap any one at around 5–10% of the portfolio, so that even a total loss stays survivable.`,
+        `Diversification also means across asset classes (equity, debt, gold), not across many funds that all hold the same large companies.`
+      ],
+      takeaway: "Size every bet so that being completely wrong is survivable.",
+      quiz: [
+        { q: "What does diversification protect against most?", o: ["One holding wrecking the whole portfolio", "All market falls", "Taxes", "Inflation"], a: 0, e: "It spreads company-specific risk. It doesn't remove market-wide falls." },
+        { q: "Owning five large-cap funds that hold the same stocks gives you:", o: ["Five times the diversification", "Little extra diversification", "Lower risk than one index fund", "Guaranteed returns"], a: 1, e: "Overlapping holdings mean the same exposure in different wrappers." },
+        { q: "A common cap for any single stock is about:", o: ["50%", "5–10% of the portfolio", "100%", "0%"], a: 1, e: "Small position sizes keep a single failure survivable." }
+      ]
+    },
+    {
+      id: "m4l5",
+      title: "Time in the market vs timing it",
+      mins: 3,
+      body: [
+        `Many of the market's best days arrive close to its worst days, in the middle of panics. An investor who jumps out to avoid the falls often misses the rebounds as well.`,
+        `Waiting for the perfect entry has a cost of its own: while cash waits, it earns little and misses the market's growth.`,
+        `Studies of US data, such as Charles Schwab's well-known comparison of investors with perfect and terrible timing, found that even perfect timing beat simply investing straight away by a surprisingly small margin. Staying in cash was by far the worst choice.`,
+        { note: `Don't take that on trust. The Lab tab lets you test it yourself on Nifty data: a monthly SIP against a dip-buyer, a perfect timer and a worst timer.` }
+      ],
+      takeaway: "Consistent investing usually beats waiting for the right moment.",
+      quiz: [
+        { q: "Why does jumping out of the market to dodge falls often backfire?", o: ["Exchanges charge exit fees", "The best days often follow the worst ones", "It's illegal", "Prices never fall twice"], a: 1, e: "Rebounds cluster near crashes, so leaving often means missing them." },
+        { q: "What did studies of perfect versus immediate investing find?", o: ["Perfect timing won by a huge margin", "Perfect timing won by a surprisingly small margin", "Staying in cash won", "Timing doesn't matter at all"], a: 1, e: "Perfect timing helped only a little, and nobody can time perfectly in real life." },
+        { q: "Where can you test this in the app?", o: ["The Market tab", "The Lab tab", "Settings", "Nowhere"], a: 1, e: "The Lab runs these strategies on Nifty data." }
+      ]
+    }
+  ]
+},
+{
+  id: "m5",
+  title: "The Data Project",
+  blurb: "Test SIP against market timing on Nifty data, then rebuild it in Python.",
+  source: "A hands-on project. Run it in the Lab, then reproduce it with the Python script included with the Android project.",
+  links: [{ label: "NSE historical index data", url: "https://www.niftyindices.com/reports/historical-data" }],
+  lessons: [
+    {
+      id: "m5l1",
+      title: "Project brief: SIP vs timing",
+      mins: 3,
+      body: [
+        `**Question:** does trying to time the market beat a plain monthly SIP in the Nifty?`,
+        `**Method:** every strategy gets the same money, ₹10,000 at the start of each month, over the same period. Only the timing of purchases differs.`,
+        { list: [
+          `**Monthly SIP:** invest every month, no thinking.`,
+          `**Dip buyer:** hold cash until the index is at least X% below its previous high, then invest everything saved.`,
+          `**Perfect timer:** with hindsight, invests each month's money at the lowest point of that calendar year.`,
+          `**Worst timer:** invests each month's money at the highest point of that calendar year.`,
+          `**Cash only:** never invests, earns interest on cash.`,
+          `**Lump sum:** invests the total on day one (a different question, shown for reference).`
+        ]},
+        `**Metrics:** final value, **XIRR** (the annual return that accounts for when each rupee went in) and the worst fall in portfolio value.`
+      ],
+      takeaway: "Hold everything constant except the one thing you're testing.",
+      quiz: [
+        { q: "Why does every strategy get the same monthly money?", o: ["So only timing differs between them", "To save tax", "It's required by SEBI", "No reason"], a: 0, e: "Controlling the inputs isolates the effect of timing." },
+        { q: "What does XIRR account for?", o: ["Only the final value", "When each rupee was invested", "Brokerage only", "Inflation only"], a: 1, e: "XIRR weights returns by the timing of each cash flow." },
+        { q: "The 'perfect timer' is:", o: ["A real strategy you can follow", "A hindsight benchmark nobody can follow", "The same as SIP", "A tax rule"], a: 1, e: "It uses future knowledge, so it sets the upper limit of what timing could add." }
+      ]
+    },
+    {
+      id: "m5l2",
+      title: "Reading your results",
+      mins: 3,
+      body: [
+        `After you run the Lab, look at three things.`,
+        { list: [
+          `**Gap between SIP and the perfect timer.** That gap is the most timing could ever have added, using knowledge no one has.`,
+          `**Dip buyer's months in cash.** Waiting has a cost. In long bull runs the dip buyer may sit out for years.`,
+          `**The worst fall.** Every equity strategy has one. Could you have held through it?`
+        ]},
+        `Then change one input at a time: the dip threshold, the start year, the cash interest rate. A finding that flips with small changes isn't robust.`,
+        `Note what the data doesn't include: dividends (the Nifty price index leaves them out, worth roughly 1–1.5% a year), charges and taxes. These affect all strategies, so the comparison still holds, but absolute returns are understated.`
+      ],
+      takeaway: "Judge a strategy by how much it really adds and how robust that is to small changes.",
+      quiz: [
+        { q: "What does the SIP-to-perfect-timer gap measure?", o: ["The maximum value timing could add", "Brokerage paid", "Dividend yield", "Tax owed"], a: 0, e: "Perfect hindsight sets the ceiling on timing benefits." },
+        { q: "A result that changes when you tweak the start year slightly is:", o: ["Very robust", "Not robust", "Guaranteed", "Tax-free"], a: 1, e: "Robust findings survive small changes in assumptions." },
+        { q: "What does the Nifty price index leave out?", o: ["Large companies", "Dividends", "Bank stocks", "Weekends"], a: 1, e: "The price index excludes dividends. The Total Return Index includes them." }
+      ]
+    },
+    {
+      id: "m5l3",
+      title: "Take it further in Python",
+      mins: 3,
+      body: [
+        `The Android project comes with **dalal_dojo_lab.py**, which repeats the Lab in Python with pandas, so you can extend it.`,
+        { list: [
+          `**Step-up SIP:** raise the monthly amount by 10% a year and compare.`,
+          `**Rolling returns:** compute every 10-year SIP window and plot the spread of outcomes, not just one.`,
+          `**Add gold:** blend GOLDBEES with the Nifty and test rebalancing yearly against never.`,
+          `**Use total return data:** download the Nifty 50 TRI from niftyindices.com to include dividends.`
+        ]},
+        `A good write-up states the question, the data and its limits, the method, the result, and what would change your mind. That's also how a research paper is structured.`
+      ],
+      takeaway: "Turn the Lab into a small study: one question, clear data, honest limits.",
+      quiz: [
+        { q: "What do rolling returns show that one backtest doesn't?", o: ["The range of outcomes across many start dates", "Brokerage charges", "Tax rates", "Company profits"], a: 0, e: "Many windows show how much results depend on luck of timing." },
+        { q: "Which index includes dividends?", o: ["Nifty 50 price index", "Nifty 50 Total Return Index", "Nifty Bank", "Sensex price index"], a: 1, e: "The TRI reinvests dividends, so it reflects what an investor actually earned." },
+        { q: "A good study write-up should include:", o: ["Only the best result", "Question, data limits, method, result", "Stock tips", "Nothing about limitations"], a: 1, e: "Stating limits honestly is part of good analysis." }
+      ]
+    }
+  ]
+}
+];
+
+</script>
+<script>
+(function () {
+"use strict";
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+const round2 = (n) => Math.round(n * 100) / 100;
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+const fmtINR = (n, d = 2) => (n < 0 ? "−" : "") + "₹" + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtSigned = (n, d = 2) => (n > 0 ? "+" : n < 0 ? "−" : "") + "₹" + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtPct = (n, d = 2) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(d) + "%";
+const fmtNum = (n, d = 2) => n.toLocaleString("en-IN", { minimumFractionDigits: d, maximumFractionDigits: d });
+const compactINR = (n) => {
+  const a = Math.abs(n), s = n < 0 ? "−" : "";
+  if (a >= 1e7) return s + "₹" + (a / 1e7).toFixed(2) + " Cr";
+  if (a >= 1e5) return s + "₹" + (a / 1e5).toFixed(2) + " L";
+  if (a >= 1e3) return s + "₹" + (a / 1e3).toFixed(1) + "k";
+  return s + "₹" + a.toFixed(0);
+};
+const axisINR = (v) => {
+  const t = (x) => String(+x.toFixed(2));
+  if (v >= 1e7) return "₹" + t(v / 1e7) + "Cr";
+  if (v >= 1e5) return "₹" + t(v / 1e5) + "L";
+  if (v >= 1e3) return "₹" + t(v / 1e3) + "k";
+  return "₹" + t(v);
+};
+const cls = (n) => (n > 0.00001 ? "up" : n < -0.00001 ? "down" : "flat");
+function gauss() { let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+const IC = {
+  home: '<path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
+  market: '<path d="M6 3v4M6 15v6M18 3v3M18 14v7M12 5v4M12 17v4"/><rect x="4" y="7" width="4" height="8" rx="1"/><rect x="16" y="6" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="8" rx="1"/>',
+  portfolio: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7"/><path d="M3 12.5h18"/>',
+  learn: '<path d="M12 6.5C10 5 7 4.5 4 5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z"/><path d="M12 6.5V20"/>',
+  lab: '<path d="M9 3h6M10 3v6.5L4.6 18.4A1.8 1.8 0 0 0 6.1 21h11.8a1.8 1.8 0 0 0 1.5-2.6L14 9.5V3"/><path d="M7.4 14.5h9.2"/>',
+  sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5" stroke-width="2.6"/>',
+  play: '<path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="none"/>',
+  pause: '<rect x="6.5" y="5" width="3.6" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.9" y="5" width="3.6" height="14" rx="1" fill="currentColor" stroke="none"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  medal: '<circle cx="12" cy="14.5" r="5.5"/><path d="M8.6 9.8 6 3h4l2 4.5L14 3h4l-2.6 6.8"/><path d="M12 12v5M10 14.5h4"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  arrow: '<path d="M9 6l6 6-6 6"/>',
+  ff: '<path d="M4 6v12l8-6zM12 6v12l8-6z" fill="currentColor" stroke="none"/>',
+  refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>'
+};
+const svg = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+
+/* =========================================================
+   Static data
+   ========================================================= */
+const INSTR = [
+  { sym: "NIFTYBEES", name: "Nippon India ETF Nifty 50 BeES", kind: "eq-etf", ac: "equity", seed: 262.4, vol: 0.010, rho: 0.95, mu: 0.11, about: "Holds all 50 companies of the Nifty 50, in index weights. One unit is a slice of India's largest listed businesses." },
+  { sym: "JUNIORBEES", name: "Nippon India ETF Nifty Next 50 Junior BeES", kind: "eq-etf", ac: "equity", seed: 705, vol: 0.013, rho: 0.85, mu: 0.12, about: "Holds the Nifty Next 50: the 50 companies after the Nifty 50 by size. Usually bumpier than the Nifty 50." },
+  { sym: "BANKBEES", name: "Nippon India ETF Nifty Bank BeES", kind: "eq-etf", ac: "equity", seed: 560, vol: 0.013, rho: 0.85, mu: 0.11, about: "Holds the largest listed banks. A single-sector bet, so less diversified than a Nifty 50 ETF." },
+  { sym: "GOLDBEES", name: "Nippon India ETF Gold BeES", kind: "gold-etf", ac: "gold", seed: 119.97, vol: 0.009, rho: -0.05, mu: 0.08, about: "Holds physical gold in vaults. No STT applies. Often used as a diversifier." },
+  { sym: "LIQUIDBEES", name: "Nippon India ETF Nifty 1D Rate Liquid BeES", kind: "liq-etf", ac: "debt", seed: 1000, vol: 0.00002, rho: 0, mu: 0.062, about: "Holds overnight money-market instruments; stands in for an emergency-fund bucket. The real fund stays near ₹1,000 and pays its return as extra units. In the simulator its price rises slowly instead." },
+  { sym: "RELIANCE", name: "Reliance Industries", kind: "stock", ac: "equity", seed: 1400, vol: 0.014, rho: 0.7, mu: 0.11, about: "Energy, retail and telecom conglomerate. One of the largest weights in the Nifty 50." },
+  { sym: "HDFCBANK", name: "HDFC Bank", kind: "stock", ac: "equity", seed: 980, vol: 0.013, rho: 0.7, mu: 0.11, about: "India's largest private-sector bank by assets." },
+  { sym: "TCS", name: "Tata Consultancy Services", kind: "stock", ac: "equity", seed: 3050, vol: 0.014, rho: 0.55, mu: 0.10, about: "IT services exporter. Earns mostly in dollars, so the rupee matters." },
+  { sym: "INFY", name: "Infosys", kind: "stock", ac: "equity", seed: 1480, vol: 0.015, rho: 0.55, mu: 0.10, about: "IT services exporter." },
+  { sym: "ITC", name: "ITC", kind: "stock", ac: "equity", seed: 405, vol: 0.012, rho: 0.5, mu: 0.10, about: "Cigarettes, packaged foods, paperboards and agri-business." },
+  { sym: "SBIN", name: "State Bank of India", kind: "stock", ac: "equity", seed: 820, vol: 0.016, rho: 0.7, mu: 0.11, about: "India's largest public-sector bank." },
+  { sym: "ONGC", name: "Oil and Natural Gas Corporation", kind: "stock", ac: "equity", seed: 224.65, vol: 0.017, rho: 0.5, mu: 0.09, about: "State-owned oil and gas producer. Swings with crude prices and government policy." }
+];
+const BYSYM = Object.fromEntries(INSTR.map((i) => [i.sym, i]));
+const KIND = { "eq-etf": "Equity ETF", "gold-etf": "Gold ETF", "liq-etf": "Liquid ETF", stock: "Stock" };
+const STT_RULE = { "eq-etf": "0.001% STT on sales only", "gold-etf": "No STT", "liq-etf": "No STT", stock: "0.1% STT on buys and sales" };
+const AC = { equity: "Equity", gold: "Gold", debt: "Debt" };
+
+const BELTS = [
+  { name: "White", xp: 0, color: "#F4F4F0" },
+  { name: "Yellow", xp: 100, color: "#F2C230" },
+  { name: "Orange", xp: 250, color: "#EE8A22" },
+  { name: "Green", xp: 500, color: "#2E9B58" },
+  { name: "Blue", xp: 850, color: "#2D6BD3" },
+  { name: "Brown", xp: 1300, color: "#7A4D2B" },
+  { name: "Black", xp: 1800, color: "#16161A" }
+];
+
+const ACH = {
+  first_trade: { t: "First fill", d: "Get any order filled.", xp: 30 },
+  first_etf: { t: "Index owner", d: "Buy a Nifty 50 or Nifty Next 50 ETF.", xp: 30 },
+  first_sell: { t: "Read the fine print", d: "Sell something and check the DP charge on the contract note.", xp: 20 },
+  limit_fill: { t: "Price setter", d: "Get a limit order filled.", xp: 40 },
+  target_set: { t: "Plan on paper", d: "Set a target asset allocation.", xp: 30 },
+  diversified: { t: "Spread out", d: "Hold 3 or more instruments across at least 2 asset classes.", xp: 50 },
+  rebalanced: { t: "Back on target", d: "With 3+ holdings, get every asset class within 5 points of your target.", xp: 60 },
+  held_dip: { t: "Steady hands", d: "Ride a 10% fall in your account back to a new high without selling.", xp: 100 },
+  patient: { t: "Long-term holder", d: "Hold a position for more than a year (250 trading days in the simulator).", xp: 80 },
+  backtest: { t: "Researcher", d: "Run your first backtest in the Lab.", xp: 40 },
+  lab_dip20: { t: "Stress test", d: "Run the Lab with a dip threshold of 20% or more.", xp: 30 },
+  lab_starts: { t: "Start-date check", d: "Run the Lab from three different start years.", xp: 40 },
+  real_data: { t: "Real data", d: "Run the Lab on real Nifty data: live in the Android app, or a CSV you load.", xp: 60 },
+  quiz_perfect: { t: "Clean sheet", d: "Answer every question in a quiz correctly.", xp: 20 },
+  streak3: { t: "Three-day streak", d: "Learn something on three days in a row.", xp: 30 },
+  streak7: { t: "Seven-day streak", d: "Learn something on seven days in a row.", xp: 70 },
+  module_all: { t: "Full syllabus", d: "Finish every module.", xp: 100 }
+};
+
+const LESSONS = [];
+MODULES.forEach((m, mi) => m.lessons.forEach((l, li) => LESSONS.push(Object.assign({}, l, { mod: m, mi, li }))));
+const LESSON = Object.fromEntries(LESSONS.map((l) => [l.id, l]));
+
+const PATH = [
+  { l: "m1l1" },
+  { l: "m1l3" },
+  { a: "first_etf", go: "market", label: "Buy your first index ETF", hint: "Market → NIFTYBEES → Buy" },
+  { l: "m1l4" },
+  { a: "first_sell", go: "market", label: "Sell a few units and read the contract note", hint: "Portfolio → a holding → Sell" },
+  { a: "limit_fill", go: "market", label: "Get a limit order filled", hint: "Set a limit slightly below the price and wait" },
+  { l: "m1l2" },
+  { l: "m2l1" },
+  { l: "m2l2" },
+  { a: "target_set", go: "portfolio", label: "Set your target allocation", hint: "Portfolio → Set target" },
+  { l: "m3l1" },
+  { l: "m3l2" },
+  { l: "m2l4" },
+  { a: "diversified", go: "market", label: "Hold 3 instruments across 2 asset classes", hint: "Equity, gold and debt are the classes here" },
+  { l: "m4l1" },
+  { a: "held_dip", go: "market", label: "Ride a 10% dip back to a new high", hint: "Simulator: fast-forward months without selling", simOnly: true },
+  { l: "m5l1" },
+  { a: "backtest", go: "lab", label: "Run your first backtest", hint: "Lab → Run backtest" }
+].concat(LESSONS.map((l) => ({ l: l.id })));
+
+/* =========================================================
+   State and storage
+   ========================================================= */
+const KEY = "dalal-dojo-v1";
+let storageOK = true;
+function newAcct(cash) { return { cash, start: cash, lots: {}, orders: [], notes: [], realized: 0, rST: 0, rLT: 0, chargesPaid: 0, dp: {}, tradesByDay: {}, seq: 0, curve: [], dd: null }; }
+function newState(cash) {
+  return { v: 1, xp: 0, lessons: {}, quiz: {}, ach: {}, mods: {}, streak: { last: "", count: 0 }, mode: "sim", modeChosen: false, startCash: cash, target: null, acct: { sim: newAcct(cash), live: newAcct(cash) }, sim: null, lab: { dips: {}, starts: {} }, welcomed: false, created: Date.now() };
+}
+function load() { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch (e) { storageOK = false; return null; } }
+function migrate(s) {
+  if (!s || s.v !== 1 || !s.acct) return null;
+  const base = newState(s.startCash || 100000);
+  for (const k of Object.keys(base)) if (s[k] === undefined) s[k] = base[k];
+  for (const m of ["sim", "live"]) { const a = s.acct[m] || newAcct(s.startCash || 100000); const b = newAcct(a.start || 100000); for (const k of Object.keys(b)) if (a[k] === undefined) a[k] = b[k]; s.acct[m] = a; }
+  return s;
+}
+let S = migrate(load()) || newState(100000);
+let saveTimer = null;
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 400); }
+function saveNow() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { storageOK = false; } }
+
+/* =========================================================
+   Time
+   ========================================================= */
+function istDate(offsetDays = 0) { return new Date(Date.now() + 5.5 * 3600e3 + offsetDays * 864e5); }
+function istKey(offsetDays = 0) { return istDate(offsetDays).toISOString().slice(0, 10); }
+function liveWindowOpen() { const d = istDate(); const wd = d.getUTCDay(); const m = d.getUTCHours() * 60 + d.getUTCMinutes(); return wd >= 1 && wd <= 5 && m >= 555 && m < 930; }
+function simClock() { const m = 555 + (S.sim ? S.sim.minute : 0); const h = Math.floor(m / 60), mm = m % 60; return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`; }
+function dayKey() { return S.mode === "sim" ? "d" + S.sim.day : istKey(); }
+function stamp() {
+  if (S.mode === "sim") return { d: S.sim.day, label: `Day ${S.sim.day}, ${simClock()}` };
+  return { ts: Date.now(), label: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + " IST" };
+}
+function lotTime() { return S.mode === "sim" ? { d: S.sim.day } : { ts: Date.now() }; }
+function lotAgeYears(l) { return l.d !== undefined ? (S.sim.day - l.d) / 250 : (Date.now() - l.ts) / (365 * 864e5); }
+function isLongTerm(l) { return lotAgeYears(l) > 1; }
+
+/* =========================================================
+   Prices: simulator and live feed
+   ========================================================= */
+const P = {};             // sym -> { px, prev, ticks, t }
+let liveAvailable = false, liveStatus = "idle", liveUpdated = 0, liveTimer = null, simTimer = null;
+
+function marketDayReturn(i, zm, zi, regime) {
+  if (i.kind === "liq-etf") return Math.log(1 + i.mu) / 250;
+  const z = i.rho * zm + Math.sqrt(1 - i.rho * i.rho) * zi;
+  const reg = i.ac === "equity" ? regime * (0.6 + 0.4 * Math.abs(i.rho)) : 0;
+  return Math.log(1 + i.mu) / 250 - 0.5 * i.vol * i.vol + reg + i.vol * z;
+}
+function initSim() {
+  const sim = { day: 131, minute: 0, px: {}, prev: {}, open: {}, hist: {}, running: true, regime: { days: 0, drift: 0 } };
+  const series = Object.fromEntries(INSTR.map((i) => [i.sym, [i.seed]]));
+  const cur = Object.fromEntries(INSTR.map((i) => [i.sym, i.seed]));
+  for (let k = 0; k < 129; k++) {
+    const zm = gauss() * (Math.random() < 0.05 ? 2.2 : 1);
+    for (const i of INSTR) { const r = marketDayReturn(i, zm, gauss(), 0); cur[i.sym] = cur[i.sym] / Math.exp(r); series[i.sym].unshift(round2(cur[i.sym])); }
+  }
+  for (const i of INSTR) { sim.hist[i.sym] = series[i.sym]; sim.px[i.sym] = i.seed; sim.prev[i.sym] = i.seed; sim.open[i.sym] = i.seed; }
+  return sim;
+}
+function regimeStep() {
+  const r = S.sim.regime;
+  if (r.days > 0) { r.days--; if (r.days === 0) r.drift = 0; }
+  else if (Math.random() < 0.006) { r.days = 20 + Math.floor(Math.random() * 40); r.drift = -(0.002 + Math.random() * 0.003); }
+}
+function syncSimP(resetTicks) {
+  for (const i of INSTR) {
+    const p = P[i.sym] || (P[i.sym] = { ticks: [] });
+    p.px = S.sim.px[i.sym]; p.prev = S.sim.prev[i.sym]; p.t = Date.now();
+    if (resetTicks || !p.ticks.length) p.ticks = [S.sim.open[i.sym]];
+    p.ticks.push(p.px); if (p.ticks.length > 400) p.ticks.shift();
+  }
+}
+function simTick() {
+  if (!S.sim.running) return;
+  const zm = gauss() * (Math.random() < 0.05 ? 2.2 : 1);
+  for (const i of INSTR) {
+    let r;
+    if (i.kind === "liq-etf") r = Math.log(1 + i.mu) / 250 / 375;
+    else {
+      const z = i.rho * zm + Math.sqrt(1 - i.rho * i.rho) * gauss();
+      const reg = i.ac === "equity" ? S.sim.regime.drift * (0.6 + 0.4 * Math.abs(i.rho)) : 0;
+      r = (Math.log(1 + i.mu) / 250 - 0.5 * i.vol * i.vol + reg) / 375 + (i.vol / Math.sqrt(375)) * z;
+    }
+    S.sim.px[i.sym] = round2(Math.max(0.05, S.sim.px[i.sym] * Math.exp(r)));
+  }
+  S.sim.minute++;
+  syncSimP(false);
+  processOrders();
+  if (S.sim.minute >= 375) endSimDay(false);
+  afterPriceUpdate();
+  if (S.sim.minute % 10 === 0) save();
+}
+function endSimDay(silent) {
+  const sim = S.sim;
+  const before = netWorth();
+  for (const i of INSTR) {
+    const close = sim.px[i.sym];
+    sim.hist[i.sym].push(close); if (sim.hist[i.sym].length > 260) sim.hist[i.sym].shift();
+    sim.prev[i.sym] = close;
+    const gap = i.kind === "liq-etf" ? 0 : gauss() * i.vol * 0.25;
+    sim.open[i.sym] = round2(close * Math.exp(gap)); sim.px[i.sym] = sim.open[i.sym];
+  }
+  regimeStep();
+  sim.day++; sim.minute = 0;
+  syncSimP(true);
+  processOrders();
+  recordCurve(); trackDD(); checkPatience();
+  if (!silent) { const ch = (netWorth() - before); toast(`Day ${sim.day - 1} closed. Day ${sim.day} is open.${holdings().length ? " Overnight move " + fmtSigned(ch) + "." : ""}`); }
+  save();
+}
+function simAdvance(days) {
+  const sim = S.sim;
+  const start = netWorth();
+  for (let d = 0; d < days; d++) {
+    const frac = d === 0 ? Math.max(0.05, 1 - sim.minute / 375) : 1;
+    const zm = gauss() * (Math.random() < 0.05 ? 2.2 : 1);
+    for (const i of INSTR) {
+      const open = sim.px[i.sym];
+      const r = marketDayReturn(i, zm, gauss(), sim.regime.drift) * frac; // first step only covers the rest of today
+      const close = round2(Math.max(0.05, open * Math.exp(r)));
+      const wig = i.kind === "liq-etf" ? 0 : Math.abs(gauss()) * i.vol * 0.5 * Math.sqrt(frac);
+      const hi = Math.max(open, close) * Math.exp(wig), lo = Math.min(open, close) * Math.exp(-wig);
+      fillRange(i.sym, open, hi, lo);
+      sim.px[i.sym] = close;
+    }
+    endSimDay(true);
+  }
+  const ch = netWorth() - start;
+  toast(`Skipped ${days} trading day${days > 1 ? "s" : ""}. Account ${fmtSigned(ch)} (${fmtPct(start ? (ch / start) * 100 : 0)}).`);
+  afterPriceUpdate(); render();
+}
+
+/* Network: in the Android app a native bridge fetches prices; elsewhere we try XHR (browsers usually block it). */
+const net = {
+  seq: 0, cbs: {},
+  get(url) {
+    if (window.DojoNet && typeof window.DojoNet.get === "function") {
+      return new Promise((res, rej) => {
+        const id = String(++net.seq); net.cbs[id] = { res, rej };
+        try { window.DojoNet.get(url, id); } catch (e) { delete net.cbs[id]; rej(e); return; }
+        setTimeout(() => { if (net.cbs[id]) { delete net.cbs[id]; rej(new Error("timeout")); } }, 15000);
+      });
+    }
+    return new Promise((res, rej) => {
+      try {
+        const x = new XMLHttpRequest(); x.open("GET", url); x.timeout = 8000;
+        x.onload = () => (x.status >= 200 && x.status < 300 ? res(x.responseText) : rej(new Error("HTTP " + x.status)));
+        x.onerror = () => rej(new Error("network")); x.ontimeout = () => rej(new Error("timeout"));
+        x.send();
+      } catch (e) { rej(e); }
+    });
+  }
+};
+window.__dojoNetCb = function (id, ok, body) { const cb = net.cbs[id]; if (!cb) return; delete net.cbs[id]; ok ? cb.res(body) : cb.rej(new Error(body || "network")); };
+
+async function yahooChart(symbol, range, interval) {
+  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}&includePrePost=false`;
+  let txt;
+  try { txt = await net.get("https://query1.finance.yahoo.com" + path); }
+  catch (e) { txt = await net.get("https://query2.finance.yahoo.com" + path); }
+  const j = JSON.parse(txt);
+  const r = j && j.chart && j.chart.result && j.chart.result[0];
+  if (!r) throw new Error("no data");
+  return r;
+}
+async function fetchQuote(sym) {
+  const r = await yahooChart(sym + ".NS", "1d", "5m");
+  const m = r.meta || {};
+  const closes = ((r.indicators && r.indicators.quote && r.indicators.quote[0] && r.indicators.quote[0].close) || []).filter((x) => x != null);
+  const px = m.regularMarketPrice || closes[closes.length - 1];
+  if (!(px > 0)) throw new Error("no price");
+  return { px: round2(px), prev: round2(m.chartPreviousClose || m.previousClose || px), t: (m.regularMarketTime || 0) * 1000, ticks: closes.length ? closes.map(round2) : [round2(px)] };
+}
+async function liveRefresh() {
+  if (S.mode !== "live") return;
+  liveStatus = "loading"; renderStatusOnly();
+  let ok = 0;
+  const queue = INSTR.slice();
+  async function worker() { while (queue.length) { const i = queue.shift(); try { const q = await fetchQuote(i.sym); P[i.sym] = q; ok++; } catch (e) { if (P[i.sym]) P[i.sym].stale = true; } } }
+  await Promise.all([worker(), worker(), worker(), worker()]);
+  liveStatus = ok ? "ok" : "error"; if (ok) liveUpdated = Date.now();
+  processOrders(); recordCurve(); trackDD(); checkPatience();
+  afterPriceUpdate(); save();
+}
+function liveFresh() { return INSTR.some((i) => P[i.sym] && P[i.sym].t && Date.now() - P[i.sym].t < 20 * 60e3); }
+function marketOpen() { return S.mode === "sim" ? true : liveWindowOpen() && liveFresh(); }
+let preferLive = false;
+async function probeLive() {
+  try { const q = await fetchQuote("NIFTYBEES"); if (q && q.px > 0) { liveAvailable = true; if (preferLive || !S.modeChosen) switchMode("live", true); else render(); return true; } }
+  catch (e) { /* not available here */ }
+  liveAvailable = false; return false;
+}
+function switchMode(mode, auto) {
+  S.mode = mode; if (!auto) S.modeChosen = true;
+  for (const k of Object.keys(P)) delete P[k];
+  stopEngines(); startEngines(); render(); save();
+}
+function startEngines() {
+  if (S.mode === "sim") { syncSimP(false); if (!simTimer) simTimer = setInterval(simTick, 2000); }
+  else { liveRefresh(); if (!liveTimer) liveTimer = setInterval(liveRefresh, 60000); }
+}
+function stopEngines() { clearInterval(simTimer); simTimer = null; clearInterval(liveTimer); liveTimer = null; }
+
+/* =========================================================
+   Accounts, orders, charges
+   ========================================================= */
+const acct = () => S.acct[S.mode];
+function holdings(a = acct()) {
+  const out = [];
+  for (const [sym, lots] of Object.entries(a.lots)) {
+    const q = lots.reduce((s, l) => s + l.q, 0); if (q <= 0) continue;
+    const cost = lots.reduce((s, l) => s + l.q * l.p, 0);
+    out.push({ sym, q, avg: cost / q, cost });
+  }
+  return out.sort((x, y) => y.cost - x.cost);
+}
+function px(sym) {
+  const p = P[sym]; if (p && p.px) return p.px;
+  const a = acct(); const n = a.notes.find((x) => x.sym === sym); if (n) return n.price;
+  return S.mode === "sim" && S.sim ? S.sim.px[sym] : null;
+}
+function prevClose(sym) { const p = P[sym]; return p && p.prev ? p.prev : px(sym); }
+function netWorth(a = acct()) { return a.cash + holdings(a).reduce((s, h) => s + h.q * (px(h.sym) || h.avg), 0); }
+function reserved(a = acct()) { return a.orders.filter((o) => o.status === "open" && o.side === "B").reduce((s, o) => s + o.reserve, 0); }
+function available(a = acct()) { return a.cash - reserved(a); }
+function dayChange(a = acct()) { return holdings(a).reduce((s, h) => s + h.q * ((px(h.sym) || 0) - (prevClose(h.sym) || 0)), 0); }
+
+function charges(kind, side, value, a, sym, dk) {
+  let stt = 0;
+  if (kind === "stock") stt = Math.round(value * 0.001);
+  else if (kind === "eq-etf" && side === "S") stt = Math.round(value * 0.00001);
+  const exch = value * 0.0000297, sebi = value * 0.000001, stamp = side === "B" ? value * 0.00015 : 0;
+  const gst = 0.18 * (exch + sebi);
+  const dp = side === "S" && a.dp[sym] !== dk ? 15.34 : 0;
+  return { brokerage: 0, stt, exch, sebi, stamp, gst, dp, total: round2(stt + exch + sebi + stamp + gst + dp) };
+}
+
+function placeOrder(o) {
+  const a = acct(), i = BYSYM[o.sym];
+  const q = Math.floor(Number(o.qty));
+  if (!(q >= 1)) return { ok: false, msg: "Enter a quantity of at least 1." };
+  if (o.type === "LMT" && !(o.limit > 0)) return { ok: false, msg: "Enter a limit price above zero." };
+  const ltp = px(o.sym);
+  if (!ltp) return { ok: false, msg: `There's no price for ${o.sym} yet. Wait for prices to load and try again.` };
+  const ref = o.type === "LMT" ? Math.max(o.limit, 0) : ltp;
+  let reserve = 0;
+  if (o.side === "B") {
+    const est = ref * q, ch = charges(i.kind, "B", est, a, o.sym, dayKey());
+    reserve = round2(est * (o.type === "MKT" ? 1.01 : 1) + ch.total);
+    if (reserve > available(a) + 0.001) return { ok: false, msg: `Not enough cash. This order needs about ${fmtINR(reserve)} and you have ${fmtINR(available(a))} available.` };
+  } else {
+    const h = holdings(a).find((x) => x.sym === o.sym);
+    const pend = a.orders.filter((x) => x.status === "open" && x.side === "S" && x.sym === o.sym).reduce((s, x) => s + x.qty, 0);
+    const free = (h ? h.q : 0) - pend;
+    if (q > free) return { ok: false, msg: free > 0 ? `You can sell at most ${free} unit${free > 1 ? "s" : ""} of ${o.sym}.` : `You don't hold any ${o.sym} to sell.` };
+  }
+  const order = { id: "O" + (++a.seq), sym: o.sym, side: o.side, qty: q, type: o.type, limit: o.type === "LMT" ? round2(o.limit) : null, status: "open", placed: stamp(), reserve, amo: !marketOpen() };
+  a.orders.unshift(order);
+  trimOrders(a);
+  let note = null;
+  if (!order.amo) {
+    if (order.type === "MKT") note = fill(a, order, ltp);
+    else if ((order.side === "B" && ltp <= order.limit) || (order.side === "S" && ltp >= order.limit)) note = fill(a, order, ltp);
+  }
+  save();
+  return { ok: true, order, note };
+}
+function trimOrders(a) {
+  const open = a.orders.filter((o) => o.status === "open"), done = a.orders.filter((o) => o.status !== "open").slice(0, 60);
+  a.orders = open.concat(done).sort((x, y) => Number(y.id.slice(1)) - Number(x.id.slice(1)));
+}
+function cancelOrder(id) { const a = acct(); const o = a.orders.find((x) => x.id === id); if (o && o.status === "open") { o.status = "cancelled"; o.reserve = 0; save(); toast(`Cancelled ${o.side === "B" ? "buy" : "sell"} order for ${o.qty} ${o.sym}.`); render(); } }
+
+function fill(a, order, price) {
+  const i = BYSYM[order.sym], dk = dayKey(), value = round2(price * order.qty);
+  const ch = charges(i.kind, order.side, value, a, order.sym, dk);
+  let realized = 0, rST = 0, rLT = 0;
+  if (order.side === "B") {
+    a.cash = round2(a.cash - value - ch.total);
+    (a.lots[order.sym] || (a.lots[order.sym] = [])).push(Object.assign({ q: order.qty, p: price }, lotTime()));
+  } else {
+    let rem = order.qty; const lots = a.lots[order.sym] || [];
+    while (rem > 0 && lots.length) {
+      const l = lots[0], take = Math.min(rem, l.q), g = (price - l.p) * take;
+      realized += g; if (isLongTerm(l)) rLT += g; else rST += g;
+      l.q -= take; rem -= take; if (l.q <= 0) lots.shift();
+    }
+    if (!lots.length) delete a.lots[order.sym];
+    a.cash = round2(a.cash + value - ch.total);
+    a.realized = round2(a.realized + realized); a.rST = round2(a.rST + rST); a.rLT = round2(a.rLT + rLT);
+    if (ch.dp > 0) a.dp[order.sym] = dk;
+    if (a.dd && a.dd.armed) a.dd.sold = true;
+  }
+  a.chargesPaid = round2(a.chargesPaid + ch.total);
+  a.tradesByDay[dk] = (a.tradesByDay[dk] || 0) + 1;
+  const keys = Object.keys(a.tradesByDay); if (keys.length > 12) delete a.tradesByDay[keys[0]];
+  order.status = "filled"; order.fillPrice = price; order.filled = stamp(); order.reserve = 0;
+  const note = { id: "CN" + order.id.slice(1), sym: order.sym, side: order.side, qty: order.qty, price, value, ch, net: order.side === "B" ? -round2(value + ch.total) : round2(value - ch.total), realized: round2(realized), when: order.filled.label, type: order.type, amo: order.amo, limit: order.limit };
+  note.tips = coachTips(note, a);
+  a.notes.unshift(note); if (a.notes.length > 150) a.notes.length = 150;
+  afterTrade(note, a);
+  return note;
+}
+function canAfford(a, o, price) {
+  if (o.side !== "B") return true;
+  const i = BYSYM[o.sym], value = price * o.qty, ch = charges(i.kind, "B", value, a, o.sym, dayKey());
+  return value + ch.total <= a.cash - (reserved(a) - o.reserve) + 0.001;
+}
+function tryFill(a, o, price, out) {
+  if (!canAfford(a, o, price)) {
+    o.status = "rejected"; o.reserve = 0;
+    toast(`Order rejected: not enough cash to buy ${o.qty} ${o.sym} at ${fmtINR(price)}.`);
+    return;
+  }
+  out.push(fill(a, o, price));
+}
+function processOrders() {
+  if (!marketOpen()) return;
+  const a = acct(); const filled = [];
+  for (const o of a.orders) {
+    if (o.status !== "open") continue;
+    const p = px(o.sym); if (!p) continue;
+    if (o.type === "MKT" || (o.side === "B" && p <= o.limit) || (o.side === "S" && p >= o.limit)) tryFill(a, o, p, filled);
+  }
+  announceFills(filled);
+}
+function fillRange(sym, open, hi, lo) {
+  const a = acct(); const filled = [];
+  for (const o of a.orders) {
+    if (o.status !== "open" || o.sym !== sym) continue;
+    if (o.type === "MKT") tryFill(a, o, round2(open), filled);
+    else if (o.side === "B" && open <= o.limit) tryFill(a, o, round2(open), filled);
+    else if (o.side === "B" && lo <= o.limit) tryFill(a, o, o.limit, filled);
+    else if (o.side === "S" && open >= o.limit) tryFill(a, o, round2(open), filled);
+    else if (o.side === "S" && hi >= o.limit) tryFill(a, o, o.limit, filled);
+  }
+  announceFills(filled);
+}
+function announceFills(notes) {
+  for (const n of notes) toast(`Filled: ${n.side === "B" ? "bought" : "sold"} ${n.qty} ${n.sym} at ${fmtINR(n.price)}`, { label: "View", act: "note", arg: n.id });
+  if (notes.length) save();
+}
+
+function coachTips(n, a) {
+  const tips = [], i = BYSYM[n.sym];
+  if (n.side === "S" && n.ch.dp > 0) {
+    const share = (n.ch.dp / n.value) * 100;
+    if (share >= 2) tips.push(`The flat ₹15.34 DP charge took ${share.toFixed(1)}% of this sale. Small sales lose a bigger share to it.`);
+    else tips.push(`The ₹15.34 DP charge applies once per stock per day. Another ${n.sym} sale today won't be charged it again.`);
+  }
+  if (n.side === "S" && n.ch.dp === 0) tips.push(`No DP charge this time: you already paid it for ${n.sym} today.`);
+  if (n.side === "B" && i.kind === "stock") tips.push("Shares pay 0.1% STT on both the buy and the sale. An equity ETF pays 0.001%, and only when you sell.");
+  if (n.side === "B" && i.kind === "gold-etf") tips.push("Gold ETFs pay no STT. Gains held over 12 months are taxed at 12.5%; shorter holdings at your slab rate.");
+  if (n.amo) tips.push("You placed this while the market was closed, so it waited as an after-market order and filled at the next open.");
+  if (n.type === "LMT") tips.push(`Your limit was ${fmtINR(n.limit)}. It filled at ${fmtINR(n.price)} because a limit is the worst price you accept, not the exact price you get.`);
+  const today = a.tradesByDay[dayKey()] || 0;
+  if (today >= 5) tips.push(`That's ${today} trades today. Every trade adds charges, and frequent trading rarely improves returns.`);
+  if (n.side === "S" && n.realized < 0) tips.push(`This sale booked a loss of ${fmtINR(-n.realized)}. In a real account, a capital loss can be set off against capital gains for tax.`);
+  if (n.side === "B" && i.kind === "stock") {
+    const h = holdings(a).find((x) => x.sym === n.sym); const w = h ? (h.q * n.price) / netWorth(a) * 100 : 0;
+    if (w > 20) tips.push(`${n.sym} is now ${w.toFixed(0)}% of your account. One company that large can swing the whole portfolio.`);
+  }
+  return tips.slice(0, 3);
+}
+
+/* =========================================================
+   Progress: XP, belts, badges, streaks
+   ========================================================= */
+function beltIndex(xp) { let i = 0; BELTS.forEach((b, k) => { if (xp >= b.xp) i = k; }); return i; }
+function addXP(n, why) {
+  const before = beltIndex(S.xp); S.xp += n; const after = beltIndex(S.xp);
+  toast(`+${n} XP · ${why}`);
+  if (after > before) setTimeout(() => beltUp(after), 500);
+  save(); renderTop();
+}
+function award(id) { if (S.ach[id] || !ACH[id]) return; S.ach[id] = Date.now(); addXP(ACH[id].xp, "Badge: " + ACH[id].t); }
+function touchStreak() {
+  const k = istKey(), s = S.streak; if (s.last === k) return;
+  s.count = s.last === istKey(-1) ? s.count + 1 : 1; s.last = k;
+  if (s.count >= 3) award("streak3"); if (s.count >= 7) award("streak7");
+}
+function classValues(a = acct()) {
+  const v = { equity: 0, gold: 0, debt: 0 };
+  for (const h of holdings(a)) v[BYSYM[h.sym].ac] += h.q * (px(h.sym) || h.avg);
+  return v;
+}
+function afterTrade(n, a) {
+  award("first_trade");
+  if (n.side === "B" && (n.sym === "NIFTYBEES" || n.sym === "JUNIORBEES")) award("first_etf");
+  if (n.side === "S") award("first_sell");
+  if (n.type === "LMT") award("limit_fill");
+  const hs = holdings(a); const classes = new Set(hs.map((h) => BYSYM[h.sym].ac));
+  if (hs.length >= 3 && classes.size >= 2) award("diversified");
+  checkRebalanced();
+  recordCurve();
+}
+function checkRebalanced() {
+  if (!S.target) return; const hs = holdings(); if (hs.length < 3) return;
+  const v = classValues(), tot = v.equity + v.gold + v.debt; if (tot <= 0) return;
+  if (["equity", "gold", "debt"].every((k) => Math.abs((v[k] / tot) * 100 - S.target[k]) <= 5)) award("rebalanced");
+}
+function recordCurve() {
+  const a = acct(), k = dayKey(), v = round2(netWorth(a));
+  const c = a.curve; if (c.length && c[c.length - 1].k === k) c[c.length - 1].v = v; else c.push({ k, v });
+  if (c.length > 400) c.shift();
+}
+function trackDD() {
+  const a = acct(), v = netWorth(a);
+  const risky = classValues(a); const eq = risky.equity + risky.gold;
+  const d = a.dd || (a.dd = { peak: v, armed: false, sold: false });
+  if (v > d.peak) { if (d.armed && !d.sold && eq > 0.3 * v) award("held_dip"); d.peak = v; d.armed = false; d.sold = false; }
+  else if (v <= d.peak * 0.9 && eq > 0.3 * v) d.armed = true;
+}
+function checkPatience() { const a = acct(); for (const lots of Object.values(a.lots)) for (const l of lots) if (lotAgeYears(l) >= 1) { award("patient"); return; } }
+
+/* =========================================================
+   UI state
+   ========================================================= */
+const TABS = ["home", "market", "portfolio", "learn", "lab"];
+let tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home";
+let marketFilter = "all";
+let openMods = null;
+let sheet = null;          // { kind, ...data }
+let orderState = null;
+let confirmKey = null, confirmTimer = null;
+
+/* Toasts */
+function toast(msg, action) {
+  const box = $("#toasts"); if (!box) return;
+  const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status");
+  el.innerHTML = `<span>${esc(msg)}</span>` + (action ? `<button data-act="${action.act}" data-arg="${esc(action.arg)}">${esc(action.label)}</button>` : "");
+  box.appendChild(el);
+  while (box.children.length > 3) box.removeChild(box.firstChild);
+  setTimeout(() => { el.remove(); }, action ? 5200 : 3200);
+}
+
+/* Sparklines */
+function downsample(vals, n) { if (vals.length <= n) return vals; const out = []; const step = (vals.length - 1) / (n - 1); for (let k = 0; k < n; k++) out.push(vals[Math.round(k * step)]); return out; }
+function spark(vals, w, h, colorVar, klass) {
+  vals = (vals || []).filter((x) => x != null);
+  if (vals.length < 2) return `<svg class="${klass || "spark"}" viewBox="0 0 ${w} ${h}" aria-hidden="true"></svg>`;
+  vals = downsample(vals, 80);
+  const min = Math.min(...vals), max = Math.max(...vals), span = max - min || 1, step = w / (vals.length - 1);
+  const pts = vals.map((v, k) => `${(k * step).toFixed(1)},${(h - 2 - ((v - min) / span) * (h - 4)).toFixed(1)}`).join(" ");
+  return `<svg class="${klass || "spark"}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(${colorVar})" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function areaChart(vals, base, w, h) {
+  vals = downsample(vals, 120);
+  if (vals.length < 2) vals = [vals[0] || base, vals[0] || base];
+  const all = vals.concat([base]); const min = Math.min(...all), max = Math.max(...all), span = max - min || 1, step = w / (vals.length - 1);
+  const y = (v) => (h - 3 - ((v - min) / span) * (h - 6)).toFixed(1);
+  const pts = vals.map((v, k) => `${(k * step).toFixed(1)},${y(v)}`);
+  const up = vals[vals.length - 1] >= base; const col = up ? "--up" : "--down";
+  return `<svg class="curve" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+    <line x1="0" x2="${w}" y1="${y(base)}" y2="${y(base)}" stroke="var(--line)" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>
+    <polygon points="0,${h} ${pts.join(" ")} ${w},${h}" fill="var(${col})" fill-opacity="0.12"/>
+    <polyline points="${pts.join(" ")}" fill="none" stroke="var(${col})" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+}
+
+/* =========================================================
+   Rendering
+   ========================================================= */
+function render() { renderTop(); renderTabs(); renderView(); if (sheet) renderSheet(); }
+function renderTop() {
+  const bi = beltIndex(S.xp), b = BELTS[bi], nb = BELTS[bi + 1];
+  const pct = nb ? ((S.xp - b.xp) / (nb.xp - b.xp)) * 100 : 100;
+  const a = acct(), nw = netWorth(a), ch = ((nw - a.start) / a.start) * 100;
+  $("#top").innerHTML = `
+    <button class="belt-btn" data-act="ach" aria-label="Belts and badges">
+      <span class="belt-band" style="--belt:${b.color}"></span>
+      <span class="belt-meta"><b>${b.name} belt</b><small>${nb ? `${S.xp} / ${nb.xp} XP` : `${S.xp} XP · top belt`}</small><span class="xpbar"><i style="width:${pct.toFixed(1)}%"></i></span></span>
+    </button>
+    <div class="nw"><small>${S.mode === "sim" ? "Simulator" : "Live paper"} account</small><b>${fmtINR(nw, 0)}</b><span class="${cls(ch)}">${fmtPct(ch)}</span></div>
+    <button class="icon-btn" data-act="settings" aria-label="Settings">${svg("sliders")}</button>`;
+}
+function renderTabs() {
+  const labels = { home: "Dojo", market: "Market", portfolio: "Portfolio", learn: "Learn", lab: "Lab" };
+  const icons = { home: "home", market: "market", portfolio: "portfolio", learn: "learn", lab: "lab" };
+  $("#tabs").innerHTML = `<div class="tabs-inner">${TABS.map((t) => `<button class="tab" data-act="tab" data-arg="${t}" ${t === tab ? 'aria-current="page"' : ""}>${svg(icons[t])}<span>${labels[t]}</span></button>`).join("")}</div>`;
+}
+function renderView() {
+  const main = $("#main");
+  const html = tab === "home" ? viewHome() : tab === "market" ? viewMarket() : tab === "portfolio" ? viewPortfolio() : tab === "learn" ? viewLearn() : viewLab();
+  main.innerHTML = html;
+  if (tab === "lab") afterLabRender();
+}
+function afterPriceUpdate() {
+  renderTop();
+  if (tab === "home" || tab === "market" || tab === "portfolio") renderView();
+  if (sheet && sheet.kind === "instr") updateInstrSheet();
+  if (sheet && sheet.kind === "order") updateTicket();
+}
+function renderStatusOnly() { const el = document.querySelector("[data-status]"); if (el) el.outerHTML = statusPills(); }
+
+function statusPills() {
+  let s;
+  if (S.mode === "sim") s = `<span class="pill sim"><span class="dot"></span>Simulator · Day ${S.sim.day} · ${simClock()}</span>`;
+  else {
+    const open = marketOpen();
+    const upd = liveUpdated ? new Date(liveUpdated).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" }) : "—";
+    s = `<span class="pill ${open ? "open" : "closed"}"><span class="dot"></span>NSE ${open ? "open" : "closed"}</span><span class="pill">${liveStatus === "loading" ? "Updating…" : liveStatus === "error" ? "Prices unavailable" : "Updated " + upd}</span>`;
+  }
+  return `<div class="status" data-status>${s}</div>`;
+}
+function simBar() {
+  return `<div class="card simbar">
+    <span class="clock">${S.sim.running ? "1 market minute every 2 s" : "Paused"}</span>
+    <button class="btn small" data-act="sim-toggle" aria-label="${S.sim.running ? "Pause" : "Play"}">${svg(S.sim.running ? "pause" : "play")}${S.sim.running ? "Pause" : "Play"}</button>
+    <button class="btn small" data-act="sim-ff" data-arg="1">Next day</button>
+    <button class="btn small" data-act="sim-ff" data-arg="21">${svg("ff")}1 month</button>
+    <button class="btn small" data-act="sim-ff" data-arg="250">${svg("ff")}1 year</button>
+  </div>`;
+}
+function liveBar() {
+  return `<div class="card simbar"><span class="clock">Real NSE prices via Yahoo Finance; may be delayed.</span><button class="btn small" data-act="live-refresh">${svg("refresh")}Refresh</button></div>`;
+}
+
+/* ---------- Home ---------- */
+function viewHome() {
+  const a = acct(), hs = holdings(a), nw = netWorth(a);
+  const invested = hs.reduce((s, h) => s + h.cost, 0), current = hs.reduce((s, h) => s + h.q * (px(h.sym) || h.avg), 0);
+  const total = nw - a.start, today = dayChange(a);
+  const curve = a.curve.map((c) => c.v); if (!curve.length) curve.push(nw);
+  const steps = PATH.filter((p) => !(p.l ? S.lessons[p.l] : S.ach[p.a]) && !(p.simOnly && S.mode !== "sim"));
+  const seen = new Set(); const next = [];
+  for (const p of steps) { const k = p.l || p.a; if (seen.has(k)) continue; seen.add(k); next.push(p); if (next.length === 3) break; }
+  const tape = INSTR.map((i) => { const p = px(i.sym), pc = prevClose(i.sym); const c = p && pc ? ((p - pc) / pc) * 100 : 0; return `<span><b>${i.sym}</b>${p ? fmtNum(p) : "—"} <em class="${cls(c)}" style="font-style:normal">${fmtPct(c)}</em></span>`; }).join("");
+  const nAch = Object.keys(S.ach).length, nAll = Object.keys(ACH).length;
+  const welcome = !S.welcomed ? `
+    <div class="card stack">
+      <div class="eyebrow">Welcome to the dojo</div>
+      <h2>Learn investing with pretend money and real mechanics</h2>
+      <p class="muted" style="margin:0">Trade Indian ETFs and stocks with game money, pay realistic charges, read short lessons, and test strategies on market data. Pick your starting cash:</p>
+      <div class="chips" role="group" aria-label="Starting cash">
+        ${[[10000, "₹10,000"], [100000, "₹1 lakh"], [1000000, "₹10 lakh"]].map(([c, l]) => `<button class="chip" data-act="start-cash" data-arg="${c}" aria-pressed="${S.startCash === c}">${l}</button>`).join("")}
+      </div>
+      <div class="btn-row"><button class="btn primary" data-act="lesson" data-arg="m1l1">Start lesson 1</button><button class="btn" data-act="welcome-done">Skip to the market</button></div>
+    </div>` : "";
+  return `
+    ${statusPills()}
+    ${welcome}
+    <section class="card hero">
+      <span class="eyebrow">${S.mode === "sim" ? "Simulator account" : "Live paper account"} · game money</span>
+      <div class="big">${fmtINR(nw, 0)}</div>
+      <div><span class="${cls(total)} num">${fmtSigned(total, 0)} (${fmtPct((total / a.start) * 100)})</span> <span class="muted">since start</span> · <span class="${cls(today)} num">${fmtSigned(today, 0)}</span> <span class="muted">today</span></div>
+      ${curve.length > 1 ? areaChart(curve, a.start, 300, 56) : ""}
+      <div class="kv">
+        <div><small>Cash</small><b>${fmtINR(a.cash, 0)}</b></div>
+        <div><small>Invested</small><b>${fmtINR(invested, 0)}</b></div>
+        <div><small>Holdings now</small><b>${fmtINR(current, 0)}</b></div>
+      </div>
+    </section>
+    ${S.mode === "sim" ? simBar() : ""}
+    <section class="card">
+      <div class="card-head"><h3>Next on your path</h3><span class="pill accent">${S.xp} XP</span></div>
+      <div class="steps">${next.length ? next.map((p, k) => stepRow(p, k)).join("") : `<p class="muted" style="margin:0">You've finished the path. Keep trading, rerun the Lab with new settings, and retake quizzes.</p>`}</div>
+    </section>
+    <div class="tape" aria-label="Prices"><div class="tape-inner">${tape}${tape}</div></div>
+    <section class="card">
+      <div class="card-head"><h3>Badges</h3><button class="btn small ghost" data-act="ach">${nAch} of ${nAll} ${svg("arrow")}</button></div>
+      <div class="badges">${Object.keys(ACH).map((id) => `<button class="badge ${S.ach[id] ? "on" : ""}" data-act="ach" title="${esc(ACH[id].t)}" aria-label="${esc(ACH[id].t)}${S.ach[id] ? "" : " (locked)"}">${svg(S.ach[id] ? "medal" : "lock")}</button>`).join("")}</div>
+    </section>
+    <p class="foot">Educational game. Not investment advice. No real money or real orders are involved.</p>`;
+}
+function stepRow(p, k) {
+  if (p.l) { const l = LESSON[p.l]; return `<div class="step"><span class="n">${k + 1}</span><div><b>${esc(l.title)}</b><small>Lesson · ${esc(l.mod.title)} · ${l.mins} min</small></div><button class="btn small" data-act="lesson" data-arg="${l.id}">Read</button></div>`; }
+  return `<div class="step"><span class="n act">${k + 1}</span><div><b>${esc(p.label)}</b><small>${esc(p.hint || ACH[p.a].d)}</small></div><button class="btn small" data-act="tab" data-arg="${p.go}">Go</button></div>`;
+}
+
+/* ---------- Market ---------- */
+function viewMarket() {
+  const list = INSTR.filter((i) => marketFilter === "all" || (marketFilter === "etf" ? i.kind !== "stock" : i.kind === "stock"));
+  const rows = list.map((i) => {
+    const p = P[i.sym], v = px(i.sym), pc = prevClose(i.sym), c = v && pc ? ((v - pc) / pc) * 100 : 0;
+    return `<button class="row" data-act="instr" data-arg="${i.sym}">
+      <div style="min-width:0"><div class="sym">${i.sym} <span class="tag ${i.ac === "gold" ? "gold" : ""}">${KIND[i.kind]}</span></div><div class="name">${esc(i.name)}</div></div>
+      ${spark(p && p.ticks, 64, 26, c >= 0 ? "--up" : "--down")}
+      <div class="px">${v ? fmtNum(v) : "—"}<small class="${cls(c)}">${fmtPct(c)}</small></div>
+    </button>`;
+  }).join("");
+  return `
+    <section class="view-title"><h1>Market</h1>${statusPills()}</section>
+    ${S.mode === "sim" ? simBar() : liveBar()}
+    <div class="chips" role="group" aria-label="Filter">
+      ${[["all", "All"], ["etf", "ETFs"], ["stock", "Stocks"]].map(([k, l]) => `<button class="chip" data-act="filter" data-arg="${k}" aria-pressed="${marketFilter === k}">${l}</button>`).join("")}
+    </div>
+    <div class="card flush"><div class="rows">${rows}</div></div>
+    <p class="foot">${S.mode === "sim" ? "Simulated prices that start near recent levels and move randomly. In the Android app you can switch to real NSE prices in Settings." : "Delivery orders only. Charges follow a typical zero-brokerage discount broker."}</p>`;
+}
+
+/* ---------- Portfolio ---------- */
+function viewPortfolio() {
+  const a = acct(), hs = holdings(a), nw = netWorth(a);
+  const invested = hs.reduce((s, h) => s + h.cost, 0), current = hs.reduce((s, h) => s + h.q * (px(h.sym) || h.avg), 0), unreal = current - invested;
+  const v = classValues(a), tot = v.equity + v.gold + v.debt + Math.max(0, a.cash);
+  const seg = (k, val) => (tot > 0 && val > 0 ? `<i class="c-${k}" style="width:${((val / tot) * 100).toFixed(2)}%;background:var(--c)"></i>` : "");
+  const invTot = v.equity + v.gold + v.debt;
+  let targetBlock = `<p class="hint" style="margin:0">Set a target mix of equity, gold and debt. The game then shows how far you've drifted and what new money would fix it.</p>`;
+  if (S.target) {
+    const t = S.target;
+    const drift = ["equity", "gold", "debt"].map((k) => { const cur = invTot ? (v[k] / invTot) * 100 : 0; return { k, cur, d: cur - t[k] }; });
+    const need = ["equity", "gold", "debt"].map((k) => ({ k, amt: (t[k] / 100) * (invTot + Math.max(0, available(a))) - v[k] })).filter((x) => x.amt > 1);
+    targetBlock = `
+      <span class="hint">Your target for invested money</span>
+      <div class="alloc-bar" aria-label="Target">${["equity", "gold", "debt"].map((k) => `<i class="c-${k}" style="width:${t[k]}%;background:var(--c)"></i>`).join("")}</div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Class</th><th>Now</th><th>Target</th><th>Drift</th></tr></thead><tbody>
+      ${drift.map((x) => `<tr><td>${AC[x.k]}</td><td>${x.cur.toFixed(1)}%</td><td>${S.target[x.k]}%</td><td class="${Math.abs(x.d) > 5 ? "down" : "flat"}">${x.d >= 0 ? "+" : "−"}${Math.abs(x.d).toFixed(1)}</td></tr>`).join("")}
+      </tbody></table></div>
+      ${invTot > 0 && need.length ? `<p class="hint" style="margin:0">To reach your target using your available cash, buy roughly: ${need.map((x) => `${fmtINR(x.amt, 0)} of ${AC[x.k].toLowerCase()}`).join(", ")}.</p>` : ""}`;
+  }
+  const open = a.orders.filter((o) => o.status === "open");
+  const netST = a.rST, netLT = a.rLT;
+  let st = netST, lt = netLT; if (st < 0) { lt += st; st = 0; } if (lt < 0) lt = 0;
+  const tax = 0.2 * st + 0.125 * Math.max(0, lt - 125000);
+  return `
+    <section class="view-title"><h1>Portfolio</h1>${statusPills()}</section>
+    <section class="card">
+      <div class="kv">
+        <div><small>Invested</small><b>${fmtINR(invested)}</b></div>
+        <div><small>Current</small><b>${fmtINR(current)}</b></div>
+        <div><small>Unrealised P&amp;L</small><b class="${cls(unreal)}">${fmtSigned(unreal)}</b></div>
+        <div><small>Realised P&amp;L</small><b class="${cls(a.realized)}">${fmtSigned(a.realized)}</b></div>
+        <div><small>Charges paid</small><b>${fmtINR(a.chargesPaid)}</b></div>
+        <div><small>Cash available</small><b>${fmtINR(available(a))}</b></div>
+      </div>
+    </section>
+    <section class="card stack">
+      <div class="between"><h3>Allocation</h3><button class="btn small" data-act="target">${S.target ? "Edit target" : "Set target"}</button></div>
+      <span class="hint">Now, including cash</span>
+      <div class="alloc-bar" aria-label="Current allocation">${seg("equity", v.equity)}${seg("gold", v.gold)}${seg("debt", v.debt)}${seg("cash", Math.max(0, a.cash))}</div>
+      <div class="alloc-legend">${[["equity", v.equity], ["gold", v.gold], ["debt", v.debt], ["cash", Math.max(0, a.cash)]].map(([k, val]) => `<span class="c-${k}">${k === "cash" ? "Cash" : AC[k]} ${tot ? ((val / tot) * 100).toFixed(0) : 0}%</span>`).join("")}</div>
+      ${targetBlock}
+    </section>
+    <section class="card flush">
+      <div class="card-head" style="padding:14px 16px 0"><h3>Holdings</h3><span class="muted">${hs.length}</span></div>
+      ${hs.length ? hs.map((h) => { const p = px(h.sym) || h.avg, pl = (p - h.avg) * h.q, pc = ((p - h.avg) / h.avg) * 100; return `<button class="hold" data-act="instr" data-arg="${h.sym}"><div class="l"><b>${h.sym}</b><small>${h.q} × avg ${fmtNum(h.avg)}</small></div><div class="r"><span class="${cls(pl)}">${fmtSigned(pl)}</span><small>${fmtPct(pc)} · LTP ${fmtNum(p)}</small></div></button>`; }).join("") : `<div class="empty">No holdings yet. Open the Market tab and buy your first ETF.</div>`}
+    </section>
+    ${open.length ? `<section class="card flush"><div class="card-head" style="padding:14px 16px 0"><h3>Open orders</h3><span class="muted">${open.length}</span></div>
+      ${open.map((o) => `<div class="hold"><div class="l"><b class="${o.side === "B" ? "up" : "down"}">${o.side === "B" ? "BUY" : "SELL"} ${o.qty} ${o.sym}</b><small>${o.type === "LMT" ? "Limit " + fmtNum(o.limit) : "Market"}${o.amo ? " · after-market" : ""} · ${esc(o.placed.label)}</small></div><div class="r"><button class="btn small" data-act="cancel" data-arg="${o.id}">Cancel</button></div></div>`).join("")}</section>` : ""}
+    <section class="card flush">
+      <div class="card-head" style="padding:14px 16px 0"><h3>Contract notes</h3><span class="muted">${a.notes.length}</span></div>
+      ${a.notes.length ? a.notes.slice(0, 25).map((n) => `<button class="hold" data-act="note" data-arg="${n.id}"><div class="l"><b class="${n.side === "B" ? "up" : "down"}">${n.side === "B" ? "BUY" : "SELL"} ${n.qty} ${n.sym}</b><small>${esc(n.when)} · @ ${fmtNum(n.price)}</small></div><div class="r"><span>${fmtSigned(n.net)}</span><small>charges ${fmtNum(n.ch.total)}</small></div></button>`).join("") : `<div class="empty">Every filled order creates a contract note listing each charge.</div>`}
+    </section>
+    <section class="card stack">
+      <h3>Tax corner</h3>
+      <div class="kv"><div><small>Short-term gains</small><b class="${cls(netST)}">${fmtSigned(netST)}</b></div><div><small>Long-term gains</small><b class="${cls(netLT)}">${fmtSigned(netLT)}</b></div><div><small>Estimated tax</small><b>${fmtINR(tax)}</b></div></div>
+      <p class="hint" style="margin:0">If this were real money: short-term equity gains at 20%, long-term at 12.5% above ₹1.25 lakh a year, with short-term losses set off first. Gold is treated like equity here for simplicity. Rates as of 2026; confirm current rules before relying on them.</p>
+    </section>`;
+}
+
+/* ---------- Learn ---------- */
+function moduleProgress(m) { const d = m.lessons.filter((l) => S.lessons[l.id]).length; return { d, n: m.lessons.length }; }
+function viewLearn() {
+  if (!openMods) { openMods = new Set(); const first = MODULES.find((m) => moduleProgress(m).d < m.lessons.length); openMods.add((first || MODULES[0]).id); }
+  const done = LESSONS.filter((l) => S.lessons[l.id]).length;
+  return `
+    <section class="view-title"><h1>Learn</h1><span class="pill accent">${done} of ${LESSONS.length} lessons</span></section>
+    <section class="card between">
+      <div><div class="eyebrow">Learning streak</div><b class="num" style="font-size:1.2rem">${S.streak.last === istKey() || S.streak.last === istKey(-1) ? S.streak.count : 0} day${S.streak.count === 1 ? "" : "s"}</b></div>
+      <div style="text-align:right"><div class="eyebrow">Quiz answers right</div><b class="num" style="font-size:1.2rem">${Object.values(S.quiz).reduce((s, q) => s + Object.values(q).filter(Boolean).length, 0)} / ${LESSONS.reduce((s, l) => s + l.quiz.length, 0)}</b></div>
+    </section>
+    ${MODULES.map((m, mi) => {
+      const pr = moduleProgress(m), isOpen = openMods.has(m.id);
+      return `<section class="card module">
+        <button class="module-head" data-act="mod" data-arg="${m.id}" aria-expanded="${isOpen}">
+          <span class="mn">${mi + 1}</span>
+          <span style="min-width:0;flex:1"><h3>${esc(m.title)}</h3><p>${esc(m.blurb)}</p></span>
+          <span class="muted num" style="white-space:nowrap">${pr.d}/${pr.n}</span>
+        </button>
+        <div class="prog"><i style="width:${(pr.d / pr.n) * 100}%"></i></div>
+        ${isOpen ? `<div class="source">${esc(m.source)} ${m.links.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join(" · ")}</div>
+        <div>${m.lessons.map((l) => `<button class="lesson-row" data-act="lesson" data-arg="${l.id}"><span class="tick ${S.lessons[l.id] ? "done" : ""}">${S.lessons[l.id] ? svg("check") : ""}</span><span style="min-width:0">${esc(l.title)}</span><small>${l.mins} min</small></button>`).join("")}</div>` : ""}
+      </section>`;
+    }).join("")}
+    <section class="card stack">
+      <h3>Read the originals</h3>
+      <p class="hint" style="margin:0">The lessons here are written fresh for this app. These go much deeper:</p>
+      <ul style="margin:0;padding-left:1.1em;display:grid;gap:4px">
+        <li><a href="https://zerodha.com/varsity/" target="_blank" rel="noopener">Zerodha Varsity</a>, free modules from market basics to taxation</li>
+        <li><i>Let's Talk Money</i> by Monika Halan, personal finance for Indian earners</li>
+        <li><i>The Little Book of Common Sense Investing</i> by John C. Bogle, the case for index funds</li>
+      </ul>
+    </section>`;
+}
+
+/* ---------- Lab ---------- */
+const lab = { source: "practice", data: null, status: "", params: { amount: 10000, start: null, dip: 10, cash: 6 }, res: null, show: { sip: true, dip: true, perfect: true, worst: false, cash: true, lump: false } };
+const STRATS = [
+  { k: "sip", name: "Monthly SIP", col: "--s1" },
+  { k: "dip", name: "Dip buyer", col: "--s2" },
+  { k: "perfect", name: "Perfect timer", col: "--s3" },
+  { k: "worst", name: "Worst timer", col: "--s4" },
+  { k: "cash", name: "Cash only", col: "--s5" },
+  { k: "lump", name: "Lump sum", col: "--s6" }
+];
+function practiceData() {
+  const rnd = mulberry32(20260419); const g = () => { let u = 0, v = 0; while (!u) u = rnd(); while (!v) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const months = []; let c = 3000, crash = 0;
+  for (let y = 2006; y <= 2025; y++) for (let m = 1; m <= 12; m++) {
+    if (!crash && rnd() < 0.012) crash = 4 + Math.floor(rnd() * 8);
+    const drift = crash ? -0.045 : 0.0105; if (crash) crash--;
+    c = c * Math.exp(drift + 0.055 * g());
+    months.push({ y, m, c: round2(c) });
+  }
+  return { label: "Practice data (simulated index, 2006–2025)", real: false, months };
+}
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, "").split("\n").filter((l) => l.trim());
+  if (lines.length < 3) throw new Error("The file has too few rows.");
+  const split = (l) => { const out = []; let cur = "", q = false; for (const ch of l) { if (ch === '"') q = !q; else if ((ch === "," || ch === ";" || ch === "\t") && !q) { out.push(cur); cur = ""; } else cur += ch; } out.push(cur); return out.map((s) => s.trim()); };
+  const head = split(lines[0]).map((h) => h.toLowerCase());
+  const di = head.findIndex((h) => h.includes("date"));
+  let ci = head.findIndex((h) => h.includes("adj close")); if (ci < 0) ci = head.findIndex((h) => h === "close" || h.startsWith("close")); if (ci < 0) ci = head.findIndex((h) => h.includes("close") || h.includes("price") || h.includes("ltp"));
+  if (di < 0 || ci < 0) throw new Error("Couldn't find Date and Close columns. Use a CSV with headers like Date, Close.");
+  const mon = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+  const pd = (s) => {
+    s = s.replace(/"/g, "").trim(); let m;
+    if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return [+m[1], +m[2], +m[3]];
+    if ((m = s.match(/^(\d{1,2})[-\s/]([A-Za-z]{3})[A-Za-z]*[-\s/](\d{2,4})/))) return [+m[3] < 100 ? 2000 + +m[3] : +m[3], mon[m[2].toLowerCase()], +m[1]];
+    if ((m = s.match(/^([A-Za-z]{3})[A-Za-z]*\s+(\d{1,2}),?\s+(\d{4})/))) return [+m[3], mon[m[1].toLowerCase()], +m[2]];
+    if ((m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})/))) return [+m[3], +m[2], +m[1]];
+    return null;
+  };
+  const rows = [];
+  for (const l of lines.slice(1)) { const c = split(l); const d = pd(c[di] || ""); const v = parseFloat(String(c[ci] || "").replace(/[,"₹\s]/g, "")); if (d && d[1] && v > 0) rows.push({ t: d[0] * 10000 + d[1] * 100 + d[2], y: d[0], m: d[1], c: v }); }
+  if (rows.length < 3) throw new Error("No usable rows. Check the date format and the Close column.");
+  rows.sort((a, b) => a.t - b.t);
+  const byMonth = new Map(); for (const r of rows) byMonth.set(r.y * 100 + r.m, r);
+  const months = [...byMonth.values()].map((r) => ({ y: r.y, m: r.m, c: r.c }));
+  if (months.length < 24) throw new Error("Need at least 24 months of data for a meaningful test.");
+  return months;
+}
+async function loadLiveNifty() {
+  const r = await yahooChart("^NSEI", "max", "1mo");
+  const ts = r.timestamp || [], cl = (r.indicators && r.indicators.quote && r.indicators.quote[0] && r.indicators.quote[0].close) || [];
+  const byMonth = new Map();
+  ts.forEach((t, k) => { const c = cl[k]; if (c == null) return; const d = new Date((t + 5.5 * 3600) * 1000); byMonth.set(d.getUTCFullYear() * 100 + d.getUTCMonth() + 1, { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, c: round2(c) }); });
+  const months = [...byMonth.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]);
+  if (months.length < 24) throw new Error("Too little data");
+  return { label: `Nifty 50 monthly closes, ${months[0].y}–${months[months.length - 1].y} (Yahoo Finance)`, real: true, months };
+}
+function xirr(flows) {
+  const f = (r) => flows.reduce((s, [t, v]) => s + v / Math.pow(1 + r, t), 0);
+  let lo = -0.99, hi = 5, flo = f(lo), fhi = f(hi);
+  if (flo * fhi > 0) return NaN;
+  for (let k = 0; k < 120; k++) { const mid = (lo + hi) / 2, fm = f(mid); if (Math.abs(fm) < 1e-7) return mid; if (flo * fm < 0) { hi = mid; fhi = fm; } else { lo = mid; flo = fm; } }
+  return (lo + hi) / 2;
+}
+function maxDD(vals) { let peak = -Infinity, dd = 0; for (const v of vals) { if (v > peak) peak = v; if (peak > 0) dd = Math.max(dd, (peak - v) / peak); } return dd; }
+function backtest(all, startIdx, p) {
+  const M = all.slice(startIdx), n = M.length, A = p.amount, rc = Math.pow(1 + p.cash / 100, 1 / 12) - 1;
+  const t = (i) => i / 12;
+  const monthly = (vals) => { const flows = []; for (let i = 0; i < n; i++) flows.push([t(i), -A]); flows.push([t(n - 1), vals[n - 1]]); return flows; };
+  const out = {};
+  { let u = 0; const v = []; for (let i = 0; i < n; i++) { u += A / M[i].c; v.push(u * M[i].c); } out.sip = { v, flows: monthly(v) }; }
+  { const u = (A * n) / M[0].c; const v = M.map((x) => u * x.c); out.lump = { v, flows: [[0, -A * n], [t(n - 1), v[n - 1]]] }; }
+  { let cash = 0; const v = []; for (let i = 0; i < n; i++) { cash = cash * (1 + rc) + A; v.push(cash); } out.cash = { v, flows: monthly(v) }; }
+  {
+    let peak = 0; for (let k = 0; k <= startIdx; k++) peak = Math.max(peak, all[k].c);
+    let u = 0, cash = 0, idle = 0, buys = 0; const v = [];
+    for (let i = 0; i < n; i++) { peak = Math.max(peak, M[i].c); cash = cash * (1 + rc) + A; if (M[i].c <= peak * (1 - p.dip / 100)) { u += cash / M[i].c; cash = 0; buys++; } else idle++; v.push(u * M[i].c + cash); }
+    out.dip = { v, flows: monthly(v), idle, buys, leftover: cash };
+  }
+  const timer = (best) => {
+    const units = new Array(n).fill(0), cashAt = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) {
+      let end = i; while (end + 1 < n && M[end + 1].y === M[i].y) end++;
+      let j = i; for (let k = i; k <= end; k++) if (best ? M[k].c < M[j].c : M[k].c > M[j].c) j = k;
+      for (let k = i; k < j; k++) cashAt[k] += A * Math.pow(1 + rc, k - i);
+      units[j] += (A * Math.pow(1 + rc, j - i)) / M[j].c;
+    }
+    let u = 0; const v = []; for (let k = 0; k < n; k++) { u += units[k]; v.push(u * M[k].c + cashAt[k]); }
+    return { v, flows: monthly(v) };
+  };
+  out.perfect = timer(true); out.worst = timer(false);
+  for (const k of Object.keys(out)) { const s = out[k]; s.final = s.v[n - 1]; s.xirr = xirr(s.flows); s.dd = maxDD(s.v); }
+  out.invested = A * n; out.n = n; out.M = M;
+  return out;
+}
+function viewLab() {
+  const d = lab.data;
+  const years = d ? [...new Set(d.months.map((x) => x.y))] : [];
+  const lastY = years.length ? years[years.length - 1] : 0;
+  if (d && (!lab.params.start || !years.includes(lab.params.start))) lab.params.start = years[0];
+  const startOpts = years.filter((y) => y <= lastY - 3).map((y) => `<option value="${y}" ${y === lab.params.start ? "selected" : ""}>${y}</option>`).join("");
+  const r = lab.res;
+  const L = S.lab;
+  const challenges = [
+    ["backtest", "Run the default backtest."],
+    ["lab_dip20", "Raise the dip threshold to 20%. Does waiting for bigger falls help?"],
+    ["lab_starts", `Try three different start years (${Object.keys(L.starts).length}/3 so far). How much does the start date matter for an SIP?`],
+    ["real_data", "Run it on real Nifty data: live in the Android app, or load a CSV of Nifty closes."]
+  ];
+  return `
+    <section class="view-title"><h1>Lab</h1><span class="pill ${d && d.real ? "open" : "sim"}">${d ? (d.real ? "Real data" : "Practice data") : "No data"}</span></section>
+    <section class="card stack">
+      <p style="margin:0">Does timing the market beat a plain monthly SIP? Every strategy gets the same money each month. Only the timing of purchases differs.</p>
+      <div class="field"><label>Data</label>
+        <div class="seg" role="group">${[["practice", "Practice"], ["live", "Live Nifty"], ["csv", "Load CSV"]].map(([k, l]) => `<button data-act="lab-src" data-arg="${k}" aria-pressed="${lab.source === k}">${l}</button>`).join("")}</div>
+      </div>
+      ${lab.source === "csv" ? `<div class="field"><label for="lab-file">Nifty CSV with Date and Close columns</label><input id="lab-file" class="input" type="file" accept=".csv,text/csv,text/plain"><span class="hint">Download Nifty 50 history from niftyindices.com or NSE, then load it here. Daily data is fine; the Lab keeps each month's last close.</span></div>` : ""}
+      ${lab.status ? `<p class="hint" style="margin:0">${esc(lab.status)}</p>` : ""}
+      ${d ? `<p class="hint" style="margin:0">Using: ${esc(d.label)}, ${d.months.length} months.</p>` : ""}
+      <div class="grid2">
+        <div class="field"><label for="lab-amt">Monthly amount (₹)</label><input id="lab-amt" class="input" inputmode="numeric" value="${lab.params.amount}"></div>
+        <div class="field"><label for="lab-start">Start year</label><select id="lab-start" class="input" ${d ? "" : "disabled"}>${startOpts}</select></div>
+        <div class="field"><label for="lab-dip">Dip threshold (%)</label><input id="lab-dip" class="input" inputmode="decimal" value="${lab.params.dip}"></div>
+        <div class="field"><label for="lab-cash">Cash earns (%/yr)</label><input id="lab-cash" class="input" inputmode="decimal" value="${lab.params.cash}"></div>
+      </div>
+      <button class="btn primary block" data-act="lab-run" ${d ? "" : "disabled"}>Run backtest</button>
+    </section>
+    ${r ? labResults(r) : ""}
+    <section class="card stack">
+      <h3>Challenges</h3>
+      <ul class="checklist">${challenges.map(([id, t]) => `<li><span class="tick ${S.ach[id] ? "done" : ""}">${S.ach[id] ? svg("check") : ""}</span><span>${esc(t)}</span></li>`).join("")}</ul>
+    </section>
+    <section class="card stack">
+      <h3>Rebuild it in Python</h3>
+      <p class="hint" style="margin:0">The same experiment with pandas and real Nifty data. Run <span class="mono">pip install yfinance pandas matplotlib</span>, save the script as <span class="mono">dalal_dojo_lab.py</span> and run it. It's also included in the Android project.</p>
+      <details><summary>Show the script</summary><div class="stack" style="margin-top:10px"><button class="btn small" data-act="copy-py">${svg("copy")}Copy script</button><pre class="code" id="py-src">${esc(PY_SRC)}</pre></div></details>
+    </section>`;
+}
+function labResults(r) {
+  const yrs = (r.n / 12).toFixed(1);
+  const rows = STRATS.map((s) => { const x = r[s.k]; return `<tr><td><span class="chip-sw" style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(${s.col});margin-right:6px"></span>${s.name}</td><td>${compactINR(x.final)}</td><td>${isFinite(x.xirr) ? (x.xirr * 100).toFixed(1) + "%" : "—"}</td><td>${s.k === "cash" ? "—" : "−" + (x.dd * 100).toFixed(0) + "%"}</td></tr>`; }).join("");
+  const sip = r.sip, per = r.perfect, dip = r.dip, worst = r.worst;
+  const gap = (per.xirr - sip.xirr) * 100;
+  const dipVs = (dip.final / sip.final - 1) * 100;
+  return `<section class="card stack">
+    <div class="between"><h3>Results</h3><span class="muted num">${r.M[0].y}–${r.M[r.n - 1].y} · ${yrs} yrs · ${compactINR(r.invested)} in</span></div>
+    <canvas class="lab-chart" id="lab-chart" role="img" aria-label="Portfolio value over time for each strategy"></canvas>
+    <div class="chips" role="group" aria-label="Show lines">${STRATS.map((s) => `<button class="chip" data-act="lab-show" data-arg="${s.k}" aria-pressed="${!!lab.show[s.k]}"><span class="sw" style="background:var(${s.col})"></span>${s.name}</button>`).join("")}</div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Strategy</th><th>Final</th><th>XIRR</th><th>Worst fall</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="insight">
+      <p>A plain SIP turned ${compactINR(r.invested)} into <b>${compactINR(sip.final)}</b>, an XIRR of ${(sip.xirr * 100).toFixed(1)}% a year.</p>
+      <p>The perfect timer, who used hindsight to buy at each year's lowest month, earned ${(per.xirr * 100).toFixed(1)}%: <b>${gap.toFixed(1)} points a year</b> more than the SIP. The worst timer, buying at each year's high, still earned ${(worst.xirr * 100).toFixed(1)}%.</p>
+      <p>Waiting for a ${lab.params.dip}% dip ended ${dipVs >= 0 ? "<b>" + dipVs.toFixed(1) + "% ahead of</b>" : "<b>" + Math.abs(dipVs).toFixed(1) + "% behind</b>"} the SIP. Its money sat in cash in ${dip.idle} of ${r.n} months${dip.leftover > 1 ? `, and ${compactINR(dip.leftover)} was still uninvested at the end` : ""}.</p>
+      <p class="muted">Price index only: dividends, charges and taxes are left out of every strategy.</p>
+    </div>
+  </section>`;
+}
+function afterLabRender() {
+  const f = $("#lab-file");
+  if (f) f.addEventListener("change", () => {
+    const file = f.files && f.files[0]; if (!file) return;
+    const rd = new FileReader();
+    rd.onload = () => { try { const months = parseCSV(String(rd.result)); lab.data = { label: `${file.name}, ${months[0].y}–${months[months.length - 1].y}`, real: true, months }; lab.status = "Loaded your file."; lab.res = null; lab.params.start = null; } catch (e) { lab.status = e.message; } renderView(); };
+    rd.onerror = () => { lab.status = "Couldn't read that file. Try saving it again as CSV."; renderView(); };
+    rd.readAsText(file);
+  });
+  drawLabChart();
+}
+function drawLabChart() {
+  const cv = $("#lab-chart"); const r = lab.res; if (!cv || !r) return;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w) return;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  const cs = getComputedStyle(document.documentElement); const col = (n) => cs.getPropertyValue(n).trim() || "#888";
+  const L = 54, R = 10, T = 10, B = 24, pw = w - L - R, ph = h - T - B, n = r.n;
+  const shown = STRATS.filter((s) => lab.show[s.k]);
+  const inv = []; for (let i = 0; i < n; i++) inv.push(lab.params.amount * (i + 1));
+  let ymax = Math.max(...inv, ...shown.flatMap((s) => r[s.k].v)); if (!(ymax > 0)) ymax = 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(ymax / 4))); const stepY = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => ymax / s <= 5) || mag * 10;
+  const top = Math.ceil(ymax / stepY) * stepY;
+  const X = (i) => L + (n > 1 ? (i / (n - 1)) * pw : 0), Y = (v) => T + ph - (v / top) * ph;
+  ctx.font = `11px ${cs.getPropertyValue("--mono")}`; ctx.textBaseline = "middle";
+  ctx.strokeStyle = col("--line"); ctx.fillStyle = col("--muted"); ctx.lineWidth = 1;
+  for (let v = 0; v <= top + 1e-6; v += stepY) { const y = Math.round(Y(v)) + 0.5; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w - R, y); ctx.stroke(); ctx.textAlign = "right"; ctx.fillText(axisINR(v), L - 6, y); }
+  const ys = [...new Set(r.M.map((x) => x.y))]; const every = Math.max(1, Math.ceil(ys.length / 6));
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  r.M.forEach((x, i) => { if (x.m === 1 || i === 0) { const k = ys.indexOf(x.y); if (k % every === 0) ctx.fillText(String(x.y), clamp(X(i), L + 12, w - R - 14), T + ph + 6); } });
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = col("--muted"); ctx.lineWidth = 1.2; ctx.beginPath(); inv.forEach((v, i) => (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v)))); ctx.stroke(); ctx.setLineDash([]);
+  for (const s of shown) {
+    const v = r[s.k].v; ctx.strokeStyle = col(s.col); ctx.lineWidth = s.k === "sip" ? 2.4 : 1.7; ctx.lineJoin = "round";
+    ctx.beginPath(); v.forEach((y, i) => (i ? ctx.lineTo(X(i), Y(y)) : ctx.moveTo(X(i), Y(y)))); ctx.stroke();
+    ctx.fillStyle = col(s.col); ctx.beginPath(); ctx.arc(X(n - 1), Y(v[n - 1]), 3, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = col("--muted"); ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("- - money put in", L + 6, T + 2);
+}
+async function labSetSource(src) {
+  lab.source = src; lab.res = null; lab.status = ""; lab.params.start = null;
+  if (src === "practice") { lab.data = practiceData(); }
+  else if (src === "live") {
+    lab.data = null; lab.status = "Loading Nifty history…"; renderView();
+    try { lab.data = await loadLiveNifty(); lab.status = ""; }
+    catch (e) { lab.data = null; lab.status = "Live data couldn't load here. It works in the Android app; in a browser, use Load CSV or Practice."; }
+  } else { lab.data = null; lab.status = ""; }
+  renderView();
+}
+function labRun() {
+  const d = lab.data; if (!d) return;
+  const num = (id, def) => { const v = parseFloat(($("#" + id) || {}).value); return isFinite(v) ? v : def; };
+  lab.params.amount = clamp(Math.round(num("lab-amt", 10000)), 100, 10000000);
+  lab.params.dip = clamp(num("lab-dip", 10), 1, 80);
+  lab.params.cash = clamp(num("lab-cash", 6), 0, 20);
+  lab.params.start = parseInt(($("#lab-start") || {}).value, 10) || lab.params.start;
+  const idx = Math.max(0, d.months.findIndex((x) => x.y === lab.params.start));
+  if (d.months.length - idx < 24) { lab.status = "Pick an earlier start year: the test needs at least 24 months."; renderView(); return; }
+  lab.res = backtest(d.months, idx, lab.params); lab.status = "";
+  S.lab.dips[lab.params.dip] = true; S.lab.starts[lab.params.start] = true;
+  award("backtest"); if (lab.params.dip >= 20) award("lab_dip20"); if (Object.keys(S.lab.starts).length >= 3) award("lab_starts"); if (d.real) award("real_data");
+  save(); renderView();
+  const c = $("#lab-chart"); if (c && c.scrollIntoView) c.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+}
+
+/* =========================================================
+   Sheets
+   ========================================================= */
+function openSheet(kind, data) {
+  sheet = Object.assign({ kind }, data || {});
+  const el = $("#sheet"); el.hidden = false; el.classList.toggle("full", kind === "lesson");
+  renderSheet(); document.body.classList.add("noscroll");
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("open")));
+  const panel = $("#sheet-panel"); panel.scrollTop = 0;
+}
+function closeSheet() {
+  const el = $("#sheet"); el.classList.remove("open"); document.body.classList.remove("noscroll");
+  const wasLesson = sheet && sheet.kind === "lesson"; sheet = null; orderState = null;
+  setTimeout(() => { if (!sheet) { el.hidden = true; $("#sheet-panel").innerHTML = ""; } }, 260);
+  if (wasLesson || tab === "learn" || tab === "home") renderView();
+}
+const head = (eyebrow, title, sub) => `<div class="grab"></div><div class="sheet-head"><div style="min-width:0"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${sub ? `<div class="muted" style="font-size:.9rem">${sub}</div>` : ""}</div><button class="icon-btn" data-act="close-sheet" aria-label="Close">${svg("close")}</button></div>`;
+function renderSheet() {
+  const p = $("#sheet-panel"); if (!sheet) return;
+  const k = sheet.kind;
+  p.innerHTML = k === "instr" ? sheetInstr() : k === "order" ? sheetOrder() : k === "note" ? sheetNote() : k === "lesson" ? sheetLesson() : k === "settings" ? sheetSettings() : k === "ach" ? sheetAch() : k === "target" ? sheetTarget() : "";
+  if (k === "order") bindTicket();
+}
+
+function sheetInstr() {
+  const i = BYSYM[sheet.sym], v = px(i.sym), pc = prevClose(i.sym), c = v && pc ? ((v - pc) / pc) * 100 : 0;
+  const h = holdings().find((x) => x.sym === i.sym);
+  const range = sheet.range || "1d";
+  const series = range === "1d" ? (P[i.sym] && P[i.sym].ticks) : (S.mode === "sim" ? S.sim.hist[i.sym].concat([v]) : null);
+  return `${head(KIND[i.kind] + " · " + AC[i.ac], i.sym, esc(i.name))}
+  <div class="sheet-body">
+    <div class="between"><div><div class="hero"><span class="big" id="is-px" style="font-size:1.9rem">${v ? fmtINR(v) : "—"}</span></div><span id="is-ch" class="num ${cls(c)}">${v && pc ? fmtSigned(v - pc) + " (" + fmtPct(c) + ") today" : ""}</span></div>
+    ${S.mode === "sim" ? `<div class="seg" role="group" style="min-width:140px">${[["1d", "Today"], ["6m", "6 months"]].map(([k, l]) => `<button data-act="range" data-arg="${k}" aria-pressed="${range === k}">${l}</button>`).join("")}</div>` : ""}</div>
+    <div id="is-chart">${spark(series, 300, 90, c >= 0 ? "--up" : "--down", "curve")}</div>
+    <p style="margin:0">${esc(i.about)}</p>
+    <div class="kv"><div><small>Asset class</small><b>${AC[i.ac]}</b></div><div><small>STT</small><b style="font-family:var(--body);font-size:.85rem">${STT_RULE[i.kind]}</b></div><div><small>DP charge on sale</small><b>₹15.34</b></div></div>
+    ${h ? `<div class="card"><div class="kv"><div><small>You hold</small><b>${h.q}</b></div><div><small>Avg price</small><b>${fmtNum(h.avg)}</b></div><div><small>P&amp;L</small><b class="${cls((v - h.avg) * h.q)}">${fmtSigned((v - h.avg) * h.q)}</b></div></div></div>` : ""}
+    <div class="btn-row"><button class="btn buy" data-act="order" data-arg="B">Buy</button><button class="btn sell" data-act="order" data-arg="S" ${h ? "" : "disabled"}>Sell</button></div>
+    ${!marketOpen() ? `<p class="hint" style="margin:0">NSE is closed. Orders placed now wait as after-market orders and fill at the next open.</p>` : ""}
+  </div>`;
+}
+function updateInstrSheet() {
+  const i = BYSYM[sheet.sym], v = px(i.sym), pc = prevClose(i.sym), c = v && pc ? ((v - pc) / pc) * 100 : 0;
+  const a = $("#is-px"), b = $("#is-ch"), ch = $("#is-chart");
+  if (a) a.textContent = v ? fmtINR(v) : "—";
+  if (b) { b.textContent = v && pc ? `${fmtSigned(v - pc)} (${fmtPct(c)}) today` : ""; b.className = "num " + cls(c); }
+  if (ch && (sheet.range || "1d") === "1d") ch.innerHTML = spark(P[i.sym] && P[i.sym].ticks, 300, 90, c >= 0 ? "--up" : "--down", "curve");
+}
+
+function sheetOrder() {
+  const o = orderState, i = BYSYM[o.sym];
+  return `${head(`${o.side === "B" ? "Buy" : "Sell"} · Delivery`, i.sym, `LTP <span class="num" id="t-ltp">${fmtINR(px(i.sym) || 0)}</span>`)}
+  <div class="sheet-body">
+    <div class="seg buy-sell" role="group" aria-label="Side">${[["B", "Buy"], ["S", "Sell"]].map(([k, l]) => `<button data-act="t-side" data-arg="${k}" data-v="${k}" aria-pressed="${o.side === k}">${l}</button>`).join("")}</div>
+    <div class="grid2">
+      <div class="field"><label for="t-qty">Quantity</label><div class="stepper"><button class="btn" data-act="t-step" data-arg="-1" aria-label="Fewer">−</button><input id="t-qty" class="input" inputmode="numeric" value="${o.qty}" style="text-align:center"><button class="btn" data-act="t-step" data-arg="1" aria-label="More">+</button></div></div>
+      <div class="field"><label>Order type</label><div class="seg" role="group">${[["MKT", "Market"], ["LMT", "Limit"]].map(([k, l]) => `<button data-act="t-type" data-arg="${k}" aria-pressed="${o.type === k}">${l}</button>`).join("")}</div></div>
+    </div>
+    <div class="field" id="t-lim-wrap" ${o.type === "LMT" ? "" : "hidden"}><label for="t-lim">Limit price (₹)</label><input id="t-lim" class="input" inputmode="decimal" value="${o.limit}"></div>
+    <div class="slip" id="t-est"></div>
+    <div class="hint" id="t-avail"></div>
+    <div class="err" id="t-err" role="alert"></div>
+    <button class="btn ${o.side === "B" ? "buy" : "sell"} block" data-act="t-submit" id="t-submit"></button>
+    <p class="hint" style="margin:0">${marketOpen() ? (S.mode === "sim" ? "Simulator market is open." : "NSE is open. Market orders fill at the latest price.") : "NSE is closed. This order will wait and fill at the next open."}</p>
+  </div>`;
+}
+function bindTicket() {
+  const q = $("#t-qty"), l = $("#t-lim");
+  if (q) q.addEventListener("input", () => { orderState.qty = q.value.replace(/[^\d]/g, ""); updateTicket(); });
+  if (l) l.addEventListener("input", () => { orderState.limit = l.value; updateTicket(); });
+  updateTicket();
+}
+function updateTicket() {
+  const o = orderState; if (!o) return; const i = BYSYM[o.sym], a = acct();
+  const ltp = px(o.sym) || 0, qty = Math.max(0, parseInt(o.qty, 10) || 0), price = o.type === "LMT" ? parseFloat(o.limit) || 0 : ltp;
+  const value = round2(price * qty), ch = charges(i.kind, o.side, value, a, o.sym, dayKey());
+  const net = o.side === "B" ? value + ch.total : value - ch.total;
+  const el = $("#t-ltp"); if (el) el.textContent = fmtINR(ltp);
+  const h = holdings().find((x) => x.sym === o.sym);
+  $("#t-est").innerHTML = `<h4>Estimate${o.type === "MKT" ? " at last price" : ""}</h4>
+    <div class="ln"><span>${qty} × ${fmtNum(price)}</span><span>${fmtINR(value)}</span></div>
+    <div class="ln"><span>Brokerage</span><span>₹0.00</span></div>
+    <div class="ln"><span>STT</span><span>${fmtINR(ch.stt)}</span></div>
+    <div class="ln"><span>Exchange + SEBI + GST</span><span>${fmtINR(ch.exch + ch.sebi + ch.gst)}</span></div>
+    ${o.side === "B" ? `<div class="ln"><span>Stamp duty</span><span>${fmtINR(ch.stamp)}</span></div>` : `<div class="ln"><span>DP charge</span><span>${fmtINR(ch.dp)}</span></div>`}
+    <div class="ln total"><span>${o.side === "B" ? "You pay" : "You receive"}</span><span>${fmtINR(net)}</span></div>
+    <div class="ln"><span>Charges as % of trade</span><span>${value ? ((ch.total / value) * 100).toFixed(2) : "0.00"}%</span></div>`;
+  $("#t-avail").textContent = o.side === "B" ? `Cash available ${fmtINR(available(a))}` : `You hold ${h ? h.q : 0} unit${h && h.q === 1 ? "" : "s"}`;
+  const btn = $("#t-submit"); if (btn) btn.textContent = `${o.side === "B" ? "Buy" : "Sell"} ${qty || ""} ${o.sym}`;
+}
+
+function sheetNote() {
+  const n = acct().notes.find((x) => x.id === sheet.id); if (!n) return head("Contract note", "Not found");
+  const ln = (a, b) => `<div class="ln"><span>${a}</span><span>${b}</span></div>`;
+  return `${head("Contract note · " + n.id, `${n.side === "B" ? "Bought" : "Sold"} ${n.qty} ${n.sym}`, esc(n.when) + (n.amo ? " · after-market order" : ""))}
+  <div class="sheet-body">
+    <div class="slip">
+      <h4>Trade</h4>
+      ${ln("Quantity", n.qty)}${ln("Price", fmtINR(n.price))}${ln("Order", n.type === "LMT" ? "Limit " + fmtINR(n.limit) : "Market")}${ln("Trade value", fmtINR(n.value))}
+      <h4 style="margin-top:12px">Charges</h4>
+      ${ln("Brokerage", fmtINR(0))}${ln("STT", fmtINR(n.ch.stt))}${ln("Exchange transaction", fmtINR(n.ch.exch))}${ln("SEBI fee", fmtINR(n.ch.sebi))}${ln("Stamp duty", fmtINR(n.ch.stamp))}${ln("GST (18%)", fmtINR(n.ch.gst))}${ln("DP charge", fmtINR(n.ch.dp))}
+      <div class="ln total"><span>Total charges</span><span>${fmtINR(n.ch.total)}</span></div>
+      <div class="ln total"><span>${n.side === "B" ? "Debited" : "Credited"}</span><span>${fmtINR(Math.abs(n.net))}</span></div>
+      ${n.side === "S" ? ln("Realised P&amp;L", `<span class="${cls(n.realized)}">${fmtSigned(n.realized)}</span>`) : ""}
+      ${ln("Settlement", "T+1")}
+    </div>
+    ${n.tips && n.tips.length ? `<section class="card stack"><h3>Coach's notes</h3>${n.tips.map((t) => `<p style="margin:0">${esc(t)}</p>`).join("")}</section>` : ""}
+    <button class="btn primary block" data-act="close-sheet">Done</button>
+  </div>`;
+}
+
+function sheetLesson() {
+  const l = LESSON[sheet.id], st = sheet;
+  if (st.step === "quiz") return sheetQuiz(l);
+  const idx = LESSONS.indexOf(l);
+  const blocks = l.body.map((b) => {
+    if (typeof b === "string") return `<p>${md(b)}</p>`;
+    if (b.list) return `<ul>${b.list.map((x) => `<li>${md(x)}</li>`).join("")}</ul>`;
+    if (b.note) return `<div class="callout">${md(b.note)}</div>`;
+    if (b.slip) return `<div class="slip"><h4>${esc(b.slip.title)}</h4>${b.slip.rows.map(([x, y]) => `<div class="ln"><span>${esc(x)}</span><span>${esc(y)}</span></div>`).join("")}${b.slip.total ? `<div class="ln total"><span>${esc(b.slip.total[0])}</span><span>${esc(b.slip.total[1])}</span></div>` : ""}</div>`;
+    return "";
+  }).join("");
+  return `${head(`${esc(l.mod.title)} · Lesson ${l.li + 1} of ${l.mod.lessons.length}`, esc(l.title), `${l.mins} min read${S.lessons[l.id] ? " · completed" : ""}`)}
+  <div class="sheet-body">
+    <article class="reader">${blocks}<div class="takeaway"><b>Takeaway</b>${esc(l.takeaway)}</div>
+    <p class="hint">${esc(l.mod.source)}</p></article>
+    <button class="btn primary block" data-act="quiz-start">Take the quiz · ${l.quiz.length} questions</button>
+    ${idx < LESSONS.length - 1 ? `<button class="btn block" data-act="lesson" data-arg="${LESSONS[idx + 1].id}">Next lesson: ${esc(LESSONS[idx + 1].title)}</button>` : ""}
+  </div>`;
+}
+function sheetQuiz(l) {
+  const st = sheet, qi = st.qi;
+  if (qi >= l.quiz.length) {
+    const right = st.results.filter(Boolean).length;
+    const idx = LESSONS.indexOf(l), nxt = LESSONS[idx + 1];
+    return `${head(esc(l.mod.title), "Quiz complete", esc(l.title))}
+    <div class="sheet-body">
+      <div class="card" style="text-align:center"><div class="big" style="font-family:var(--display);font-size:2.6rem;font-weight:700">${right} / ${l.quiz.length}</div><p class="muted" style="margin:0">${right === l.quiz.length ? "Every answer right." : "Review the explanations, then retake it any time."}</p><p class="num" style="margin:6px 0 0">+${st.gained} XP this round</p></div>
+      ${nxt ? `<button class="btn primary block" data-act="lesson" data-arg="${nxt.id}">Next lesson: ${esc(nxt.title)}</button>` : ""}
+      <button class="btn block" data-act="quiz-start">Retake quiz</button>
+      <button class="btn block ghost" data-act="close-sheet">Back</button>
+    </div>`;
+  }
+  const q = l.quiz[qi], picked = st.picked;
+  return `${head(`Quiz · ${esc(l.title)}`, `Question ${qi + 1} of ${l.quiz.length}`)}
+  <div class="sheet-body">
+    <div class="qprog">${l.quiz.map((_, k) => `<i class="${k < qi || (k === qi && picked != null) ? "done" : ""}"></i>`).join("")}</div>
+    <div class="q"><h3>${esc(q.q)}</h3>
+      ${q.o.map((o, k) => `<button class="opt ${picked != null ? (k === q.a ? "right" : k === picked ? "wrong" : "") : ""}" data-act="quiz-pick" data-arg="${k}" ${picked != null ? "disabled" : ""}>${esc(o)}</button>`).join("")}
+      ${picked != null ? `<div class="explain"><b class="${picked === q.a ? "up" : "down"}">${picked === q.a ? "Correct." : "Not quite."}</b> ${esc(q.e)}</div><button class="btn primary block" data-act="quiz-next">${qi + 1 < l.quiz.length ? "Next question" : "See score"}</button>` : ""}
+    </div>
+  </div>`;
+}
+function quizPick(k) {
+  const l = LESSON[sheet.id], q = l.quiz[sheet.qi]; if (sheet.picked != null) return;
+  sheet.picked = k; const ok = k === q.a; sheet.results.push(ok);
+  const rec = S.quiz[l.id] || (S.quiz[l.id] = {});
+  if (ok && !rec[sheet.qi]) { rec[sheet.qi] = true; S.xp += 10; sheet.gained += 10; }
+  else if (!ok && rec[sheet.qi] === undefined) rec[sheet.qi] = false;
+  touchStreak(); save(); renderSheet(); renderTop();
+}
+function quizNext() {
+  const l = LESSON[sheet.id]; sheet.qi++; sheet.picked = null;
+  if (sheet.qi >= l.quiz.length) finishLesson(l);
+  renderSheet(); $("#sheet-panel").scrollTop = 0;
+}
+function finishLesson(l) {
+  const before = beltIndex(S.xp - sheet.gained);
+  if (!S.lessons[l.id]) { S.lessons[l.id] = true; S.xp += 25; sheet.gained += 25; }
+  if (sheet.results.every(Boolean)) award("quiz_perfect");
+  const m = l.mod;
+  if (!S.mods[m.id] && m.lessons.every((x) => S.lessons[x.id])) { S.mods[m.id] = true; S.xp += 50; sheet.gained += 50; toast(`Module complete: ${m.title} · +50 XP`); }
+  if (MODULES.every((x) => S.mods[x.id])) award("module_all");
+  touchStreak();
+  if (sheet.gained) toast(`+${sheet.gained} XP from this lesson`);
+  const after = beltIndex(S.xp); if (after > before) setTimeout(() => beltUp(after), 600);
+  S.welcomed = true; save(); renderTop();
+}
+
+function sheetSettings() {
+  const ck = (k) => confirmKey === k;
+  return `${head("Settings", "Your dojo")}
+  <div class="sheet-body">
+    <section class="card stack">
+      <h3>Market data</h3>
+      <div class="seg" role="group">${[["sim", "Simulator"], ["live", "Live NSE"]].map(([k, l]) => `<button data-act="mode" data-arg="${k}" aria-pressed="${S.mode === k}" ${k === "live" && !liveAvailable ? "disabled" : ""}>${l}</button>`).join("")}</div>
+      <p class="hint" style="margin:0">${liveAvailable ? "Live mode uses real NSE prices from Yahoo Finance, which may be delayed. Orders only fill during market hours. Each mode keeps its own account." : "Live prices work in the Android app. Browsers block the price feed, so this version runs the simulator. Each mode keeps its own account."}</p>
+    </section>
+    <section class="card stack">
+      <h3>Accounts</h3>
+      <div class="field"><label>Starting cash for a reset</label><div class="chips">${[10000, 100000, 1000000].map((c) => `<button class="chip" data-act="start-cash" data-arg="${c}" aria-pressed="${S.startCash === c}">${fmtINR(c, 0)}</button>`).join("")}</div></div>
+      <button class="btn block" data-act="reset-acct">${ck("reset-acct") ? "Tap again to reset this account" : `Reset ${S.mode === "sim" ? "simulator" : "live paper"} account`}</button>
+      <button class="btn block" data-act="reset-all">${ck("reset-all") ? "Tap again to erase all progress" : "Reset everything (XP, lessons, both accounts)"}</button>
+    </section>
+    <section class="card stack">
+      <h3>Backup</h3>
+      <p class="hint" style="margin:0">${storageOK ? "Progress is saved on this device only. Copy a backup code to move it to another device." : "This browser isn't letting the app save progress, so it will reset when you close it. Copy a backup code to keep it."}</p>
+      <button class="btn block" data-act="backup">${svg("copy")}Copy backup code</button>
+      <textarea id="restore-box" class="input" placeholder="Paste a backup code here to restore"></textarea>
+      <button class="btn block" data-act="restore">Restore from code</button>
+    </section>
+    <section class="card stack">
+      <h3>About</h3>
+      <p class="hint" style="margin:0">Dalal Dojo is an educational game. It isn't investment advice, places no real orders and uses no real money. Charges follow a typical zero-brokerage discount broker as of 2026 and may differ from yours. Lessons are original and point to Zerodha Varsity, <i>Let's Talk Money</i> and <i>The Little Book of Common Sense Investing</i> for deeper reading.</p>
+    </section>
+  </div>`;
+}
+function sheetAch() {
+  const bi = beltIndex(S.xp);
+  return `${head("Progress", `${BELTS[bi].name} belt`, `${S.xp} XP`)}
+  <div class="sheet-body">
+    <section class="card stack">
+      <h3>Belts</h3>
+      ${BELTS.map((b, k) => `<div class="between"><span style="display:flex;align-items:center;gap:10px"><span class="belt-band" style="--belt:${b.color}"></span><b style="${k === bi ? "" : "font-weight:500"}">${b.name}</b>${k === bi ? '<span class="pill accent">You</span>' : ""}</span><span class="num muted">${b.xp} XP</span></div>`).join("")}
+      <p class="hint" style="margin:0">Earn XP from lessons (25), correct quiz answers (10 each), finished modules (50) and badges.</p>
+    </section>
+    <section class="card flush">
+      ${Object.entries(ACH).map(([id, x]) => `<div class="hold"><div class="l" style="display:flex;gap:10px;align-items:center"><span class="badge ${S.ach[id] ? "on" : ""}" style="width:38px;height:38px">${svg(S.ach[id] ? "medal" : "lock")}</span><span><b>${esc(x.t)}</b><small style="font-family:var(--body)">${esc(x.d)}</small></span></div><div class="r"><span class="num ${S.ach[id] ? "up" : "muted"}">+${x.xp}</span></div></div>`).join("")}
+    </section>
+  </div>`;
+}
+function sheetTarget() {
+  const t = sheet.t;
+  const sum = t.equity + t.gold + t.debt;
+  return `${head("Portfolio", "Target allocation", "How you want your invested money split")}
+  <div class="sheet-body">
+    ${["equity", "gold", "debt"].map((k) => `<div class="field"><label for="tg-${k}">${AC[k]} (%)</label><div class="stepper"><button class="btn" data-act="tg-step" data-arg="${k}:-5" aria-label="Less ${AC[k]}">−</button><input id="tg-${k}" class="input" inputmode="numeric" value="${t[k]}" style="text-align:center" data-tg="${k}"><button class="btn" data-act="tg-step" data-arg="${k}:5" aria-label="More ${AC[k]}">+</button></div></div>`).join("")}
+    <div class="alloc-bar">${["equity", "gold", "debt"].map((k) => `<i class="c-${k}" style="width:${sum ? (t[k] / Math.max(sum, 100)) * 100 : 0}%;background:var(--c)"></i>`).join("")}</div>
+    <p class="${sum === 100 ? "hint" : "err"}" style="margin:0" id="tg-sum">Total ${sum}%${sum === 100 ? "" : " — it needs to add up to 100%."}</p>
+    <p class="hint" style="margin:0">Equity is the ETFs and stocks, gold is GOLDBEES, debt is LIQUIDBEES. Choose a mix you'd keep through a 40% equity fall.</p>
+    <button class="btn primary block" data-act="tg-save" ${sum === 100 ? "" : "disabled"}>Save target</button>
+  </div>`;
+}
+
+/* Belt-up moment */
+function beltUp(i) {
+  const b = BELTS[i], el = $("#beltup");
+  el.innerHTML = `<div class="beltup-card"><div class="beltup-belt" style="--belt:${b.color}"></div><h2>${b.name} belt</h2><p class="muted" style="margin:0">You've reached ${b.xp} XP. ${BELTS[i + 1] ? `Next: ${BELTS[i + 1].name} at ${BELTS[i + 1].xp} XP.` : "That's the top belt."}</p><button class="btn primary" data-act="beltup-close">Continue</button></div>`;
+  el.hidden = false;
+}
+
+/* =========================================================
+   Events
+   ========================================================= */
+function copyText(text, okMsg) {
+  const fallback = () => { const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (e) { } ta.remove(); toast(ok ? okMsg : "Couldn't copy automatically. Select the text and copy it manually."); };
+  try { navigator.clipboard.writeText(text).then(() => toast(okMsg), fallback); } catch (e) { fallback(); }
+}
+function armConfirm(k) { confirmKey = k; clearTimeout(confirmTimer); confirmTimer = setTimeout(() => { confirmKey = null; if (sheet && sheet.kind === "settings") renderSheet(); }, 4000); renderSheet(); }
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-act]"); if (!t) return;
+  const act = t.dataset.act, arg = t.dataset.arg;
+  switch (act) {
+    case "tab": if (sheet) closeSheet(); tab = arg; try { history.replaceState(null, "", "#" + arg); } catch (er) { } renderTabs(); renderView(); window.scrollTo(0, 0); break;
+    case "filter": marketFilter = arg; renderView(); break;
+    case "instr": openSheet("instr", { sym: arg }); break;
+    case "range": sheet.range = arg; renderSheet(); break;
+    case "order": {
+      const sym = sheet && sheet.sym; const h = holdings().find((x) => x.sym === sym);
+      orderState = { sym, side: arg, qty: arg === "S" && h ? String(h.q) : "1", type: "MKT", limit: String(px(sym) || "") };
+      openSheet("order", { sym }); break;
+    }
+    case "t-side": { orderState.side = arg; const h = holdings().find((x) => x.sym === orderState.sym); if (arg === "S" && h && +orderState.qty > h.q) orderState.qty = String(h.q); renderSheet(); break; }
+    case "t-type": orderState.type = arg; if (arg === "LMT" && !(parseFloat(orderState.limit) > 0)) orderState.limit = String(px(orderState.sym) || ""); renderSheet(); break;
+    case "t-step": orderState.qty = String(Math.max(1, (parseInt(orderState.qty, 10) || 0) + Number(arg))); $("#t-qty").value = orderState.qty; updateTicket(); break;
+    case "t-submit": {
+      const o = orderState; const r = placeOrder({ sym: o.sym, side: o.side, qty: o.qty, type: o.type, limit: parseFloat(o.limit) });
+      if (!r.ok) { $("#t-err").textContent = r.msg; break; }
+      if (r.note) { openSheet("note", { id: r.note.id }); }
+      else { closeSheet(); toast(r.order.amo ? `Order placed. It will go to the exchange when NSE opens.` : `Limit order placed. It fills if the price reaches ${fmtINR(r.order.limit)}.`); }
+      render(); break;
+    }
+    case "cancel": cancelOrder(arg); break;
+    case "note": openSheet("note", { id: arg }); break;
+    case "close-sheet": closeSheet(); break;
+    case "lesson": openSheet("lesson", { id: arg, step: "read" }); break;
+    case "quiz-start": sheet.step = "quiz"; sheet.qi = 0; sheet.picked = null; sheet.results = []; sheet.gained = 0; renderSheet(); $("#sheet-panel").scrollTop = 0; break;
+    case "quiz-pick": quizPick(Number(arg)); break;
+    case "quiz-next": quizNext(); break;
+    case "mod": if (openMods.has(arg)) openMods.delete(arg); else openMods.add(arg); renderView(); break;
+    case "settings": openSheet("settings"); break;
+    case "ach": openSheet("ach"); break;
+    case "target": openSheet("target", { t: Object.assign({ equity: 80, gold: 10, debt: 10 }, S.target || {}) }); break;
+    case "tg-step": { const [k, d] = arg.split(":"); sheet.t[k] = clamp(sheet.t[k] + Number(d), 0, 100); renderSheet(); break; }
+    case "tg-save": S.target = Object.assign({}, sheet.t); award("target_set"); checkRebalanced(); save(); closeSheet(); toast("Target saved."); render(); break;
+    case "mode": if (arg !== S.mode) { switchMode(arg, false); toast(arg === "live" ? "Switched to live NSE prices." : "Switched to the simulator."); } renderSheet(); break;
+    case "start-cash": {
+      const c = Number(arg); S.startCash = c;
+      if (!S.welcomed && !S.acct.sim.notes.length && !S.acct.live.notes.length) { S.acct.sim = newAcct(c); S.acct.live = newAcct(c); toast(`Starting cash set to ${fmtINR(c, 0)}.`); }
+      else toast(`New starting cash of ${fmtINR(c, 0)} applies when you reset an account.`);
+      save(); render(); break;
+    }
+    case "welcome-done": S.welcomed = true; save(); tab = "market"; render(); break;
+    case "reset-acct":
+      if (confirmKey !== "reset-acct") { armConfirm("reset-acct"); break; }
+      confirmKey = null; S.acct[S.mode] = newAcct(S.startCash); if (S.mode === "sim") { S.sim = initSim(); syncSimP(true); }
+      save(); toast("Account reset."); render(); break;
+    case "reset-all":
+      if (confirmKey !== "reset-all") { armConfirm("reset-all"); break; }
+      confirmKey = null; { const m = S.mode; S = newState(S.startCash); S.sim = initSim(); S.mode = m; } for (const k of Object.keys(P)) delete P[k]; startEngines(); syncSimPIfSim(); openMods = null; save(); closeSheet(); toast("Everything reset."); render(); break;
+    case "backup": copyText(btoa(unescape(encodeURIComponent(JSON.stringify(S)))), "Backup code copied."); break;
+    case "restore": {
+      const box = $("#restore-box"); const code = (box && box.value || "").trim(); if (!code) { toast("Paste a backup code first."); break; }
+      try { const s = migrate(JSON.parse(decodeURIComponent(escape(atob(code))))); if (!s) throw new Error("bad"); S = s; if (!S.sim) S.sim = initSim(); for (const k of Object.keys(P)) delete P[k]; stopEngines(); startEngines(); save(); closeSheet(); toast("Progress restored."); render(); }
+      catch (er) { toast("That code didn't work. Copy the whole code and try again."); }
+      break;
+    }
+    case "sim-toggle": S.sim.running = !S.sim.running; save(); renderView(); break;
+    case "sim-ff": simAdvance(Number(arg)); break;
+    case "live-refresh": liveRefresh(); break;
+    case "lab-src": labSetSource(arg); break;
+    case "lab-run": labRun(); break;
+    case "lab-show": lab.show[arg] = !lab.show[arg]; renderView(); break;
+    case "copy-py": copyText(PY_SRC, "Script copied."); break;
+    case "beltup-close": $("#beltup").hidden = true; break;
+  }
+});
+document.addEventListener("input", (e) => {
+  const k = e.target && e.target.dataset && e.target.dataset.tg;
+  if (k && sheet && sheet.kind === "target") {
+    sheet.t[k] = clamp(parseInt(e.target.value, 10) || 0, 0, 100);
+    const sum = sheet.t.equity + sheet.t.gold + sheet.t.debt;
+    const el = $("#tg-sum"); if (el) { el.textContent = `Total ${sum}%` + (sum === 100 ? "" : " — it needs to add up to 100%."); el.className = sum === 100 ? "hint" : "err"; }
+    const btn = document.querySelector('[data-act="tg-save"]'); if (btn) btn.disabled = sum !== 100;
+  }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("#beltup").hidden) $("#beltup").hidden = true; else if (sheet) closeSheet(); } });
+function syncSimPIfSim() { if (S.mode === "sim") syncSimP(true); }
+
+/* Android back button: close a sheet, then go home, then exit. */
+window.__onBack = function () {
+  if (!$("#beltup").hidden) { $("#beltup").hidden = true; return true; }
+  if (sheet) { closeSheet(); return true; }
+  if (tab !== "home") { tab = "home"; render(); window.scrollTo(0, 0); return true; }
+  return false;
+};
+
+let resizeT = null;
+window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(drawLabChart, 150); });
+try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => setTimeout(drawLabChart, 50)); } catch (e) { }
+try { new MutationObserver(() => setTimeout(drawLabChart, 50)).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] }); } catch (e) { }
+document.addEventListener("visibilitychange", () => { if (document.hidden) { stopEngines(); saveNow(); } else startEngines(); });
+window.addEventListener("pagehide", saveNow);
+
+/* =========================================================
+   Boot
+   ========================================================= */
+if (!S.sim) S.sim = initSim();
+preferLive = S.mode === "live";
+S.mode = "sim"; // start in the simulator until the live feed answers
+lab.data = practiceData();
+syncSimP(true);
+recordCurve();
+render();
+startEngines();
+probeLive();
+})();
+
+</script>
+
+</body></html>
