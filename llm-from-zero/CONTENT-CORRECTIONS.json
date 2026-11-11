@@ -1,0 +1,152 @@
+{
+  "reviewed": "2026-11-11",
+  "scope": "Targeted factual corrections; not an exhaustive certification of all editorial content.",
+  "changes": [
+    {
+      "lesson": "py-05",
+      "before": "Looking a key up is fast no matter how many keys there are.",
+      "after": "Key lookup takes average constant time in a hash-table dictionary, although collisions and hashing costs can make particular cases slower."
+    },
+    {
+      "lesson": "s4-01",
+      "before": "Rotary embeddings (RoPE), used by nearly every model since 2023,",
+      "after": "Rotary embeddings (RoPE), used by many modern transformer families,"
+    },
+    {
+      "lesson": "s4-01",
+      "before": "Dot products of random vectors grow with their length; without the scaling the softmax saturates and its gradients vanish.",
+      "after": "For independent, zero-mean query and key components with unit variance, the dot-product variance grows with the head dimension d_k. Dividing by sqrt(d_k) keeps its scale more stable and reduces softmax saturation."
+    },
+    {
+      "lesson": "s4-01",
+      "before": "The cost</strong> is the <code>(T, T)</code> matrix: quadratic in the sequence length, in time and memory. That is why long contexts are expensive, and what FlashAttention and the KV cache attack.",
+      "after": "The cost</strong> of ordinary dense attention is quadratic in sequence length for a full sequence. Materializing its scores also takes quadratic memory. FlashAttention avoids storing that full score matrix in high-bandwidth memory through tiling; it does not make dense attention arithmetic linear. A KV cache serves a different purpose during autoregressive inference: it reuses previous keys and values, at the cost of cache memory that grows with context."
+    },
+    {
+      "lesson": "s4-01",
+      "before": "Each head can learn a different pattern (the previous token, the matching bracket, the subject of the sentence) at no extra cost, since the total width stays <code>C</code>.",
+      "after": "Heads can learn different patterns, though human-interpretable roles are not guaranteed. At fixed total width C, the main projection and attention-multiplication arithmetic stays comparable to a single head; per-head score storage, softmax work and implementation overhead can still differ. Scale each head by sqrt(C / h), not sqrt(C)."
+    },
+    {
+      "lesson": "s4-01",
+      "before": "The first loss should be near <code>ln(V)</code>; character-level text drops to around 1.5 in a few thousand steps. If validation stops improving while training keeps falling, the model is memorising: more data or more dropout.",
+      "after": "Near-uniform initial predictions give cross-entropy near <code>ln(V)</code>. Subsequent loss depends on data, tokenizer and training settings; no fixed loss or step count is guaranteed. If validation stops improving while training loss falls, investigate overfitting, split quality and distribution differences before changing data or regularization."
+    },
+    {
+      "lesson": "gen-01",
+      "before": "The dot product of a rotated query and key then depends only on how far apart they are, so attention sees relative positions. Stretching the angles is how long-context versions extend a model.",
+      "after": "The positional contribution to the dot product depends on their relative offset; the score still depends on the query and key content. Some context-extension methods modify rotary frequencies, usually alongside additional training or evaluation; changing angles alone does not guarantee reliable long-context performance."
+    },
+    {
+      "lesson": "gen-01",
+      "before": "Cheaper, and just as good in practice.",
+      "after": "It avoids mean-centering and is used in many architectures; speed and quality depend on the model and implementation."
+    },
+    {
+      "lesson": "gen-01",
+      "before": "A <strong>chat</strong> or <strong>instruct</strong> model has been fine-tuned on conversations and then on human preferences (lesson 3), and wraps every message in a chat template of special tokens. Most odd behaviour of a self-hosted model comes from sending it text without its template.",
+      "after": "A <strong>chat</strong> or <strong>instruct</strong> model is adapted to follow instructions, often with supervised examples and sometimes preference optimization (lesson 3). Use its documented chat template. An incorrect template is one possible cause of poor behavior, alongside model limitations, sampling settings and insufficient context."
+    },
+    {
+      "lesson": "gen-02",
+      "before": "A model knows only what was in its training data, up to a date, and it will answer confidently either way.",
+      "after": "A model uses learned parameters together with the context supplied at inference time. It can produce unsupported answers, and confident wording does not establish correctness."
+    },
+    {
+      "lesson": "gen-02",
+      "before": "It is the most common GenAI system in industry, and \"design a RAG system for our documents\" is the most common design question.",
+      "after": "It is a useful design pattern when answers need inspectable, updateable external information."
+    },
+    {
+      "lesson": "gen-02",
+      "before": "<h3>The pipeline</h3>",
+      "after": "<h3>One possible dense-retrieval pipeline</h3><p>Embedding and reranking are optional choices. A keyword system such as BM25 can retrieve passages without an embedding model, and a small baseline need not include a reranker.</p>"
+    },
+    {
+      "lesson": "gen-02",
+      "before": "It matches meaning: \"car won't start\" finds \"engine fails to turn over\". It misses exact strings: part numbers, names, error codes, rare words the embedding model never learned.",
+      "after": "It can match paraphrases such as \"car won't start\" and \"engine fails to turn over\", but performance depends on the embedding model. Exact identifiers, negation and rare terms can still be difficult; test them explicitly."
+    },
+    {
+      "lesson": "gen-02",
+      "before": "It finds <code>XJ-4410</code> at once and misses paraphrases.",
+      "after": "It can help with exact identifiers such as <code>XJ-4410</code>, depending on tokenization, but paraphrases without shared terms are often difficult."
+    },
+    {
+      "lesson": "gen-02",
+      "before": "it is far more accurate than comparing two separate embeddings, and far too slow to run on the whole collection, hence two stages.",
+      "after": "it can improve ranking on suitable tasks but adds computation. Use two stages when the measured quality gain justifies their latency and cost."
+    },
+    {
+      "lesson": "gen-02",
+      "before": "<strong>recall@k</strong>: did the answer make it into the top <code>k</code> at all? If not, no prompt can save it.",
+      "after": "<strong>recall@k</strong>: the number of relevant items retrieved in the first <code>k</code>, divided by the total number of relevant items. With one relevant item this is a hit/miss indicator; with several, a single hit can still have low recall. Choose and document a convention for queries with no relevant items."
+    },
+    {
+      "lesson": "gen-02",
+      "before": "Chunks must fit a token budget, and models use the beginning and the end of a long context better than the middle (Liu et al., 2023, \"Lost in the Middle\"). So: retrieve fewer, better chunks; rerank; put the best first and the second best last.",
+      "after": "Chunks must fit a token budget. Some evaluated models show sensitivity to evidence position (Liu et al., 2023, \"Lost in the Middle\"). Test context order and passage selection for your model and task; there is no universal best-first, second-best-last rule."
+    },
+    {
+      "lesson": "gen-02",
+      "before": "RAG gives a model knowledge. It does not teach a format, a tone or a skill; that is fine-tuning (lesson 3).",
+      "after": "RAG supplies external context without updating weights. Prompts and examples can also influence format and behavior. Fine-tuning (lesson 3) changes learned parameters and may help a task when suitable training examples and evaluation justify it."
+    },
+    {
+      "skill": "gen-decode",
+      "before": [
+        "ml-attention"
+      ],
+      "after": [
+        "py-bigram",
+        "ml-linalg"
+      ]
+    },
+    {
+      "skill": "gen-rag",
+      "before": [
+        "q-agents"
+      ],
+      "after": [
+        "py-classes",
+        "ml-linalg"
+      ]
+    },
+    {
+      "skill": "gen-apps",
+      "before": [
+        "gen-infer"
+      ],
+      "after": [
+        "q-agents"
+      ]
+    },
+    {
+      "skill": "num-linear",
+      "before": [
+        "num-calc"
+      ],
+      "after": [
+        "ml-linalg"
+      ]
+    },
+    {
+      "skill": "q-ros",
+      "before": [
+        "py-bigram"
+      ],
+      "after": [
+        "py-classes"
+      ]
+    },
+    {
+      "skill": "q-agents",
+      "before": [
+        "ml-attention"
+      ],
+      "after": [
+        "gen-eval"
+      ]
+    }
+  ]
+}

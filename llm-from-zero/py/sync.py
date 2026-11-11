@@ -19,6 +19,7 @@ notes; upload the same PDF on the other device and the notes are already there.
 
 import json
 import os
+import re
 import time
 
 import engine
@@ -51,6 +52,8 @@ def export(con, work_dir, content_version, since=0):
         else:
             rows = con.execute("select * from %s" % t)
         tables[t] = [dict(r) for r in rows]
+        if t == "settings":
+            tables[t] = [r for r in tables[t] if r["k"] not in LOCAL_SETTINGS and not r["k"].startswith("agent_")]
     work = {}
     if os.path.isdir(work_dir):
         for root, _dirs, files in os.walk(work_dir):
@@ -257,7 +260,8 @@ def merge(con, data, work_dir, rows_for=None, quiz_resets=None):
         if not isinstance(f, dict) or not isinstance(f.get("code"), str):
             continue
         parts = rel.replace("\\", "/").split("/")
-        if len(parts) != 2 or any(p in ("", ".", "..") for p in parts) or not parts[1].endswith(".py"):
+        if (len(parts) != 2 or not re.fullmatch(r"[A-Za-z0-9_-]+", parts[0])
+                or not re.fullmatch(r"[A-Za-z0-9_-]+\.py", parts[1])):
             continue
         path = os.path.join(work_dir, parts[0], parts[1])
         mtime = _int(f.get("mtime"))

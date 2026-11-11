@@ -1,0 +1,839 @@
+{
+  "version": 1,
+  "reviewed": "2026-11-11",
+  "note": "Recommended pedagogical dependencies, not universal scientific necessities. All required edges use AND semantics. Framework alternatives and optional branches are explicit. Estimates are rough hands-on study hours, not completion promises.",
+  "tracks": [
+    {
+      "id": "apps",
+      "title": "Build useful AI apps",
+      "targets": [
+        "agents",
+        "hybrid",
+        "edge"
+      ]
+    },
+    {
+      "id": "build",
+      "title": "Understand & build models",
+      "targets": [
+        "pretraining",
+        "finetuning"
+      ]
+    },
+    {
+      "id": "all",
+      "title": "Explore the full map",
+      "targets": [
+        "python",
+        "git",
+        "linux",
+        "probability",
+        "statistics",
+        "linear",
+        "calculus",
+        "supervised",
+        "unsupervised",
+        "neural",
+        "pytorch",
+        "tensorflow",
+        "text",
+        "tokenization",
+        "embeddings",
+        "word2vec",
+        "attention",
+        "multihead",
+        "position",
+        "transformer",
+        "llm-use",
+        "safety",
+        "evaluation",
+        "rag",
+        "hybrid",
+        "agents",
+        "multiagent",
+        "pretraining",
+        "finetuning",
+        "rl",
+        "alignment",
+        "quantization",
+        "optimization",
+        "scaling",
+        "distributed",
+        "edge"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "python",
+      "title": "Python essentials",
+      "group": "Foundations",
+      "needs": [],
+      "hours": 8,
+      "difficulty": "Beginner",
+      "lessons": [
+        "py-01",
+        "py-02",
+        "py-03",
+        "py-04",
+        "py-05",
+        "py-06",
+        "py-07"
+      ],
+      "summary": "Values, control flow, functions, collections and files let you turn an idea into a repeatable program. Separate input, transformation and output; add a small test before growing the script.",
+      "question": "Why use a dictionary instead of a list for lookup by document ID?",
+      "answer": "A dictionary maps unique keys to values and offers average constant-time key lookup. A list is ordered and usually needs a scan to find a matching ID. Neither removes the need to handle missing data.",
+      "project": "Write a function that counts words in three strings; test empty input and repeated words.",
+      "source": "https://docs.python.org/3/tutorial/",
+      "outcome": "Demonstrate: Write a function that counts words in three strings; test empty input and repeated words."
+    },
+    {
+      "id": "git",
+      "title": "Git & reproducible work",
+      "group": "Foundations",
+      "needs": [],
+      "hours": 2,
+      "difficulty": "Beginner",
+      "lessons": [],
+      "summary": "A repository records changes; a commit captures a coherent version. Keep source and small fixtures in Git, secrets and generated model weights outside it. Save the command that reproduces your result.",
+      "question": "How does a commit differ from a backup of your entire laptop?",
+      "answer": "A commit records tracked project files and their history. It does not automatically include ignored files, untracked files, environments or external datasets. Back those up separately.",
+      "project": "Create a local repository, commit a tiny script and its test, then inspect a diff.",
+      "source": "https://git-scm.com/book/en/v2",
+      "outcome": "Demonstrate: Create a local repository, commit a tiny script and its test, then inspect a diff."
+    },
+    {
+      "id": "linux",
+      "title": "Terminal & Linux basics",
+      "group": "Foundations",
+      "needs": [],
+      "hours": 2,
+      "difficulty": "Beginner",
+      "lessons": [],
+      "summary": "Learn paths, working directories, processes and environment variables. PowerShell is sufficient for the supplied Windows launcher; Linux skills help when you move a static library to a Pi.",
+      "question": "Why can a relative path work in one terminal and fail in another?",
+      "answer": "A relative path is resolved from the current working directory. Use an explicit project directory or derive paths from the script location.",
+      "project": "List a project directory, run a script from its root and explain the resulting file paths.",
+      "source": "https://ubuntu.com/tutorials/command-line-for-beginners",
+      "outcome": "Demonstrate: List a project directory, run a script from its root and explain the resulting file paths."
+    },
+    {
+      "id": "probability",
+      "title": "Probability",
+      "group": "Foundations",
+      "needs": [
+        "python"
+      ],
+      "hours": 4,
+      "difficulty": "Beginner",
+      "lessons": [
+        "py-08",
+        "s1-01"
+      ],
+      "summary": "Probabilities describe uncertainty. Conditional probability changes the sample space; independent events are a special case. Simulations approximate expectations and should include a seed when reproducibility matters.",
+      "question": "Is P(A given B) generally equal to P(B given A)?",
+      "answer": "No. Bayes rule connects them through P(A) and P(B). Rare-event base rates can change the conclusion even when a test has high sensitivity.",
+      "project": "Simulate a biased coin and compare empirical frequency with its specified probability.",
+      "source": "https://scikit-learn.org/stable/user_guide.html",
+      "outcome": "Demonstrate: Simulate a biased coin and compare empirical frequency with its specified probability."
+    },
+    {
+      "id": "statistics",
+      "title": "Statistics & measurement",
+      "group": "Foundations",
+      "needs": [
+        "probability"
+      ],
+      "hours": 4,
+      "difficulty": "Beginner",
+      "lessons": [
+        "s3-02"
+      ],
+      "summary": "Separate an estimate from uncertainty about that estimate. Training, validation and final test sets serve different purposes. Repeatedly tuning against the final test set leaks information into your choices.",
+      "question": "Why does a high training score not establish generalization?",
+      "answer": "The model or your choices may fit training-specific patterns. Evaluate once on held-out examples and examine sample size, uncertainty and distribution shift.",
+      "project": "Split a small dataset before fitting a baseline; report both training and held-out errors.",
+      "source": "https://scikit-learn.org/stable/user_guide.html",
+      "outcome": "Demonstrate: Split a small dataset before fitting a baseline; report both training and held-out errors."
+    },
+    {
+      "id": "linear",
+      "title": "Linear algebra",
+      "group": "Foundations",
+      "needs": [
+        "python"
+      ],
+      "hours": 5,
+      "difficulty": "Beginner",
+      "lessons": [
+        "s1-01"
+      ],
+      "summary": "Vectors represent collections of numbers; matrices describe linear maps. Track shapes before implementing a model. A dot product is a scalar, while an outer product is a matrix.",
+      "question": "What is the shape of A @ B when A is 3 by 4 and B is 4 by 2?",
+      "answer": "The result is 3 by 2. The shared inner dimension must match; reversing the multiplication is not generally valid.",
+      "project": "Implement a dot product and matrix multiplication for small lists; test shape mismatches.",
+      "source": "https://numpy.org/doc/stable/user/absolute_beginners.html",
+      "outcome": "Demonstrate: Implement a dot product and matrix multiplication for small lists; test shape mismatches."
+    },
+    {
+      "id": "calculus",
+      "title": "Calculus & gradients",
+      "group": "Foundations",
+      "needs": [
+        "python",
+        "linear"
+      ],
+      "hours": 5,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s1-01",
+        "s2-01"
+      ],
+      "summary": "A derivative measures local sensitivity. The chain rule connects derivatives through a computation. A gradient gives sensitivities with respect to multiple parameters; gradient descent moves against it.",
+      "question": "Why compare an analytic gradient with a finite-difference estimate?",
+      "answer": "They are independent ways to approximate the same local derivative. Agreement at sensible step sizes helps detect implementation errors; floating-point error limits very small steps.",
+      "project": "Check the derivative of a quadratic numerically and show one gradient-descent step.",
+      "source": "https://docs.pytorch.org/tutorials/beginner/basics/intro.html",
+      "outcome": "Demonstrate: Check the derivative of a quadratic numerically and show one gradient-descent step."
+    },
+    {
+      "id": "supervised",
+      "title": "Supervised machine learning",
+      "group": "Model building",
+      "needs": [
+        "statistics",
+        "linear"
+      ],
+      "hours": 5,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s3-02"
+      ],
+      "summary": "Learn a mapping from inputs to labelled targets. Begin with a simple baseline and choose a metric that fits the task. Fit preprocessing on training data only.",
+      "question": "Why fit a scaler only on the training split?",
+      "answer": "Using held-out distribution statistics during fitting leaks information. Reuse training-derived parameters to transform validation and test data.",
+      "project": "Train a simple classifier or regressor, compare with a trivial baseline and report held-out performance.",
+      "source": "https://scikit-learn.org/stable/user_guide.html",
+      "outcome": "Demonstrate: Train a simple classifier or regressor, compare with a trivial baseline and report held-out performance."
+    },
+    {
+      "id": "unsupervised",
+      "title": "Unsupervised machine learning",
+      "group": "Model building",
+      "needs": [
+        "statistics",
+        "linear"
+      ],
+      "hours": 4,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s3-02"
+      ],
+      "summary": "Clustering groups examples under a chosen geometry; dimensionality reduction finds useful representations. A cluster is not automatically a true category or causal explanation.",
+      "question": "Why can feature scaling change k-means clusters?",
+      "answer": "Distance depends on numerical scale. A high-range feature can dominate Euclidean distances, so scaling choices change the geometry and the result.",
+      "project": "Cluster a tiny two-dimensional dataset and compare assignments before and after scaling.",
+      "source": "https://scikit-learn.org/stable/user_guide.html",
+      "outcome": "Demonstrate: Cluster a tiny two-dimensional dataset and compare assignments before and after scaling."
+    },
+    {
+      "id": "neural",
+      "title": "Neural networks & deep learning",
+      "group": "Model building",
+      "needs": [
+        "supervised",
+        "calculus"
+      ],
+      "hours": 6,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s2-01"
+      ],
+      "summary": "Compose parameterized transformations and nonlinearities, define a loss, then backpropagate derivatives. Depth alone does not guarantee better generalization. Monitor validation loss and numerical stability.",
+      "question": "What does backpropagation compute, and what does an optimizer do?",
+      "answer": "Backpropagation computes loss gradients using the chain rule. An optimizer uses those gradients and its update rule to change parameters. These are separate operations.",
+      "project": "Build a two-layer network on a toy task and test one parameter gradient.",
+      "source": "https://docs.pytorch.org/tutorials/beginner/basics/intro.html",
+      "outcome": "Demonstrate: Build a two-layer network on a toy task and test one parameter gradient."
+    },
+    {
+      "id": "pytorch",
+      "title": "PyTorch training workflow",
+      "group": "Model building",
+      "needs": [
+        "neural"
+      ],
+      "hours": 5,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s3-01"
+      ],
+      "summary": "Tensors, autograd, data loaders and explicit train/evaluation modes form the training loop. Clear gradients appropriately and keep evaluation separate from parameter updates.",
+      "question": "Why call zero_grad before another independent training step?",
+      "answer": "Gradients accumulate by default. Clearing them prevents accidental addition across steps unless deliberate gradient accumulation is intended.",
+      "project": "Train a tiny network, save a checkpoint and reproduce its evaluation predictions.",
+      "source": "https://docs.pytorch.org/tutorials/beginner/basics/intro.html",
+      "outcome": "Demonstrate: Train a tiny network, save a checkpoint and reproduce its evaluation predictions."
+    },
+    {
+      "id": "tensorflow",
+      "title": "TensorFlow alternative",
+      "group": "Model building",
+      "needs": [
+        "neural"
+      ],
+      "hours": 5,
+      "difficulty": "Intermediate",
+      "lessons": [],
+      "summary": "TensorFlow and Keras provide another tensor and training ecosystem. This is an optional alternative exploration; learning both frameworks is not a prerequisite for RAG or transformers.",
+      "question": "What should stay comparable when porting a model between frameworks?",
+      "answer": "Data splits, preprocessing, architecture, loss, optimization settings and evaluation protocol should match. Numerical details can still produce small differences.",
+      "project": "Recreate one small trained model in Keras and compare held-out predictions.",
+      "source": "https://www.tensorflow.org/tutorials/quickstart/beginner",
+      "outcome": "Demonstrate: Recreate one small trained model in Keras and compare held-out predictions."
+    },
+    {
+      "id": "text",
+      "title": "Text processing & documents",
+      "group": "Language & transformers",
+      "needs": [
+        "python"
+      ],
+      "hours": 3,
+      "difficulty": "Beginner",
+      "lessons": [
+        "py-03",
+        "py-06"
+      ],
+      "summary": "Treat text as versioned data. Preserve document IDs, encoding, source information and boundaries. Normalization can help search but can also destroy meaningful distinctions such as code case.",
+      "question": "Why retain source IDs after cleaning and chunking documents?",
+      "answer": "IDs let you trace a passage to its source, update changed documents, inspect citations and avoid duplicate ingestion. Keep offsets or passage IDs too.",
+      "project": "Load three UTF-8 notes into records containing stable IDs, titles and text.",
+      "source": "https://docs.python.org/3/tutorial/",
+      "outcome": "Demonstrate: Load three UTF-8 notes into records containing stable IDs, titles and text."
+    },
+    {
+      "id": "tokenization",
+      "title": "Tokenization",
+      "group": "Language & transformers",
+      "needs": [
+        "text"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s4-01",
+        "gen-01"
+      ],
+      "summary": "Tokenizers map text into token IDs according to a vocabulary and encoding procedure. Tokens need not be whole words. The tokenizer and model vocabulary must agree.",
+      "question": "Why is word count not the same as token count?",
+      "answer": "A word can split into several subword or byte tokens; whitespace, symbols and language affect segmentation. Use the model tokenizer when measuring its context budget.",
+      "project": "Compare character and word tokenizers on punctuation, Unicode and unseen words.",
+      "source": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "outcome": "Demonstrate: Compare character and word tokenizers on punctuation, Unicode and unseen words."
+    },
+    {
+      "id": "embeddings",
+      "title": "Embeddings & similarity",
+      "group": "Language & transformers",
+      "needs": [
+        "text",
+        "linear"
+      ],
+      "hours": 4,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "gen-02"
+      ],
+      "summary": "An embedding maps an item to a vector. Similarity reflects the model and training objective, not guaranteed truth. Retrieval can use pretrained embeddings without training your own model.",
+      "question": "Does a high cosine similarity prove two passages say the same thing?",
+      "answer": "No. It measures direction similarity in a particular representation. Negation, numbers and fine distinctions can still be wrong; evaluate retrieved passages against labelled questions.",
+      "project": "Rank a few toy vectors by cosine similarity; explain zero-vector handling.",
+      "source": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "outcome": "Demonstrate: Rank a few toy vectors by cosine similarity; explain zero-vector handling."
+    },
+    {
+      "id": "word2vec",
+      "title": "Word2Vec: optional historical branch",
+      "group": "Language & transformers",
+      "needs": [
+        "embeddings",
+        "probability",
+        "neural"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [],
+      "summary": "Word2Vec learns word vectors from local context prediction. Static word vectors give one representation per vocabulary entry, unlike contextual representations that depend on the surrounding text.",
+      "question": "How would static and contextual embeddings handle the two meanings of bank?",
+      "answer": "A static word vector shares one representation for bank. A contextual model can produce different representations for river bank and financial bank.",
+      "project": "Write two ambiguous sentences and compare what static versus contextual representations can express.",
+      "source": "https://arxiv.org/abs/1301.3781",
+      "outcome": "Demonstrate: Write two ambiguous sentences and compare what static versus contextual representations can express."
+    },
+    {
+      "id": "attention",
+      "title": "Attention & self-attention",
+      "group": "Language & transformers",
+      "needs": [
+        "embeddings",
+        "probability"
+      ],
+      "hours": 4,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s4-01"
+      ],
+      "summary": "Scaled dot-product attention computes softmax(Q Kᵀ / sqrt(d_k)) V. In self-attention, queries, keys and values are derived from the same input sequence. A causal mask blocks access to future tokens.",
+      "question": "If Q and K are T by d_k, what is the shape of their attention score matrix?",
+      "answer": "Q K-transpose has shape T by T. Each row compares one query position with key positions. Row-wise softmax creates weights before multiplication with V.",
+      "project": "Compute a two-token attention example and verify that each softmax row sums to one.",
+      "source": "https://arxiv.org/abs/1706.03762",
+      "outcome": "Demonstrate: Compute a two-token attention example and verify that each softmax row sums to one."
+    },
+    {
+      "id": "multihead",
+      "title": "Multi-head attention",
+      "group": "Language & transformers",
+      "needs": [
+        "attention"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s4-01"
+      ],
+      "summary": "Different learned projections create attention heads. Their outputs are concatenated and projected back into the model representation. Heads are not guaranteed to have human-interpretable roles.",
+      "question": "For d_model=64 and 4 equal heads, what is each head dimension?",
+      "answer": "The conventional equal-head setup uses 16 dimensions per head. Concatenating four head outputs restores 64 dimensions before the output projection.",
+      "project": "Trace batch, head, sequence and feature dimensions through a four-head attention block.",
+      "source": "https://arxiv.org/abs/1706.03762",
+      "outcome": "Demonstrate: Trace batch, head, sequence and feature dimensions through a four-head attention block."
+    },
+    {
+      "id": "position",
+      "title": "Positional information",
+      "group": "Language & transformers",
+      "needs": [
+        "tokenization",
+        "linear"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s4-01"
+      ],
+      "summary": "Attention needs a way to represent order. Original transformers use positional encodings; other designs use learned positions or rotary transformations. Positional methods have different extrapolation behavior.",
+      "question": "Why does a transformer need positional information?",
+      "answer": "Without positional information or order-sensitive structure, self-attention alone does not encode sequence order. Position representations distinguish permutations of otherwise identical tokens.",
+      "project": "Compare representations of the same tokens in two orders with and without position information.",
+      "source": "https://arxiv.org/abs/1706.03762",
+      "outcome": "Demonstrate: Compare representations of the same tokens in two orders with and without position information."
+    },
+    {
+      "id": "transformer",
+      "title": "Transformer architecture",
+      "group": "Language & transformers",
+      "needs": [
+        "neural",
+        "multihead",
+        "position"
+      ],
+      "hours": 6,
+      "difficulty": "Advanced",
+      "lessons": [
+        "s4-01"
+      ],
+      "summary": "Combine attention, feed-forward layers, residual connections and normalization. Encoder, decoder and encoder-decoder designs serve different objectives. A GPT-style decoder uses causal attention.",
+      "question": "What prevents next-token training from seeing the target token through future positions?",
+      "answer": "Inputs and targets are shifted appropriately and causal attention masks future positions. Dataset construction and masking must both avoid target leakage.",
+      "project": "Draw a decoder block with tensor shapes and test a causal mask on a tiny input.",
+      "source": "https://arxiv.org/abs/1706.03762",
+      "outcome": "Demonstrate: Draw a decoder block with tensor shapes and test a causal mask on a tiny input."
+    },
+    {
+      "id": "llm-use",
+      "title": "Use a local LLM",
+      "group": "Applications",
+      "needs": [
+        "python",
+        "tokenization"
+      ],
+      "hours": 3,
+      "difficulty": "Beginner",
+      "lessons": [
+        "gen-01",
+        "listen-llm"
+      ],
+      "summary": "Inference uses learned weights and a supplied context to generate token predictions. Sampling affects variability; it does not verify facts. Keep a fixed test prompt set and record model and settings.",
+      "question": "How do context, retrieval and training differ?",
+      "answer": "Context is temporary input. Retrieval selects information to supply as context. Training changes learned parameters. A long prompt does not update model weights.",
+      "project": "Compare two prompts on the same local model, recording settings, latency and one failure.",
+      "source": "https://docs.ollama.com/api/introduction",
+      "outcome": "Demonstrate: Compare two prompts on the same local model, recording settings, latency and one failure."
+    },
+    {
+      "id": "safety",
+      "title": "Safety, privacy & source boundaries",
+      "group": "Applications",
+      "needs": [
+        "llm-use"
+      ],
+      "hours": 3,
+      "difficulty": "Beginner",
+      "lessons": [
+        "gen-04",
+        "listen-agents"
+      ],
+      "summary": "Treat model outputs and retrieved documents as untrusted. Validate tool arguments in code, minimize permissions, and keep actions bounded. Prompt instructions alone cannot enforce a security boundary.",
+      "question": "What should happen if a retrieved document asks the assistant to delete files?",
+      "answer": "Treat it as document content, not an authorized instruction. The application should lack that tool or require independently validated authorization before any such action.",
+      "project": "Add a hostile document to a retrieval fixture and verify that no tool action can execute.",
+      "source": "https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices",
+      "outcome": "Demonstrate: Add a hostile document to a retrieval fixture and verify that no tool action can execute."
+    },
+    {
+      "id": "evaluation",
+      "title": "Evaluation & regression sets",
+      "group": "Applications",
+      "needs": [
+        "llm-use"
+      ],
+      "hours": 4,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "gen-02",
+        "listen-eval"
+      ],
+      "summary": "Separate retrieval metrics from answer quality. Keep answerable, unanswerable and adversarial examples, with expected sources. Reserve held-out examples to assess changes after development.",
+      "question": "Can perfect retrieval recall guarantee a correct generated answer?",
+      "answer": "No. The model can ignore or misread relevant evidence. Evaluate support, citation correctness, abstention and latency separately from retrieval recall.",
+      "project": "Create ten answerable and five unanswerable questions; record expected sources and a baseline.",
+      "source": "https://huggingface.co/docs/evaluate/index",
+      "outcome": "Demonstrate: Create ten answerable and five unanswerable questions; record expected sources and a baseline."
+    },
+    {
+      "id": "rag",
+      "title": "RAG & keyword retrieval",
+      "group": "Applications",
+      "needs": [
+        "text",
+        "llm-use",
+        "evaluation",
+        "safety"
+      ],
+      "hours": 5,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "gen-02",
+        "listen-rag"
+      ],
+      "summary": "A RAG pipeline retrieves passages and supplies them as evidence for generation. BM25 provides a useful lexical baseline and does not require embedding training. Show evidence before trusting an answer.",
+      "question": "When is RAG more appropriate than fine-tuning?",
+      "answer": "RAG is useful when answers require changing or inspectable external facts. Fine-tuning adapts behavior or task performance; it is not a reliable substitute for a versioned document store.",
+      "project": "Use Ask your sources to inspect four passages; record supported answers and abstentions.",
+      "source": "https://arxiv.org/abs/2005.11401",
+      "outcome": "Demonstrate: Use Ask your sources to inspect four passages; record supported answers and abstentions."
+    },
+    {
+      "id": "hybrid",
+      "title": "Vector & hybrid retrieval",
+      "group": "Applications",
+      "needs": [
+        "rag",
+        "embeddings"
+      ],
+      "hours": 5,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "gen-02"
+      ],
+      "summary": "Dense retrieval compares embeddings; lexical retrieval matches terms. Hybrid systems combine signals, often followed by reranking. Measure gains on the same questions before adding infrastructure.",
+      "question": "Why retain lexical retrieval alongside embeddings?",
+      "answer": "Exact identifiers and rare terms can be important. Embeddings can help paraphrases. Their strengths differ, so a measured hybrid system can improve coverage.",
+      "project": "Compare lexical and embedding rankings for exact-ID and paraphrase questions; record recall at k.",
+      "source": "https://qdrant.tech/documentation/",
+      "outcome": "Demonstrate: Compare lexical and embedding rankings for exact-ID and paraphrase questions; record recall at k."
+    },
+    {
+      "id": "agents",
+      "title": "Tool-using agents",
+      "group": "Applications",
+      "needs": [
+        "rag",
+        "git"
+      ],
+      "hours": 5,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "gen-04",
+        "listen-agents"
+      ],
+      "summary": "An agent delegates some action selection to a model. Explicit tool contracts, state, step budgets, timeouts and traces make behavior inspectable. Begin with a predictable workflow and add decisions only where needed.",
+      "question": "What stops an agent from repeatedly calling a failing tool?",
+      "answer": "Enforced step/time budgets, retry limits and state checks outside the model. A prompt asking it to stop is not a sufficient operational control.",
+      "project": "Implement a read-only search tool with argument validation, a two-step budget and a timeout test.",
+      "source": "https://docs.langchain.com/oss/python/langgraph/overview",
+      "outcome": "Demonstrate: Implement a read-only search tool with argument validation, a two-step budget and a timeout test."
+    },
+    {
+      "id": "multiagent",
+      "title": "Multi-agent systems & MCP",
+      "group": "Applications",
+      "needs": [
+        "agents"
+      ],
+      "hours": 4,
+      "difficulty": "Advanced",
+      "lessons": [
+        "listen-agents"
+      ],
+      "summary": "Multiple agents can divide tasks but add coordination and failure modes. MCP standardizes connections to tools and resources; it does not itself create a planner or validate every tool action.",
+      "question": "When would two agents be worse than one deterministic workflow?",
+      "answer": "When coordination, duplicated calls or conflicting state cost more than any task specialization helps. Compare success rate, latency and trace complexity against a simpler baseline.",
+      "project": "Compare one workflow with a planner/reviewer pair on fixed tasks; retain only measured improvements.",
+      "source": "https://modelcontextprotocol.io/docs/getting-started/intro",
+      "outcome": "Demonstrate: Compare one workflow with a planner/reviewer pair on fixed tasks; retain only measured improvements."
+    },
+    {
+      "id": "pretraining",
+      "title": "Pretraining a tiny language model",
+      "group": "Model building",
+      "needs": [
+        "pytorch",
+        "transformer",
+        "tokenization",
+        "statistics",
+        "git"
+      ],
+      "hours": 8,
+      "difficulty": "Advanced",
+      "lessons": [
+        "s4-01"
+      ],
+      "summary": "Pretraining learns an objective such as next-token prediction from a corpus. Split data carefully, estimate token and compute budgets and train a tiny example before scaling. A laptop exercise is not frontier-model training.",
+      "question": "Why keep validation text separate before creating overlapping token windows?",
+      "answer": "Overlapping windows can otherwise leak nearly identical text across splits, making validation loss too optimistic. Split at meaningful source boundaries before windowing.",
+      "project": "Train or specify a tiny decoder experiment with data splits, loss curve and a saved checkpoint.",
+      "source": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "outcome": "Demonstrate: Train or specify a tiny decoder experiment with data splits, loss curve and a saved checkpoint."
+    },
+    {
+      "id": "finetuning",
+      "title": "Fine-tuning & LoRA",
+      "group": "Model building",
+      "needs": [
+        "pytorch",
+        "transformer",
+        "evaluation",
+        "git"
+      ],
+      "hours": 6,
+      "difficulty": "Advanced",
+      "lessons": [
+        "s5-01",
+        "gen-03",
+        "listen-tuning"
+      ],
+      "summary": "Fine-tuning starts with pretrained weights and adapts them to a task. LoRA trains low-rank updates to selected matrices. Smaller trainable parameter counts do not eliminate activation memory or data-quality requirements.",
+      "question": "Does LoRA mean the model needs no GPU or no base weights?",
+      "answer": "No. Base weights still participate in computation, and activations use memory. Hardware feasibility depends on model, precision, context, batch size and implementation.",
+      "project": "Design a small adapter comparison against the unchanged model using a held-out task set.",
+      "source": "https://huggingface.co/docs/peft/index",
+      "outcome": "Demonstrate: Design a small adapter comparison against the unchanged model using a held-out task set."
+    },
+    {
+      "id": "rl",
+      "title": "Reinforcement learning",
+      "group": "Model building",
+      "needs": [
+        "probability",
+        "neural",
+        "pytorch"
+      ],
+      "hours": 6,
+      "difficulty": "Advanced",
+      "lessons": [
+        "s6-01"
+      ],
+      "summary": "An agent learns behavior from rewards over interactions. Credit assignment and exploration differ from supervised target prediction. A reward function can reward unintended shortcuts.",
+      "question": "Why is a high reward not automatically evidence of desirable behavior?",
+      "answer": "The reward may omit important goals or be exploitable. Test actual task outcomes and side effects independently of the optimized score.",
+      "project": "Simulate a small bandit and compare greedy and exploratory action selection.",
+      "source": "https://spinningup.openai.com/en/latest/spinningup/rl_intro.html",
+      "outcome": "Demonstrate: Simulate a small bandit and compare greedy and exploratory action selection."
+    },
+    {
+      "id": "alignment",
+      "title": "RLHF, preferences & alignment",
+      "group": "Model building",
+      "needs": [
+        "finetuning",
+        "rl",
+        "safety"
+      ],
+      "hours": 6,
+      "difficulty": "Advanced",
+      "lessons": [
+        "s6-01",
+        "gen-03"
+      ],
+      "summary": "RLHF often uses preference data and a learned reward with policy optimization. Preference methods such as DPO offer a different training approach. Alignment is broader than one reward or tuning recipe.",
+      "question": "Is DPO the same procedure as PPO with an explicit learned reward model?",
+      "answer": "No. DPO optimizes a preference objective directly relative to a reference policy; PPO-based RLHF typically includes reward modeling and policy optimization. Neither guarantees safety.",
+      "project": "Diagram SFT, reward-model/PPO and direct-preference workflows, including evaluation and data limits.",
+      "source": "https://arxiv.org/abs/2305.18290",
+      "outcome": "Demonstrate: Diagram SFT, reward-model/PPO and direct-preference workflows, including evaluation and data limits."
+    },
+    {
+      "id": "quantization",
+      "title": "Quantization & model memory",
+      "group": "Systems",
+      "needs": [
+        "llm-use",
+        "linear"
+      ],
+      "hours": 4,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "gen-03",
+        "listen-hardware"
+      ],
+      "summary": "Lower-precision weights can reduce storage and memory. Total runtime memory also includes activations, KV cache and runtime overhead. Compare quality and latency with fixed settings.",
+      "question": "Why can a model fail to fit even when its weight file is smaller than available RAM?",
+      "answer": "The loaded model needs additional memory for caches, buffers, activations and the runtime. Context and batch size can increase those requirements.",
+      "project": "Estimate weight memory for a toy parameter count, then list runtime costs excluded from the estimate.",
+      "source": "https://huggingface.co/docs/transformers/quantization/overview",
+      "outcome": "Demonstrate: Estimate weight memory for a toy parameter count, then list runtime costs excluded from the estimate."
+    },
+    {
+      "id": "optimization",
+      "title": "Inference & training optimization",
+      "group": "Systems",
+      "needs": [
+        "pytorch",
+        "transformer",
+        "quantization"
+      ],
+      "hours": 5,
+      "difficulty": "Advanced",
+      "lessons": [
+        "sys-01",
+        "sys-02",
+        "gen-03"
+      ],
+      "summary": "Profile before optimizing. KV caching avoids recomputing previous keys and values during autoregressive inference; attention kernels and batching change throughput and memory tradeoffs. Training has a different workload.",
+      "question": "Why can a longer context increase memory even with quantized weights?",
+      "answer": "Attention state and KV caches grow with sequence length and batch size. Weight compression does not automatically compress all runtime state.",
+      "project": "Measure latency on a fixed workload at two context sizes and separate prefill from generation.",
+      "source": "https://docs.pytorch.org/tutorials/beginner/basics/intro.html",
+      "outcome": "Demonstrate: Measure latency on a fixed workload at two context sizes and separate prefill from generation."
+    },
+    {
+      "id": "scaling",
+      "title": "Scaling laws & compute budgets",
+      "group": "Systems",
+      "needs": [
+        "pretraining",
+        "statistics"
+      ],
+      "hours": 4,
+      "difficulty": "Advanced",
+      "lessons": [
+        "sys-01"
+      ],
+      "summary": "Empirical scaling laws describe relationships among loss, model size, data and compute within studied settings. They guide budgets but are not universal guarantees for every architecture or task.",
+      "question": "Why is an observed power-law trend not a guarantee for an arbitrary model?",
+      "answer": "It is an empirical fit over particular experiments. Data quality, architecture, optimization and regime changes can invalidate extrapolation.",
+      "project": "Plot a hypothetical loss-versus-compute curve and label measured points separately from extrapolations.",
+      "source": "https://arxiv.org/abs/2203.15556",
+      "outcome": "Demonstrate: Plot a hypothetical loss-versus-compute curve and label measured points separately from extrapolations."
+    },
+    {
+      "id": "distributed",
+      "title": "Distributed training",
+      "group": "Systems",
+      "needs": [
+        "pretraining",
+        "linux",
+        "optimization"
+      ],
+      "hours": 6,
+      "difficulty": "Advanced",
+      "lessons": [
+        "sys-03"
+      ],
+      "summary": "Data, tensor and pipeline parallelism split different parts of the workload. Communication, synchronization and failures affect scaling. Study on diagrams or tiny processes before needing multiple GPUs.",
+      "question": "How do data and tensor parallelism differ?",
+      "answer": "Data parallel workers process different batches with replicated model parameters and synchronize gradients. Tensor parallelism partitions tensor computations or parameters across workers.",
+      "project": "Draw two-worker data parallelism and identify where gradients synchronize and communication costs arise.",
+      "source": "https://docs.pytorch.org/tutorials/beginner/dist_overview.html",
+      "outcome": "Demonstrate: Draw two-worker data parallelism and identify where gradients synchronize and communication costs arise."
+    },
+    {
+      "id": "edge",
+      "title": "Laptop, Android & Pi delivery",
+      "group": "Systems",
+      "needs": [
+        "rag",
+        "linux",
+        "quantization"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "s7-01",
+        "listen-hardware"
+      ],
+      "summary": "Run experiments on the laptop, use Android for cached reading and downloaded audio, and use a confirmed Pi model for lightweight serving. Device capability is measured, not inferred from a marketing name.",
+      "question": "Why does opening localhost on Android not connect to the laptop?",
+      "answer": "Localhost refers to the device running the browser. Use a deliberately configured network service or copy static files/audio; the local model bridge here is loopback-only.",
+      "project": "Copy one WAV and transcript to Android; test playback with screen locked and record device details.",
+      "source": "https://www.raspberrypi.com/products/raspberry-pi-2-model-b/",
+      "outcome": "Demonstrate: Copy one WAV and transcript to Android; test playback with screen locked and record device details."
+    }
+  ],
+  "projects": [
+    {
+      "id": "notes",
+      "title": "01 · A reusable notes tool",
+      "needs": [
+        "python",
+        "git",
+        "text"
+      ],
+      "brief": "Turn three notes into a versioned document collection. Reuse the same document IDs in later retrieval experiments.",
+      "checks": [
+        "Load UTF-8 text with stable IDs",
+        "Reject duplicate IDs and handle empty files",
+        "Save a test command and expected output"
+      ]
+    },
+    {
+      "id": "assistant",
+      "title": "02 · Your evidence-based study assistant",
+      "needs": [
+        "rag"
+      ],
+      "brief": "Use the local source-search lab first, then add a downloaded model when hardware permits. Carry your fixtures and source IDs forward.",
+      "checks": [
+        "Ten answerable and five unanswerable questions",
+        "Expected evidence and citation checks",
+        "Record model/version or retrieval-only mode, latency and failures"
+      ]
+    },
+    {
+      "id": "tiny-model",
+      "title": "03 · A tiny model you can explain",
+      "needs": [
+        "pretraining"
+      ],
+      "brief": "Train a deliberately small decoder or produce a reproducible experiment specification until hardware is available.",
+      "checks": [
+        "Document tokenizer, tensor shapes and causal mask",
+        "Separate training and validation sources",
+        "Save checkpoint/settings and plot held-out loss; label a design-only submission"
+      ]
+    }
+  ]
+}

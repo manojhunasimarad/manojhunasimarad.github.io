@@ -10,6 +10,7 @@ standard library only, and keeps your progress in data/progress.db next to this 
 """
 
 import html as html_lib
+import contextlib
 import http.server
 import json
 import mimetypes
@@ -19,9 +20,17 @@ import random
 import re
 import secrets
 import shutil
-import sqlite3
-import subprocess
 import sys
+# The deployed py/sqlite3 shim is for Pyodide only. On a laptop import the
+# standard-library SQLite module before restoring the deployed source path.
+_native_path = list(sys.path)
+if os.environ.get("LFZ_WEB") != "1":
+    sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
+try:
+    import sqlite3
+finally:
+    sys.path = _native_path
+import subprocess
 import threading
 import time
 import urllib.parse
@@ -38,6 +47,11 @@ import sync  # noqa: E402
 
 WEB = os.path.join(HERE, "web")
 CONTENT = os.path.join(HERE, "content")
+# A GitHub Pages checkout has deployed assets one level above py/.
+# Preserve the original app/web layout when that source distribution is used.
+if not os.path.isdir(CONTENT):
+    WEB = os.path.dirname(HERE)
+    CONTENT = os.path.join(WEB, "content")
 DATA = os.path.join(HERE, "data")
 WORK = os.path.join(DATA, "work")
 DB = os.path.join(DATA, "progress.db")
@@ -95,10 +109,15 @@ create index if not exists quiz_qid on quiz(qid);
 """
 
 
+@contextlib.contextmanager
 def db():
     con = sqlite3.connect(DB, timeout=10)
     con.row_factory = sqlite3.Row
-    return con
+    try:
+        with con:
+            yield con
+    finally:
+        con.close()
 
 
 def init_db():
@@ -1794,11 +1813,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.send(200, f.read(), "application/pdf")
         rel = "index.html" if url.path in ("/", "") else url.path.lstrip("/")
         full = os.path.normpath(os.path.join(WEB, rel))
-        if not full.startswith(WEB + os.sep) or not os.path.isfile(full):
+        public_root = {"index.html", "studio.html", "studio.mjs", "studio-core.mjs", "learning-engine.mjs", "learning-ui.mjs", "quiz-core.mjs", "quiz-ui.mjs", "learning.css", "studio.css", "studio.webmanifest", "style.css", "app.js", "manifest.webmanifest"}
+        public_dir = rel.replace("\\", "/").split("/")[0]
+        if (rel not in public_root and public_dir not in ("content", "vendor", "icons", "audio")) or not full.startswith(WEB + os.sep) or not os.path.isfile(full):
             return self.send(404, "Not found", "text/plain; charset=utf-8")
         with open(full, "rb") as f:
             data = f.read()
         if rel == "index.html":
+            if b'name="token" content="web"' in data:
+                data = data.replace(b'name="token" content="web"', b'name="token" content="__TOKEN__"')
+                data = data.replace(b'<script src="config.js"></script>', b'')
+                data = data.replace(b'<script src="boot.js"></script>', b'<script src="app.js"></script>')
             data = data.replace(b"__TOKEN__", TOKEN.encode("ascii"))
             return self.send(200, data, "text/html; charset=utf-8")
         # Fixed types for the files this app serves. The system's own table can be wrong (on some

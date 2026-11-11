@@ -21,6 +21,11 @@ window.LFZ_WEB = true;
   let seq = 0;
   let started = null;
   const ready = new Promise((resolve, reject) => { started = { resolve, reject }; });
+  const bootTimeout = setTimeout(() => {
+    started.reject(new Error("Python took too long to load. Check your connection, or open Learn & Listen for the lightweight course library."));
+    api.terminate();
+  }, 90000);
+  ready.then(() => clearTimeout(bootTimeout), () => clearTimeout(bootTimeout));
   api.onmessage = e => {
     const m = e.data;
     if (m.type === "status") step(m.text);
@@ -29,13 +34,23 @@ window.LFZ_WEB = true;
     else if (m.type === "warn") { if (window.toast) window.toast(m.text); }
     else if (m.type === "reply") {
       const p = waiting.get(m.id);
-      if (p) { waiting.delete(m.id); p(m); }
+      if (p) { waiting.delete(m.id); clearTimeout(p.timer); p.resolve(m); }
     }
   };
-  api.onerror = e => started.reject(new Error(e.message || "The browser could not start the app's worker."));
+  api.onerror = e => {
+    const error = new Error(e.message || "The browser could not start the app's worker.");
+    started.reject(error);
+    for (const p of waiting.values()) { clearTimeout(p.timer); p.reject(error); }
+    waiting.clear();
+  };
   function ask(msg, transfer) {
     const id = ++seq;
-    return new Promise(resolve => { waiting.set(id, resolve); api.postMessage(Object.assign({}, msg, { id }), transfer || []); });
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { waiting.delete(id); reject(new Error("Python did not answer in time. Reload the practice app.")); }, 120000);
+      waiting.set(id, { resolve, reject, timer });
+      try { api.postMessage(Object.assign({}, msg, { id }), transfer || []); }
+      catch (e) { clearTimeout(timer); waiting.delete(id); reject(e); }
+    });
   }
   api.postMessage({ kind: "boot", cfg: { pyodideUrl: CFG.pyodideUrl, base: CFG.base, files: CFG.files } });
 
@@ -72,6 +87,7 @@ window.LFZ_WEB = true;
       return new Promise((resolve, reject) => { this.pending.set(id, { resolve, reject, onStart }); this.w.postMessage(Object.assign({}, msg, { id })); });
     },
     async runAll(code, tests, given, seconds) {
+      if (!this.w) this.spawn();
       await this.ready;
       this.noted = false;
       await this.ask({ kind: "imports", code: given + "\n" + code + "\n" + tests.map(t => t.test).join("\n") });
@@ -204,7 +220,7 @@ window.LFZ_WEB = true;
     const s = document.createElement("script");
     s.src = "app.js";
     document.body.appendChild(s);
-    runner.spawn();                                   // the files are in the browser's cache by now
+    // Start the second Python runtime only when an exercise is actually run.
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") ask({ kind: "flush" }); });
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
     window.LFZ_INFO = info;
@@ -213,7 +229,7 @@ window.LFZ_WEB = true;
     if (!box) return;
     box.innerHTML = `<h1>The app could not start</h1>
       <p>${navigator.onLine ? "Python could not be loaded in this browser." : "This device is offline, and the app has not been opened here with a connection before. The first visit needs a connection to download Python (about 12 MB); after that it works offline."}</p>
-      <p class="muted small"></p><p><button class="btn primary" onclick="location.reload()">Try again</button></p>`;
+      <p class="muted small"></p><p><button class="btn primary" onclick="location.reload()">Try again</button> <a class="btn" href="studio.html">Open Learn & Listen</a></p>`;
     box.querySelector(".muted").textContent = err.message;
   });
 

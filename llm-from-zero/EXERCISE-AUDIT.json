@@ -1,0 +1,1199 @@
+{
+  "exercises": 170,
+  "tests": 446,
+  "passed": 446,
+  "starters_rejected": 170,
+  "seconds": 39.9,
+  "results": [
+    {
+      "id": "py-celsius",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-even",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-sumto",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-largest",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-fizzbuzz",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-reverse",
+      "reference_passed": 1,
+      "tests": 1,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-vowels",
+      "reference_passed": 1,
+      "tests": 1,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-readtext",
+      "reference_passed": 1,
+      "tests": 1,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-countchars",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-topn",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-words",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-vocab",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-tokenizer",
+      "reference_passed": 5,
+      "tests": 5,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-pairs",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-split",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-bigrams",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-probs",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-sample",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-generate",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "py-loss",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-duplicate",
+      "reference_passed": 1,
+      "tests": 1,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-anagram",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-pair-sum",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-missing-number",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-range-sum",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-top-k",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-longest-run",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-subarray-sum",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-palindrome",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-sorted-pair",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-move-zeros",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-stock",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-sorted-squares",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-three-sum",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-max-window",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-longest-unique",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-min-subarray-len",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-brackets",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-rpn",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-min-stack",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-queue-stacks",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-next-greater",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-binary-search",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-lower-bound",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-int-sqrt",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-single-number",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-count-bits",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-merge-sort",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-quick-sort",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-subsets",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-permutations",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-reverse-list",
+      "reference_passed": 1,
+      "tests": 1,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-middle-node",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-has-cycle",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-merge-lists",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-climb",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-kadane",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-coins",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-tree-depth",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-invert-tree",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-level-order",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-diameter",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-bst-insert",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-bst-valid",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-bst-kth",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-kth-largest",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-k-closest",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-islands",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-shortest-path",
+      "reference_passed": 1,
+      "tests": 1,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-course-schedule",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-cheapest-flight",
+      "reference_passed": 2,
+      "tests": 2,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-mst",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "dsa-floyd",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "mat-csr",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "mat-csr-matvec",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "mat-circulant",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-softmax",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-topk-topp",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-beam",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-rmsnorm",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-rope",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-gqa",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-kv-cache",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-quant",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-speculative",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-chunk",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-cosine",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-bm25",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-rrf",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-mmr",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-pack",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-recall-mrr",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-qa-f1",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-ndcg",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-sft-loss",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-lora",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-reward",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-dpo",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-tool-call",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-cost",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-agent-loop",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-rate-limit",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-cache",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gen-stream",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-filter",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-group",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-having",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-case",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-nulls",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-left-join",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-anti-join",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-self-join",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-second",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-top-n",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-running",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-lag",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-dedupe",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-outliers",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-streak",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sql-retention",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-bayes",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-expected",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-binomial",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-ci-mean",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-z-test",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-bootstrap",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-permutation",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-ab-test",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-sample-size",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-srm",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-holm",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-kfold",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-impute",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-stratified",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-scaler-leak",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-target-encoding",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-auc",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-logloss",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-threshold",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "ds-woe",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sys-amdahl",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sys-blocks",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sys-cache",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sys-traverse",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gpu-index",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gpu-saxpy",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gpu-transpose",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gpu-blur",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gpu-matmul",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gpu-reduce",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "gpu-scan",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "mr-wordcount",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "mr-mean",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "mpi-tree",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-bisection",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-newton",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-diff",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-trapezoid",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-simpson",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-lagrange",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-backsub",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-gauss",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-lu",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-jacobi",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "num-seidel",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sto-step",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sto-stationary",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sto-mm1",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sto-pagerank",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "sto-topsv",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    }
+  ]
+}

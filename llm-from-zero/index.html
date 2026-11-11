@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="token" content="web">
+<script>
+// Open the daily learning desk at the public/static root. Existing practice hash links remain valid.
+if (!location.hash && document.querySelector('meta[name="token"]').content === 'web') location.replace('studio.html');
+</script>
 <title>LLM From Zero</title>
 <link rel="stylesheet" href="style.css">
 <script>
@@ -34,6 +38,7 @@ window.MathJax = {
 <header class="bar">
   <a class="brand" href="#/">LLM From Zero</a>
   <nav id="nav" aria-label="Sections">
+    <a href="studio.html">Learning desk ↗</a>
     <a href="#/" data-nav="home">Today</a>
     <a href="#/recall" data-nav="recall">Recall</a>
     <a href="#/learn" data-nav="learn">Learn</a>
@@ -52,6 +57,7 @@ window.MathJax = {
   <div class="spin" aria-hidden="true"></div>
   <h1>LLM From Zero</h1>
   <p id="boot-step">Starting</p>
+  <p><a class="btn primary" href="studio.html">Read & listen without waiting for Python</a></p>
   <p class="muted small">Everything runs in this browser, Python included. The first visit downloads Python (about 12 MB); after that the app opens offline. Your progress is kept in this browser; to move it to another device, use "Your devices" under Settings.</p>
 </div></main>
 <div id="update-bar" class="update-bar" role="status" hidden><span>A new version of the app is ready.</span><button class="btn primary" type="button" onclick="location.reload()">Reload</button></div>

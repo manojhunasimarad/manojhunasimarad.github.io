@@ -1,0 +1,231 @@
+{
+  "files": 32,
+  "bytes": 312448460,
+  "minutes": 118.1,
+  "episodes": [
+    {
+      "id": "gen-01",
+      "bytes": 12818814,
+      "seconds": 290.68,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "gen-02",
+      "bytes": 15491870,
+      "seconds": 351.29,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "gen-03",
+      "bytes": 16058318,
+      "seconds": 364.13,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "gen-04",
+      "bytes": 12760926,
+      "seconds": 289.36,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "listen-agents",
+      "bytes": 5625372,
+      "seconds": 127.56,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "listen-eval",
+      "bytes": 5645362,
+      "seconds": 128.01,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "listen-hardware",
+      "bytes": 5281656,
+      "seconds": 119.76,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "listen-llm",
+      "bytes": 5680172,
+      "seconds": 128.8,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "listen-rag",
+      "bytes": 6189518,
+      "seconds": 140.35,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "listen-reuse",
+      "bytes": 4924718,
+      "seconds": 111.67,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "listen-session",
+      "bytes": 4682658,
+      "seconds": 106.18,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "listen-tuning",
+      "bytes": 5279378,
+      "seconds": 119.71,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "py-01",
+      "bytes": 5221266,
+      "seconds": 118.4,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "py-02",
+      "bytes": 5510072,
+      "seconds": 124.94,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "py-03",
+      "bytes": 3870062,
+      "seconds": 87.76,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "py-04",
+      "bytes": 5358238,
+      "seconds": 121.5,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "py-05",
+      "bytes": 4557458,
+      "seconds": 103.34,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "py-06",
+      "bytes": 4309044,
+      "seconds": 97.71,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "py-07",
+      "bytes": 5569812,
+      "seconds": 126.3,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "py-08",
+      "bytes": 6940004,
+      "seconds": 157.37,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s1-01",
+      "bytes": 14714764,
+      "seconds": 333.67,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s2-01",
+      "bytes": 14212896,
+      "seconds": 322.29,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s3-01",
+      "bytes": 13804348,
+      "seconds": 313.02,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s3-02",
+      "bytes": 14088964,
+      "seconds": 319.48,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s4-01",
+      "bytes": 15392302,
+      "seconds": 349.03,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s5-01",
+      "bytes": 13808024,
+      "seconds": 313.11,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s6-01",
+      "bytes": 17266460,
+      "seconds": 391.53,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s7-01",
+      "bytes": 13129428,
+      "seconds": 297.72,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "s8-01",
+      "bytes": 13619112,
+      "seconds": 308.82,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "sys-01",
+      "bytes": 12836290,
+      "seconds": 291.07,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "sys-02",
+      "bytes": 15911068,
+      "seconds": 360.79,
+      "rate": 22050,
+      "channels": 1
+    },
+    {
+      "id": "sys-03",
+      "bytes": 11890086,
+      "seconds": 269.62,
+      "rate": 22050,
+      "channels": 1
+    }
+  ]
+}

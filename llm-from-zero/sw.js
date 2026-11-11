@@ -16,7 +16,7 @@ async function warmPython() {
   await Promise.all(C.pyodideCore.map(async name => {
     const url = pyodideBase + name;
     if (await cache.match(url)) return;
-    const res = await fetch(url, { mode: "cors" });
+    const res = await fetch(url, { mode: "cors", signal: AbortSignal.timeout(15000) });
     if (res.ok) await cache.put(url, res);
   }));
 }
@@ -47,11 +47,24 @@ self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  // Never cache local-model discovery, model answers or dynamic native APIs.
+  if (/^\/(studio-api|api)\//.test(url.pathname)) return;
   if (url.href.startsWith(pyodideBase)) { e.respondWith(fromCache(RUNTIME, req)); return; }
   if (url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname)) return;
   if (req.mode === "navigate") {
-    e.respondWith(caches.open(SHELL).then(c => c.match(new URL("index.html", scope).href)).then(r => r || fetch(req)));
+    // Hash routes need no SPA rewrite. Preserve studio.html and audio/index.html
+    // instead of replacing every navigation with the Python practice shell.
+    e.respondWith(caches.open(SHELL).then(c => c.match(req, { ignoreSearch: true })).then(r => r || fetch(req)));
     return;
   }
   e.respondWith(caches.open(SHELL).then(c => c.match(req, { ignoreSearch: true })).then(r => r || fetch(req)));
+});
+
+self.addEventListener('message', e => {
+  if (e.data?.type !== 'studio-ready') return;
+  e.waitUntil(caches.open(SHELL).then(async cache => {
+    const essential = ['studio.html','studio.mjs','studio-core.mjs','learning-engine.mjs','learning-ui.mjs','quiz-core.mjs','quiz-ui.mjs','content/quiz.json','learning.css','content/learning-graph.json','studio.css','style.css','content/studio.json','content/lessons.json'];
+    const hits = await Promise.all(essential.map(p => cache.match(new URL(p, scope).href)));
+    e.source?.postMessage({type:'studio-ready',ok:hits.every(Boolean)});
+  }));
 });

@@ -151,12 +151,12 @@ def result_for(n, t, out, err, timed_out, given=""):
     verdict = compare(out, want)
     return {
         "n": n,
-        "ok": verdict == "same",
+        "ok": verdict == "same" and not err.strip() and not timed_out,
         "shape": verdict == "shape",
         "ran": clip(test_code, 700),
         "expected": clip(want),
         "got": clip(out),
-        "error": tidy_error(err, with_given(given).count("\n")) if (err.strip() and verdict != "same") else "",
+        "error": tidy_error(err, with_given(given).count("\n")) if err.strip() else "",
         "timeout": timed_out,
     }
 
