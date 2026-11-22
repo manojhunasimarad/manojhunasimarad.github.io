@@ -361,3 +361,21 @@ mjx-container { color: var(--ink); }
 .qr-box canvas { max-width: 100%; image-rendering: pixelated; background: #fff; border-radius: 6px; }
 .cam-box { background: #000; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; }
 .cam-box video { width: 100%; max-height: 56vh; object-fit: contain; }
+
+/* ETL project page: the goal's prerequisite graph */
+button.node { font: inherit; text-align: left; cursor: pointer; }
+.etl-map .node.known, .legend i.node.known { border-color: var(--done); background: color-mix(in srgb, var(--done) 10%, var(--surface)); }
+.etl-map .node.known .n { color: var(--muted); }
+.etl-map .node.ready, .legend i.node.ready { border-color: var(--accent); }
+.etl-map .node.wait, .legend i.node.wait { border-style: dashed; border-color: var(--muted); }
+.etl-map .node.crit { box-shadow: inset 4px 0 0 var(--warn); }
+.etl-map .node.goal .n { font-weight: 750; }
+.etl-map .node.sel, .etl-map .node:hover, .etl-map .node:focus-visible { box-shadow: 0 0 0 2px var(--accent); outline: none; }
+.etl-map .node.crit.sel, .etl-map .node.crit:hover { box-shadow: inset 4px 0 0 var(--warn), 0 0 0 2px var(--accent); }
+.etl-map .edge.crit { stroke: var(--warn); stroke-width: 2.5; stroke-dasharray: none; }
+.legend .key i.chainkey { display: inline-block; width: 22px; height: 0; border-top: 3px solid var(--warn); }
+.etl-order > li, .etl-steps > li { flex-wrap: nowrap; }
+.etl-order .btn.quiet, .etl-detail-pick { text-align: left; padding-inline: 0; }
+.etl-practice > li { padding: 7px 0; }
+.etl-how > summary { padding: 12px 14px; cursor: pointer; font-weight: 600; }
+@media (max-width: 560px) { .etl-steps > li { flex-wrap: wrap; } }

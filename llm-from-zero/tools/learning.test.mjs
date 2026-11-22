@@ -9,7 +9,7 @@ const graph=JSON.parse(await fs.readFile(new URL('content/learning-graph.json',r
 const now=new Date(2026,10,11,12).getTime();
 const prove=(s,id)=>saveEvidence(s,id,{answer:'I explained the principle and its limitation.',evidence:'project.py; ran test command; all assertions passed.',complete:true},now);
 test('Curriculum: complete IDs, acyclic graph, valid resources, primary path distinctions',async()=>{
-  assert.equal(validateGraph(graph),true);assert.equal(graph.nodes.length,36);
+  assert.equal(validateGraph(graph),true);assert.equal(graph.nodes.length,55);
   const course=JSON.parse(await fs.readFile(new URL('content/lessons.json',root),'utf8'));
   const studio=JSON.parse(await fs.readFile(new URL('content/studio.json',root),'utf8'));
   const lessons=new Set([...course.lessons,...studio.episodes].map(x=>x.id));

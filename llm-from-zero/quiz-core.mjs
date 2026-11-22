@@ -8,6 +8,7 @@ export function gradeQuiz(questions,answers){
   return {correct:results.filter(r=>r.correct).length,total:results.length,results};
 }
 export function recommendedTopic(q){
+  if(q.node)return q.node;   // questions written for one learning-map topic name it
   if(q.topic==='gen'||q.topic==='ag'){
     const text=(q.q+' '+q.explain).toLowerCase();
     if(/recall@|ndcg|mrr|faithful|evaluat/.test(text))return 'evaluation';

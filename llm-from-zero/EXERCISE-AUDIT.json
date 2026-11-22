@@ -1,9 +1,9 @@
 {
-  "exercises": 170,
-  "tests": 446,
-  "passed": 446,
-  "starters_rejected": 170,
-  "seconds": 39.9,
+  "exercises": 196,
+  "tests": 526,
+  "passed": 526,
+  "starters_rejected": 196,
+  "seconds": 37.3,
   "results": [
     {
       "id": "py-celsius",
@@ -1190,6 +1190,188 @@
     },
     {
       "id": "sto-topsv",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-safe-number",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-profile-columns",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-orphans",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-fd-violation",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-fanout",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-dedupe-first",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-core-load",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-row-reasons",
+      "reference_passed": 5,
+      "tests": 5,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-dedupe-keep-first",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-orphans",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-scd2-versions",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-star-join",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-point-in-time",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-precision-recall",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-reconcile",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-mom-growth",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-pareto",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-repeat-rate",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-skewed-tasks",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-join-strategy",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-sql-index",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-dag-order",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-dag-downstream",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-kafka-partition",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-watermark-late",
+      "reference_passed": 3,
+      "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-idempotent-upsert",
       "reference_passed": 3,
       "tests": 3,
       "starter_rejected": true,

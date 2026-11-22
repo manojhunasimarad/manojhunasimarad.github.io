@@ -29,6 +29,10 @@
       "name": "Generative AI systems"
     },
     {
+      "id": "de",
+      "name": "Data engineering"
+    },
+    {
       "id": "role",
       "name": "Role topics"
     }
@@ -1636,6 +1640,283 @@
       "quiz": "ab",
       "ml_block": null,
       "about": "p-values, power, peeking, sample ratio mismatch, interference, CUPED, Simpson's paradox."
+    },
+    {
+      "id": "de-profile",
+      "name": "Contracts and profiling",
+      "group": "de",
+      "at": [
+        1,
+        8
+      ],
+      "needs": [
+        "py-collections"
+      ],
+      "ladder": [
+        [
+          "de-safe-number",
+          1
+        ],
+        [
+          "de-profile-columns",
+          1
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Safe casts and column profiles: see the data before changing it. Step 1 of the ETL project."
+    },
+    {
+      "id": "de-keys",
+      "name": "Keys, grain and fan-out",
+      "group": "de",
+      "at": [
+        2,
+        8
+      ],
+      "needs": [
+        "sql-core"
+      ],
+      "ladder": [
+        [
+          "de-orphans",
+          1
+        ],
+        [
+          "de-sql-fd-violation",
+          1
+        ],
+        [
+          "de-sql-fanout",
+          2
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Orphans, functional dependencies and the join that double counts. Step 2."
+    },
+    {
+      "id": "de-load",
+      "name": "Loading: raw to core",
+      "group": "de",
+      "at": [
+        3,
+        9
+      ],
+      "needs": [
+        "de-keys",
+        "sql-window"
+      ],
+      "ladder": [
+        [
+          "de-sql-dedupe-first",
+          2
+        ],
+        [
+          "de-sql-core-load",
+          3
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "First row per key, then validation: a load you can rerun. Step 2."
+    },
+    {
+      "id": "de-clean",
+      "name": "Silver and quarantine",
+      "group": "de",
+      "at": [
+        1,
+        9
+      ],
+      "needs": [
+        "de-profile",
+        "de-keys"
+      ],
+      "ladder": [
+        [
+          "de-row-reasons",
+          2
+        ],
+        [
+          "de-dedupe-keep-first",
+          2
+        ],
+        [
+          "de-sql-orphans",
+          2
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Every reason a row fails, duplicates against conflicting keys, orphans. Step 3."
+    },
+    {
+      "id": "de-star",
+      "name": "Star schema and SCD Type 2",
+      "group": "de",
+      "at": [
+        1,
+        10
+      ],
+      "needs": [
+        "de-clean",
+        "sql-window"
+      ],
+      "ladder": [
+        [
+          "de-scd2-versions",
+          3
+        ],
+        [
+          "de-sql-star-join",
+          2
+        ],
+        [
+          "de-sql-point-in-time",
+          3
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Versions of a customer, the point-in-time join and queries on a star. Step 4."
+    },
+    {
+      "id": "de-dq",
+      "name": "Data quality gates",
+      "group": "de",
+      "at": [
+        0,
+        10
+      ],
+      "needs": [
+        "de-clean"
+      ],
+      "ladder": [
+        [
+          "de-precision-recall",
+          2
+        ],
+        [
+          "de-sql-reconcile",
+          3
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Scoring checks against known defects, and a reconciliation gate. Step 5."
+    },
+    {
+      "id": "de-stream",
+      "name": "Streaming",
+      "group": "de",
+      "at": [
+        2,
+        10
+      ],
+      "needs": [
+        "de-clean"
+      ],
+      "ladder": [
+        [
+          "de-kafka-partition",
+          2
+        ],
+        [
+          "de-watermark-late",
+          3
+        ],
+        [
+          "de-idempotent-upsert",
+          2
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Partitions and order, watermarks, and an idempotent sink. Step 9."
+    },
+    {
+      "id": "de-sqla",
+      "name": "Analytics SQL",
+      "group": "de",
+      "at": [
+        1,
+        11
+      ],
+      "needs": [
+        "de-star"
+      ],
+      "ladder": [
+        [
+          "de-sql-mom-growth",
+          2
+        ],
+        [
+          "de-sql-pareto",
+          3
+        ],
+        [
+          "de-sql-repeat-rate",
+          1
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Growth, Pareto cuts and repeat customers on the star schema. Step 6."
+    },
+    {
+      "id": "de-perf",
+      "name": "Performance",
+      "group": "de",
+      "at": [
+        2,
+        11
+      ],
+      "needs": [
+        "de-star"
+      ],
+      "ladder": [
+        [
+          "de-skewed-tasks",
+          1
+        ],
+        [
+          "de-join-strategy",
+          2
+        ],
+        [
+          "de-sql-index",
+          2
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Stragglers, broadcast joins and indexes. Step 7."
+    },
+    {
+      "id": "de-orch",
+      "name": "Orchestration",
+      "group": "de",
+      "at": [
+        0,
+        11
+      ],
+      "needs": [
+        "de-dq"
+      ],
+      "ladder": [
+        [
+          "de-dag-order",
+          2
+        ],
+        [
+          "de-dag-downstream",
+          1
+        ]
+      ],
+      "quiz": null,
+      "ml_block": null,
+      "about": "Run order of a DAG and what a failed gate stops. Step 8."
     }
   ],
   "watch": {

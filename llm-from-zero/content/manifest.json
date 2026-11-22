@@ -1,11 +1,11 @@
 {
   "app": "llm-from-zero",
-  "version": "4.2.0",
-  "date": "2026-11-11",
+  "version": "4.3.0",
+  "date": "2026-11-22",
   "counts": {
     "subscriptions": 111,
     "channels_used": 68,
-    "exercises": 170,
+    "exercises": 196,
     "python": 20,
     "dsa": 56,
     "sys": 14,
@@ -14,9 +14,9 @@
     "sql": 16,
     "ds": 20,
     "ml_plan": 97,
-    "lessons": 24,
-    "questions": 325,
-    "skills": 54,
+    "lessons": 37,
+    "questions": 356,
+    "skills": 64,
     "list_items": {
       "build": 107,
       "books": 262,
@@ -28,7 +28,8 @@
       "video": 72,
       "watch": 147,
       "syl": 99
-    }
+    },
+    "de": 26
   },
   "rules": [
     "An id, once published, is never renamed, reused or removed. Your progress is stored against ids, so it survives every update.",
@@ -38,6 +39,16 @@
     "Every exercise is checked before release: its reference solution must pass its tests and its starter must fail them."
   ],
   "changelog": [
+    {
+      "version": "4.3.0",
+      "date": "2026-11-22",
+      "changes": [
+        "ETL project page: pick a step of the e-commerce ETL project, or all of it, and see only the topics it needs, drawn as a graph with what you know skipped and the longest chain marked.",
+        "Data engineering course: thirteen lessons, one per step of the project, from contracts and loading to Spark, the star schema, data quality, tuning, Airflow, Kafka and the cloud.",
+        "Twenty-six Data engineering exercises in Python and SQLite, a Data engineering group on the practice map, and 31 quiz questions.",
+        "Nineteen data engineering topics on the learning map, with practice and a checkpoint per topic, and a new goal: ETL project."
+      ]
+    },
     {
       "version": "4.2.0",
       "date": "2026-11-11",

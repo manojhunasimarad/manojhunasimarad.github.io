@@ -68,7 +68,7 @@ ML_QUIRKS = {
 }
 TOKEN = secrets.token_urlsafe(24)
 WEB_MODE = os.environ.get("LFZ_WEB") == "1"      # set by the browser version, which runs this file inside the browser
-MIME = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
+MIME = {".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
         ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon",
         ".txt": "text/plain; charset=utf-8", ".pdf": "application/pdf"}
 LOCK = threading.Lock()
@@ -1813,7 +1813,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.send(200, f.read(), "application/pdf")
         rel = "index.html" if url.path in ("/", "") else url.path.lstrip("/")
         full = os.path.normpath(os.path.join(WEB, rel))
-        public_root = {"index.html", "studio.html", "studio.mjs", "studio-core.mjs", "learning-engine.mjs", "learning-ui.mjs", "quiz-core.mjs", "quiz-ui.mjs", "learning.css", "studio.css", "studio.webmanifest", "style.css", "app.js", "manifest.webmanifest"}
+        public_root = {"index.html", "studio.html", "studio.mjs", "studio-core.mjs", "learning-engine.mjs", "etl-core.mjs", "learning-ui.mjs", "quiz-core.mjs", "quiz-ui.mjs", "learning.css", "studio.css", "studio.webmanifest", "style.css", "app.js", "manifest.webmanifest"}
         public_dir = rel.replace("\\", "/").split("/")[0]
         if (rel not in public_root and public_dir not in ("content", "vendor", "icons", "audio")) or not full.startswith(WEB + os.sep) or not os.path.isfile(full):
             return self.send(404, "Not found", "text/plain; charset=utf-8")

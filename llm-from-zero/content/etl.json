@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "repo": "https://github.com/manojhunasimarad/ETL",
+  "title": "E-commerce batch and streaming ETL pipeline",
+  "blurb": "Python, PySpark, SQL, Airflow, Docker and Kafka on Olist-shaped e-commerce data. Pick a goal: a step of the project or the whole of it. The page shows only the topics that goal needs, leaves out what you already know, and puts the rest in order.",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Data sources and profiling",
+      "note": "docs/steps/STEP-01-data-sources.md",
+      "targets": [
+        "de-profiling"
+      ],
+      "builds": "Source contract, synthetic generator with ground-truth defects, Olist download, profiler.",
+      "done": [
+        "generate and profile run",
+        "you can explain each difference between the profile and _manifest.json"
+      ]
+    },
+    {
+      "n": 2,
+      "title": "Postgres landing zone and normalisation",
+      "note": "docs/steps/STEP-02-postgres.md",
+      "targets": [
+        "de-postgres"
+      ],
+      "builds": "Postgres in Docker, COPY into raw, a 3NF core schema with keys and constraints.",
+      "done": [
+        "load-raw and build-core run in Docker",
+        "you can explain every raw versus core count difference"
+      ]
+    },
+    {
+      "n": 3,
+      "title": "Batch with PySpark: bronze to silver",
+      "note": "docs/steps/STEP-03-spark.md",
+      "targets": [
+        "de-cleaning"
+      ],
+      "builds": "Bronze and silver Parquet layers, quarantine with reason codes, deduplication.",
+      "done": [
+        "silver counts equal the Postgres core counts",
+        "you can name the reason codes and where each comes from"
+      ]
+    },
+    {
+      "n": 4,
+      "title": "Star schema and SCD Type 2",
+      "note": "docs/steps/STEP-04-star-schema.md",
+      "targets": [
+        "de-dimensional"
+      ],
+      "builds": "Two facts, SCD Type 2 customers, surrogate keys, the unknown member, load to Postgres.",
+      "done": [
+        "gold loads into Postgres with constraints",
+        "you can show a person with two versions and the orders on each"
+      ]
+    },
+    {
+      "n": 5,
+      "title": "Data quality framework",
+      "note": "docs/steps/STEP-05-data-quality.md",
+      "targets": [
+        "de-quality"
+      ],
+      "builds": "115 checks (80 row rules, 35 gates), blocking gates, check history, precision and recall.",
+      "done": [
+        "quality runs and stores its history",
+        "you can explain write-audit-publish and the precision of the checks"
+      ]
+    },
+    {
+      "n": 6,
+      "title": "SQL analysis and dashboard",
+      "note": "docs/steps/STEP-06-analysis-dashboard.md",
+      "targets": [
+        "de-analytics",
+        "de-dashboard"
+      ],
+      "builds": "Ten business questions in SQL and a tested Streamlit dashboard.",
+      "done": [
+        "analyze runs",
+        "the dashboard shows sales, delivery, customers and data quality"
+      ]
+    },
+    {
+      "n": 7,
+      "title": "Performance tuning",
+      "note": "docs/steps/STEP-07-performance.md",
+      "targets": [
+        "de-spark-tuning",
+        "de-sql-tuning"
+      ],
+      "builds": "Benchmark ablation (176.9 s to 33.0 s), partition pruning, Postgres indexes with EXPLAIN ANALYZE.",
+      "done": [
+        "you can explain each row of the ablation table",
+        "you can read a stage in the Spark UI"
+      ]
+    },
+    {
+      "n": 8,
+      "title": "Orchestration with Airflow",
+      "note": "docs/steps/STEP-08-airflow.md",
+      "targets": [
+        "de-orchestration"
+      ],
+      "builds": "Airflow 3 in Docker, the batch DAG with gates, retries and params, DAG tests in CI.",
+      "done": [
+        "the DAG runs green in the Airflow UI",
+        "you can show what a failed gate stops"
+      ]
+    },
+    {
+      "n": 9,
+      "title": "Streaming with Kafka",
+      "note": "docs/steps/STEP-09-streaming.md",
+      "targets": [
+        "de-streaming"
+      ],
+      "builds": "Kafka in Docker, an event producer with duplicates, late and malformed messages, four Structured Streaming queries, an idempotent Postgres sink.",
+      "done": [
+        "produce and stream run in Docker",
+        "you can explain watermarks and exactly-once results"
+      ]
+    },
+    {
+      "n": 10,
+      "title": "Cloud platforms and wrap-up",
+      "note": "docs/steps/STEP-10-cloud.md",
+      "targets": [
+        "de-cloud"
+      ],
+      "builds": "The Spark job on Databricks, gold in Snowflake, final numbers and stories.",
+      "done": [
+        "the cloud scripts are explained",
+        "RESULTS.md and STORIES.md are complete"
+      ]
+    }
+  ],
+  "whole": {
+    "title": "The whole project",
+    "targets": [
+      "de-capstone"
+    ]
+  }
+}

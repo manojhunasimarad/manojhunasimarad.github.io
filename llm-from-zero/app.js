@@ -68,6 +68,7 @@ const ROUTES = [
   [/^\/ex\/([\w-]+)$/, exercise, "practice"],
   [/^\/quiz$/, quiz, "quiz"],
   [/^\/quiz\/run$/, quizRun, "quiz"],
+  [/^\/etl(?:\?(.*))?$/, etlPage, "etl"],
   [/^\/certs$/, certs, "certs"],
   [/^\/lists\/(\w+)$/, lists, "lists"],
   [/^\/map$/, map, "map"],
@@ -453,7 +454,7 @@ async function exercise(id) {
   const draftKey = "lfz.draft." + d.id;
   const draft = lsGet(draftKey, null);
   const code = draft != null && draft !== d.code ? draft : d.code;
-  const setName = { python: "Python", dsa: "DSA patterns", ml: "ML coding", sys: "Parallel and GPU", num: "Numerical", gen: "Generative AI", sql: "SQL", ds: "Statistics" }[d.set] || d.set;
+  const setName = { python: "Python", dsa: "DSA patterns", ml: "ML coding", sys: "Parallel and GPU", num: "Numerical", gen: "Generative AI", sql: "SQL", ds: "Statistics", de: "Data engineering" }[d.set] || d.set;
   const hintWord = d.hint_label || "Hint";
   view.innerHTML = `
     <div class="row-flex"><a class="btn quiet" href="#/practice/${esc(d.set)}">${esc(setName)}</a>${d.skill ? `<a href="#/skill/${esc(d.skill.id)}">${esc(d.skill.name)}</a>${d.skill.step ? `<span class="num">step ${d.skill.step} of 3</span>` : ""}` : `<span class="muted">${esc(d.unit)}</span>`}</div>
@@ -1235,8 +1236,214 @@ function reminderWire() {
 /* ------------------------------------------------------------------ skill map */
 
 const STATE_WORD = { strong: "strong", learning: "in progress", ready: "ready to start", later: "for later", missing: "needs the download" };
-const GROUP_SHORT = { py: "Python", dsa: "DSA", ml: "ML", role: "Role topic", sys: "Systems", num: "Numerical", data: "SQL and stats", gen: "GenAI" };
+const GROUP_SHORT = { py: "Python", dsa: "DSA", ml: "ML", role: "Role topic", sys: "Systems", num: "Numerical", data: "SQL and stats", gen: "GenAI", de: "Data eng." };
 const mapTabs = cur => `<div class="tabs"><a href="#/map"${cur === "map" ? ' aria-current="page"' : ""}>Skill map</a><a href="#/roles"${cur === "roles" ? ' aria-current="page"' : ""}>Role tracks</a></div>`;
+
+/* ------------------------------------------------------------------ ETL project */
+
+// A goal (one step of the project, or all of it) is a set of topics on the learning map. The page
+// shows only what that goal needs: it walks the prerequisite edges backwards from the goal, stops
+// at topics you already know, orders the rest and marks the longest chain. The graph rules are in
+// etl-core.mjs; this part fetches, draws and remembers what you marked as known.
+const ETL_KEY = "lfz-etl-v1";
+const etlFiles = {};
+async function etlJson(path) {
+  if (!etlFiles[path]) {
+    etlFiles[path] = fetch(path).then(r => { if (!r.ok) throw new Error("Could not load " + path + "."); return r.json(); });
+    etlFiles[path].catch(() => { delete etlFiles[path]; });
+  }
+  return etlFiles[path];
+}
+
+async function etlPage(query) {
+  const ticket = routeId;
+  const [E, graph, etl, course, ...sets] = await Promise.all([
+    import("./etl-core.mjs"), etlJson("content/learning-graph.json"), etlJson("content/etl.json"), etlJson("content/lessons.json"),
+    ...["de", "sql", "sys"].map(s => api("/api/exercises?set=" + s).catch(() => ({ rows: [] })))
+  ]);
+  if (ticket !== routeId) return;
+  view.className = "wide";
+  const byId = new Map(graph.nodes.map(n => [n.id, n]));
+  const lessonTitle = new Map(course.lessons.map(l => [l.id, l.title]));
+  const ex = new Map();
+  sets.forEach(d => (d.rows || []).forEach(r => ex.set(r.id, r)));
+  const solved = new Set([...ex.values()].filter(r => r.status === "solved").map(r => r.id));
+  const desk = lsGet("lfz-learning-v1", null);
+  const demonstrated = new Set(Object.entries((desk && desk.topics) || {}).filter(([, t]) => t && t.status === "demonstrated").map(([id]) => id));
+  const saved = lsGet(ETL_KEY, {});
+  const marked = new Set((Array.isArray(saved.known) ? saved.known : []).filter(id => byId.has(id)));
+  const params = new URLSearchParams(query || "");
+  const steps = etl.steps;
+  const asked = params.get("goal") || saved.goal || "whole";
+  const goal = asked === "whole" || steps.some(s => String(s.n) === asked) ? asked : "whole";
+  let selected = params.get("topic");
+  const store = () => lsSet(ETL_KEY, { goal, known: [...marked] });
+  store();
+
+  const deNodes = graph.nodes.filter(n => n.group === "Data engineering");
+  const step = goal === "whole" ? null : steps.find(s => String(s.n) === goal);
+  const targets = step ? step.targets : etl.whole.targets;
+  const note = path => etl.repo + "/blob/main/" + path;
+  const exLink = id => { const r = ex.get(id); return `<a href="#/ex/${esc(id)}">${esc(r ? r.title : id)}</a>`; };
+  const practiceDone = n => (n.practice || []).filter(id => solved.has(id)).length;
+
+  function render() {
+    const why = E.knownTopics(graph, { marked, solved, demonstrated });
+    const p = E.planFor(graph, targets, why);
+    const onMap = new Set([...p.study, ...p.knownOnPath]);
+    const full = new Set([...p.study, ...p.knownOnPath, ...p.coveredByKnown]);
+    const notNeeded = deNodes.filter(n => !full.has(n.id));
+    const crit = new Set(p.critical.ids), next = new Set(p.next), goalSet = new Set(targets);
+    const critEdge = new Set(p.critical.ids.slice(1).map((id, i) => p.critical.ids[i] + ">" + id));
+    if (!selected || !byId.has(selected)) selected = p.next[0] || p.order[0] || targets[0];
+    const state = id => why.has(id) ? "known" : next.has(id) ? "ready" : "wait";
+    const stateWord = { known: "known", ready: "start here", wait: "after its prerequisites" };
+    const title = id => esc(byId.get(id).title);
+    const pick = id => `<button type="button" class="btn quiet" data-pick="${esc(id)}">${title(id)}</button>`;
+
+    // layout: one row per layer, prerequisites above; each row ordered by where its prerequisites sit
+    const rows = [];
+    for (const [id, l] of p.layer) (rows[l] = rows[l] || []).push(id);
+    const rank = new Map(p.order.map((id, i) => [id, i])), at = id => rank.has(id) ? rank.get(id) : -1;
+    const slot = new Map();
+    rows.forEach((row, r) => {
+      const bary = id => { const ps = byId.get(id).needs.filter(q => slot.has(q)); return ps.length ? ps.reduce((s, q) => s + slot.get(q), 0) / ps.length : 0; };
+      row.sort((a, b) => (r ? bary(a) - bary(b) : 0) || at(a) - at(b));
+      row.forEach((id, i) => slot.set(id, i - (row.length - 1) / 2));
+    });
+    const NW = 150, NH = 62, CW = 166, RH = 96, PAD = 6;
+    const most = Math.max(1, ...rows.map(r => r.length));
+    const W = most * CW - (CW - NW) + 2 * PAD, H = rows.length * RH - (RH - NH) + 2 * PAD;
+    const pos = {};
+    rows.forEach((row, r) => row.forEach(id => { pos[id] = { x: PAD + (slot.get(id) + (most - 1) / 2) * CW, y: PAD + r * RH }; }));
+    let edges = "";
+    onMap.forEach(id => byId.get(id).needs.filter(q => onMap.has(q)).forEach(q => {
+      const a = pos[q], b = pos[id], x1 = a.x + NW / 2, y1 = a.y + NH, x2 = b.x + NW / 2, y2 = b.y, m = (y2 - y1) / 2;
+      const cls = critEdge.has(q + ">" + id) ? " crit" : why.has(q) ? " met" : "";
+      edges += `<path class="edge${cls}" data-a="${esc(q)}" data-b="${esc(id)}" d="M${x1} ${y1} C${x1} ${y1 + m} ${x2} ${y2 - m} ${x2} ${y2}"/>`;
+    }));
+    const nodes = [...onMap].map(id => {
+      const n = byId.get(id), s = state(id), total = (n.practice || []).length, done = practiceDone(n);
+      const cls = [s, crit.has(id) ? "crit" : "", goalSet.has(id) ? "goal" : "", id === selected ? "sel" : ""].filter(Boolean).join(" ");
+      return `<button type="button" class="node ${cls}" data-pick="${esc(id)}" style="left:${pos[id].x}px;top:${pos[id].y}px" aria-label="${title(id)}: ${stateWord[s]}, about ${n.hours} hours">`
+        + `<span class="g">~${n.hours} h · ${s === "known" ? "known" : s === "ready" ? "ready" : "later"}${crit.has(id) ? " · chain" : ""}</span><span class="n">${title(id)}</span>`
+        + `<span class="p"><i style="width:${s === "known" ? 100 : total ? Math.round(100 * done / total) : 0}%"></i></span></button>`;
+    }).join("");
+    const legend = [["known", "known: skipped, with what it covers"], ["ready", "ready to start"], ["wait", "needs something above it first"]]
+      .map(([k, t]) => `<span class="key"><i class="node ${k}"></i>${t}</span>`).join("")
+      + `<span class="key"><i class="chainkey"></i>longest chain</span>`;
+
+    const goals = `<a href="#/etl?goal=whole"${goal === "whole" ? ' aria-current="page"' : ""}>Whole project</a>`
+      + steps.map(s => `<a href="#/etl?goal=${s.n}" title="${esc(s.title)}"${String(s.n) === goal ? ' aria-current="page"' : ""}>Step ${s.n}</a>`).join("");
+    const head = step
+      ? `<h2>Step ${step.n}: ${esc(step.title)}</h2><p>${esc(step.builds)} <a href="${esc(note(step.note))}" target="_blank" rel="noopener">Study note ↗</a></p>`
+      : `<h2>${esc(etl.whole.title)}</h2><p>All ten steps, from source files to a tested star schema, Airflow and a Kafka stream. <a href="${esc(etl.repo)}" target="_blank" rel="noopener">The repository ↗</a></p>`;
+    const skippedHours = p.fullHours - p.hours;
+    const summary = `<section class="panel"><div class="body stack">${head}
+      <div class="meters">${meter("Study left", p.hours, p.fullHours, `${p.hours} h of ${p.fullHours} h`)}
+        ${meter("Topics to study", p.study.size, full.size, `${p.study.size} of ${full.size}`)}
+        ${meter("Longest chain", p.critical.hours, p.hours || 1, `${p.critical.hours} h`)}</div>
+      ${p.study.size ? `<p><strong>Start with:</strong> ${p.next.map(pick).join(" · ")}</p>
+      <p><strong>Longest chain:</strong> ${p.critical.ids.map(pick).join(" → ")}. Each topic on it waits for the one before, so begin it early and fit the others around it.</p>`
+      : `<p><strong>Nothing left to study for this goal.</strong> Every topic it needs is known. Build the step and tell its story.</p>`}
+      <p class="muted small">${why.size ? `What you know saves ${skippedHours} h here. ` : ""}${notNeeded.length} of the ${deNodes.length} data engineering topics are not needed for this goal at all.</p>
+    </div></section>`;
+
+    function detailHtml() {
+      const n = byId.get(selected), s = state(selected), reason = why.get(selected);
+      return `<section class="panel" id="etl-detail"><div class="head"><h2>${title(selected)}</h2><span class="chip${s === "known" ? " ok" : ""}">${reason ? esc(reason) : full.has(selected) ? stateWord[s] : "not needed for this goal"}</span><span class="num">~${n.hours} h · ${esc(n.difficulty)}</span></div><div class="body stack">
+      <p>${esc(n.summary)}</p>
+      <p><strong>Needs:</strong> ${n.needs.map(q => full.has(q) ? pick(q) : esc(byId.get(q).title)).join(" · ") || "nothing: a starting point."}</p>
+      ${n.lessons.length ? `<p><strong>Read:</strong> ${n.lessons.map(l => `<a href="#/lesson/${esc(l)}">${esc(lessonTitle.get(l) || l)}</a>`).join(" · ")}</p>` : ""}
+      ${(n.practice || []).length ? `<ul class="rows etl-practice">${n.practice.map(id => `<li><span class="dot ${esc((ex.get(id) || {}).status || "")}"></span><span class="grow">${exLink(id)}</span>${id === n.checkpoint ? `<span class="chip ok">checkpoint</span>` : ""}</li>`).join("")}</ul>
+        <p class="muted small">${n.checkpoint ? "Solve the checkpoint, or every exercise, and this topic counts as known: you tested out of it." : "Solve every exercise and this topic counts as known."}</p>` : `<p class="muted small">No exercise here runs in the browser. Mark it known once you have done the outcome below.</p>`}
+      <p><strong>Outcome:</strong> ${esc(n.outcome)}</p>
+      <div class="row-flex">${why.has(selected) && reason !== "marked known" ? "" : `<button type="button" class="btn${marked.has(selected) ? "" : " primary"}" id="etl-mark">${marked.has(selected) ? "I still need this" : "I know this, skip it"}</button>`}
+        <a class="btn quiet" href="studio.html#topic/${esc(selected)}">Explain it in the learning desk ↗</a><a class="btn quiet" href="${esc(n.source)}" target="_blank" rel="noopener">Reference ↗</a></div>
+    </div></section>`;
+
+    }
+    const detail = detailHtml();
+
+    const list = p.order.map((id, i) => {
+      const m = byId.get(id), total = (m.practice || []).length;
+      return `<li><span class="num">${i + 1}</span><span class="dot ${next.has(id) ? "open" : ""}"></span><span class="grow"><button type="button" class="btn quiet" data-pick="${esc(id)}">${title(id)}</button></span>`
+        + (crit.has(id) ? `<span class="chip medium">chain</span>` : "") + (next.has(id) ? `<span class="chip ok">ready</span>` : "")
+        + `<span class="num">${total ? practiceDone(m) + "/" + total + " solved · " : ""}~${m.hours} h</span></li>`;
+    }).join("");
+    const listed = (label, ids, note2) => ids.length ? `<p><strong>${label}</strong> ${note2 ? `<span class="muted small">${note2}</span>` : ""}<br>${ids.map(id => `${pick(id)}${why.get(id) ? ` <span class="muted small">(${esc(why.get(id))})</span>` : ""}`).join(" · ")}</p>` : "";
+    const skipped = `<section class="panel"><div class="head"><h2>Skipped for this goal</h2></div><div class="body stack">
+      ${listed("You know these.", [...p.knownOnPath], "The walk back from the goal stops at them.")}
+      ${listed("Covered by what you know.", p.coveredByKnown, "Only a known topic needed them.")}
+      ${listed("Not needed for this goal.", notNeeded.map(x => x.id), "The goal does not reach them.")}
+      ${!p.knownOnPath.size && !p.coveredByKnown.length && !notNeeded.length ? `<p class="muted">Nothing yet. Mark topics you already know, or solve their checkpoints, and they drop out of the plan.</p>` : ""}
+      ${marked.size ? `<p><button type="button" class="btn" id="etl-reset">Forget the ${marked.size} topic${marked.size > 1 ? "s" : ""} I marked known</button></p>` : ""}
+    </div></section>`;
+
+    const stepCards = steps.map(st => `<li><span class="num">${st.n}</span><span class="grow"><strong>${esc(st.title)}</strong><br><span class="muted small">${esc(st.builds)} Done when: ${st.done.map(esc).join("; ")}.</span></span>`
+      + `<a class="btn${String(st.n) === goal ? " primary" : ""}" href="#/etl?goal=${st.n}">What it needs</a><a class="btn quiet" href="${esc(note(st.note))}" target="_blank" rel="noopener">Note ↗</a></li>`).join("");
+
+    view.innerHTML = `
+      <div class="stack"><h1>ETL project</h1><p class="lede">${esc(etl.blurb)}</p></div>
+      <nav class="tabs" aria-label="Goal">${goals}</nav>
+      ${summary}
+      ${p.study.size || p.knownOnPath.size ? `<div class="row-flex legend">${legend}</div>
+      <div class="map-wrap" id="etl-wrap"><div class="map-size" id="etl-size"><div class="map etl-map" id="etl-map" style="width:${W}px;height:${H}px">
+        <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${edges}</svg>${nodes}</div></div></div>
+      <p class="muted small" id="etl-hint" hidden>The map is wider than this screen. Scroll it sideways, or use the list below.</p>` : ""}
+      <div class="cols2">${detail}
+        <section class="panel"><div class="head"><h2>Study in this order</h2><span class="num">${p.study.size} topics · ${p.hours} h</span></div>
+          ${list ? `<ol class="rows etl-order">${list}</ol>` : `<div class="body"><p class="muted">Nothing left for this goal.</p></div>`}</section></div>
+      ${skipped}
+      <section class="panel"><div class="head"><h2>The ten steps</h2><a class="small" href="#/learn">Lessons under Learn</a></div><ol class="rows etl-steps">${stepCards}</ol></section>
+      <details class="panel etl-how"><summary>How the plan is worked out</summary><div class="body stack">
+        <p>The learning map is a directed acyclic graph: an edge runs from a prerequisite to the topic that needs it. For a goal, the page walks the edges <em>backwards</em> from the goal's topics. Anything the walk does not reach is not needed. The walk stops at a topic you know, because knowing it covers what it needs; those prerequisites are skipped unless another path still needs them. A topic counts as known when you mark it, when you recorded it as demonstrated in the learning desk, or when you solved its checkpoint (or all of its exercises).</p>
+        <p>The topics left are sorted topologically (Kahn's algorithm: repeatedly take a topic whose prerequisites are all done), and drawn one row per layer, each topic one row below its deepest prerequisite. The <strong>longest chain</strong> is the prerequisite path with the most study hours, found in one pass over that order: it is the part of the plan that cannot be shortened by reordering.</p>
+        <p>The same three ideas run the project itself: Airflow orders tasks topologically, a failed gate stops everything reachable from it, and the exercises <em>A run order for the DAG</em> and <em>What a failed gate stops</em> have you write them.</p>
+      </div></details>`;
+
+    const bindDetail = () => {
+      const mark = $("#etl-mark");
+      if (mark) mark.addEventListener("click", () => {
+        if (marked.has(selected)) marked.delete(selected); else marked.add(selected);
+        const y = window.scrollY;
+        store(); render(); window.scrollTo(0, y);
+        toast(marked.has(selected) ? "Marked as known. The plan no longer includes it." : "Back in the plan.");
+      });
+      $$("#etl-detail [data-pick]").forEach(bindPick);
+    };
+    function bindPick(b) {
+      b.addEventListener("click", () => {
+        selected = b.dataset.pick;
+        $$("#etl-map .node").forEach(nd => nd.classList.toggle("sel", nd.dataset.pick === selected));
+        $("#etl-detail").outerHTML = detailHtml();
+        bindDetail();
+        $("#etl-detail").scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+    }
+    $$("[data-pick]").forEach(b => { if (!b.closest("#etl-detail")) bindPick(b); });
+    bindDetail();
+    const reset = $("#etl-reset");
+    if (reset) reset.addEventListener("click", () => { marked.clear(); store(); render(); });
+    const wrap = $("#etl-wrap");
+    if (wrap) {
+      const size = $("#etl-size"), inner = $("#etl-map");
+      const fit = () => {
+        const sc = Math.min(1, Math.max(0.7, (wrap.clientWidth - 26) / W));
+        inner.style.transform = "scale(" + sc + ")";
+        size.style.width = Math.ceil(W * sc) + "px";
+        size.style.height = Math.ceil(H * sc) + "px";
+        $("#etl-hint").hidden = !(wrap.scrollWidth > wrap.clientWidth + 2);
+      };
+      fit();
+      if (leaveHook) { try { leaveHook(); } catch (e) {} }
+      let ro = null;
+      if (window.ResizeObserver) { ro = new ResizeObserver(fit); ro.observe(wrap); } else window.addEventListener("resize", fit);
+      leaveHook = () => { if (ro) ro.disconnect(); else window.removeEventListener("resize", fit); };
+    }
+  }
+  render();
+}
 
 async function map() {
   const ticket = routeId;
