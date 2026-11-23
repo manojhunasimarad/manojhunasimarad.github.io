@@ -1,7 +1,7 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "4.3.1-mobile-20261123-r1",
- "version": "4.3.0",
+ "build": "4.4.0-etl-check-20261123-r1",
+ "version": "4.4.0",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",
  "pyodideCore": [
@@ -90,6 +90,7 @@ self.LFZ_CONFIG = {
   "studio-core.mjs",
   "learning-engine.mjs",
   "etl-core.mjs",
+  "etl-check.mjs",
   "learning-ui.mjs",
   "quiz-core.mjs",
   "quiz-ui.mjs",

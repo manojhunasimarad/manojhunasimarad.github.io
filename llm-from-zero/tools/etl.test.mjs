@@ -93,3 +93,23 @@ test('The page is routed, linked and served',async()=>{
   assert(index.includes('<a href="#/etl" data-nav="etl">ETL project</a>'));
   assert(server.includes('"etl-core.mjs"'));assert(serve.includes("'etl-core.mjs'"));
 });
+
+test('Check what you know: every topic of the whole project is listed in study order, every ETL topic has two questions, and the suggestion follows the answers',async()=>{
+  const {checkTopics,suggest}=await import('../etl-check.mjs');
+  const E=await import('../etl-core.mjs');const {recommendedTopic}=await import('../quiz-core.mjs');
+  const etl=JSON.parse(await fs.readFile(new URL('../content/etl.json',import.meta.url)));
+  const topics=checkTopics(graph,etl,quiz,E,recommendedTopic);
+  const ids=topics.map(t=>t.id);
+  assert.deepEqual(new Set(ids),closure(graph,etl.whole.targets));
+  for(const [i,id] of ids.entries())for(const p of byId.get(id).needs)if(ids.includes(p))assert(ids.indexOf(p)<i,id+' before '+p);
+  for(const t of topics.filter(t=>t.node.group==='Data engineering')){assert(t.questions.length>=2,t.id);for(const q of t.questions){assert.equal(q.options.length,4,q.id);assert(q.answer>=0&&q.answer<4,q.id);}}
+  assert.equal(topics.find(t=>t.id==='de-profiling').step,1);
+  const t={questions:[{id:'a',answer:1},{id:'b',answer:2}]};
+  assert.equal(suggest(t,{}).kind,null);
+  assert.equal(suggest(t,{answers:{a:1}}).kind,null);
+  assert.equal(suggest(t,{answers:{a:1,b:2}}).kind,'skip');
+  assert.equal(suggest(t,{answers:{a:1,b:0}}).kind,'study');
+  assert.equal(suggest(t,{answers:{a:1,b:2},rate:'new'}).kind,'study');
+  assert.equal(suggest({questions:[]},{rate:'knew'}).kind,'skip');
+  assert.equal(suggest({questions:[]},{rate:'partly'}).kind,'study');
+});

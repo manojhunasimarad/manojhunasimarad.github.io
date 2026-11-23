@@ -69,6 +69,7 @@ const ROUTES = [
   [/^\/quiz$/, quiz, "quiz"],
   [/^\/quiz\/run$/, quizRun, "quiz"],
   [/^\/etl(?:\?(.*))?$/, etlPage, "etl"],
+  [/^\/etl\/check(?:\?(.*))?$/, etlCheck, "etl"],
   [/^\/certs$/, certs, "certs"],
   [/^\/lists\/(\w+)$/, lists, "lists"],
   [/^\/map$/, map, "map"],
@@ -1255,6 +1256,25 @@ async function etlJson(path) {
   return etlFiles[path];
 }
 
+// "Check what you know": one screen per topic with quick questions, a self-rating and skip/study.
+async function etlCheck(query) {
+  const ticket = routeId;
+  const [C, E, Q, graph, etl, course, quiz] = await Promise.all([
+    import("./etl-check.mjs"), import("./etl-core.mjs"), import("./quiz-core.mjs"),
+    etlJson("content/learning-graph.json"), etlJson("content/etl.json"), etlJson("content/lessons.json"), etlJson("content/quiz.json")
+  ]);
+  if (ticket !== routeId) return;
+  view.className = "";
+  const titles = new Map();
+  const ctx = { graph, etl, quiz, course, E, recommendedTopic: Q.recommendedTopic, lsGet, lsSet, esc, toast, exTitle: id => titles.get(id) || id.replace(/[-_]/g, " ") };
+  C.mountCheck(view, ctx, query);
+  // exercise titles come from the practice engine; draw again with them once it answers
+  Promise.all(["de", "sql", "sys"].map(s => api("/api/exercises?set=" + s).catch(() => ({ rows: [] })))).then(sets => {
+    sets.forEach(d => (d.rows || []).forEach(r => titles.set(r.id, r.title)));
+    if (ticket === routeId && titles.size && /[?&]t=/.test(query || "")) { const y = window.scrollY; C.mountCheck(view, ctx, query); window.scrollTo(0, y); }
+  });
+}
+
 async function etlPage(query) {
   const ticket = routeId;
   const [E, graph, etl, course, ...sets] = await Promise.all([
@@ -1359,7 +1379,7 @@ async function etlPage(query) {
         <p class="muted small">${n.checkpoint ? "Solve the checkpoint, or every exercise, and this topic counts as known: you tested out of it." : "Solve every exercise and this topic counts as known."}</p>` : `<p class="muted small">No exercise here runs in the browser. Mark it known once you have done the outcome below.</p>`}
       <p><strong>Outcome:</strong> ${esc(n.outcome)}</p>
       <div class="row-flex">${why.has(selected) && reason !== "marked known" ? "" : `<button type="button" class="btn${marked.has(selected) ? "" : " primary"}" id="etl-mark">${marked.has(selected) ? "I still need this" : "I know this, skip it"}</button>`}
-        <a class="btn quiet" href="studio.html#topic/${esc(selected)}">Explain it in the learning desk ↗</a><a class="btn quiet" href="${esc(n.source)}" target="_blank" rel="noopener">Reference ↗</a></div>
+        <a class="btn" href="#/etl/check?t=${esc(selected)}">Quick check</a><a class="btn quiet" href="studio.html#topic/${esc(selected)}">Explain it in the learning desk ↗</a><a class="btn quiet" href="${esc(n.source)}" target="_blank" rel="noopener">Reference ↗</a></div>
     </div></section>`;
 
     }
@@ -1385,6 +1405,8 @@ async function etlPage(query) {
 
     view.innerHTML = `
       <div class="stack"><h1>ETL project</h1><p class="lede">${esc(etl.blurb)}</p></div>
+      ${(() => { const c = lsGet("lfz-etl-check-v1", {}) || {}; const n = Object.values(c).filter(r => r && r.decision).length;
+        return `<a class="chk-cta" href="#/etl/check"><span><b>${n ? "Continue: check what you know" : "Not sure what you already know?"}</b><small>${n ? n + " topics checked. " : ""}Quick multiple-choice questions per topic, then skip what you know. About 15 minutes.</small></span><span class="go">${n ? "Continue" : "Start"} →</span></a>`; })()}
       <p class="goal-label">Choose what to study for</p><nav class="tabs goal-chips" aria-label="Goal">${goals}</nav>
       ${summary}
       ${p.study.size || p.knownOnPath.size ? `<div class="row-flex legend">${legend}</div>
