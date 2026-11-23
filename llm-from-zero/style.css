@@ -14,8 +14,14 @@
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
   color-scheme: light;
 }
+:root[data-theme="dark"] {
+  --bg: #0f141a; --surface: #171d25; --ink: #e7ecf2; --muted: #96a2b0; --line: #2a333f;
+  --accent: #86a8ff; --done: #4fc48d; --warn: #e0a94a; --bad: #f0877d; --code-bg: #111720;
+  color-scheme: dark;
+}
+/* Without scripts, follow the device. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --bg: #0f141a; --surface: #171d25; --ink: #e7ecf2; --muted: #96a2b0; --line: #2a333f;
     --accent: #86a8ff; --done: #4fc48d; --warn: #e0a94a; --bad: #f0877d; --code-bg: #111720;
     color-scheme: dark;
@@ -433,3 +439,11 @@ button.node { font: inherit; text-align: left; cursor: pointer; }
 .chk-nav .btn { max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
 @media (max-width: 560px) { .chk-list > li { flex-direction: column; } .chk-sum b { font-size: 19px; } }
 @media (max-width: 560px) { .chk-list a.main { flex: none; width: 100%; } }
+
+/* Dark theme: white text on the light-blue accent is hard to read; use the page ink instead. */
+:root[data-theme="dark"] .tabs.goal-chips a[aria-current="page"],
+:root[data-theme="dark"] .chk-cta .go { color: var(--bg); }
+.theme-toggle { font: 500 12px var(--font-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 999px; padding: 4px 10px; min-height: 30px; cursor: pointer; white-space: nowrap; }
+.theme-toggle:hover { border-color: var(--accent); }
+input[data-sync-token] { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; }

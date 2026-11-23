@@ -1297,7 +1297,7 @@ async function etlPage(query) {
   const asked = params.get("goal") || saved.goal || "whole";
   const goal = asked === "whole" || steps.some(s => String(s.n) === asked) ? asked : "whole";
   let selected = params.get("topic");
-  const store = () => lsSet(ETL_KEY, { goal, known: [...marked] });
+  const store = () => lsSet(ETL_KEY, { goal, known: [...marked], updated: Date.now() });   // dated, so sync can tell which save is newer
   store();
 
   const deNodes = graph.nodes.filter(n => n.group === "Data engineering");
@@ -1772,6 +1772,8 @@ function devicesPanel(d) {
         <label class="btn" for="sync-file">Add progress from a file</label><input type="file" id="sync-file" accept=".json,application/json" class="visually-hidden">
       </div>
       <p class="muted small" id="sync-msg"></p>
+      <div class="box"><h3>Sync automatically</h3><div id="cloud-sync" class="stack"></div></div>
+      <div class="box"><h3>Use it offline</h3><div id="offline-panel" class="stack"></div></div>
       <div class="row-flex">
         <button class="btn" id="qr-show">Show as QR codes</button>
         <button class="btn" id="qr-scan">Scan QR codes</button>
@@ -1790,7 +1792,15 @@ function devicesPanel(d) {
     </div></section>`;
 }
 
+const syncParts = async () => {
+  const cs = await import("./cloud-sync.mjs");
+  return [...await cs.localParts(), cs.practicePart(api)];
+};
+
 function devicesWire() {
+  import("./sync-ui.mjs").then(ui => ui.mountSyncPanel($("#cloud-sync"), syncParts, { notify: toast, practice: true }))
+    .catch(e => { $("#cloud-sync").textContent = "Sync could not load: " + e.message; });
+  import("./offline.mjs").then(o => o.mountOffline($("#offline-panel"))).catch(() => {});
   $("#qr-show").addEventListener("click", () => qrShow());
   $("#qr-scan").addEventListener("click", () => qrScan());
   const msg = $("#sync-msg");
@@ -2692,3 +2702,4 @@ focusDraw();
 setInterval(focusTick, 1000);
 if (Focus.s) Focus.load().catch(() => {});
 route();
+import("./sync-ui.mjs").then(ui => ui.autoSync(syncParts, { notify: toast })).catch(() => {});

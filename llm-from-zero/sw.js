@@ -60,10 +60,40 @@ self.addEventListener("fetch", e => {
   e.respondWith(caches.open(SHELL).then(c => c.match(req, { ignoreSearch: true })).then(r => r || fetch(req)));
 });
 
+// "Download everything for offline": the app, all content, Python and the packages in C.offlinePackages
+// (with their dependencies, from Pyodide's lock file). Already-saved files are skipped, so it is cheap to repeat.
+async function downloadAll(client) {
+  const say = m => client?.postMessage({type: 'offline-progress', ...m});
+  try {
+    const shell = await caches.open(SHELL);
+    let n = 0;
+    for (const p of C.precache) {
+      const url = new URL(p, scope).href;
+      if (!(await shell.match(url))) { const r = await fetch(url, {cache: 'reload'}); if (r.ok) await shell.put(url, r); }
+      say({step: 'app', done: ++n, total: C.precache.length});
+    }
+    await warmPython();
+    const runtime = await caches.open(RUNTIME);
+    const lockRes = await fromCache(RUNTIME, new Request(pyodideBase + 'pyodide-lock.json'));
+    const lock = await lockRes.json();
+    const want = new Set();
+    const add = name => { const k = String(name).toLowerCase(), p = lock.packages[k]; if (!p || want.has(k)) return; want.add(k); (p.depends || []).forEach(add); };
+    (C.offlinePackages || []).forEach(add);
+    n = 0;
+    for (const k of want) {
+      const url = pyodideBase + lock.packages[k].file_name;
+      if (!(await runtime.match(url))) { const r = await fetch(url, {mode: 'cors'}); if (r.ok) await runtime.put(url, r); else throw new Error('could not download ' + k); }
+      say({step: 'python', done: ++n, total: want.size, name: k});
+    }
+    say({finished: true, ok: true, packages: [...want]});
+  } catch (err) { say({finished: true, ok: false, error: String(err && err.message || err)}); }
+}
+
 self.addEventListener('message', e => {
+  if (e.data?.type === 'offline-all') { e.waitUntil(downloadAll(e.source)); return; }
   if (e.data?.type !== 'studio-ready') return;
   e.waitUntil(caches.open(SHELL).then(async cache => {
-    const essential = ['studio.html','studio.mjs','studio-core.mjs','learning-engine.mjs','learning-ui.mjs','quiz-core.mjs','quiz-ui.mjs','content/quiz.json','learning.css','content/learning-graph.json','studio.css','style.css','content/studio.json','content/lessons.json'];
+    const essential = ['studio.html','studio.mjs','theme.js','sync-ui.mjs','cloud-sync.mjs','offline.mjs','studio-core.mjs','learning-engine.mjs','learning-ui.mjs','quiz-core.mjs','quiz-ui.mjs','content/quiz.json','learning.css','content/learning-graph.json','studio.css','style.css','content/studio.json','content/lessons.json'];
     const hits = await Promise.all(essential.map(p => cache.match(new URL(p, scope).href)));
     e.source?.postMessage({type:'studio-ready',ok:hits.every(Boolean)});
   }));

@@ -11,3 +11,27 @@ body{font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:162px}button,inp
 @media(max-width:720px){nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;gap:6px}nav a{font-size:0;padding:10px 6px;justify-content:center;text-align:center;white-space:normal;border:1px solid var(--line);background:var(--surface);min-height:44px;align-items:center}nav a span{font-size:12.5px;line-height:1.25}nav a[aria-current]{border-color:var(--accent)}nav a.nav-out{border-color:var(--accent);color:var(--accent)}body{padding-bottom:150px}.player-options{display:none}.player.show-options .player-options{display:flex}}
 #opts{display:none}@media(max-width:720px){#opts{display:inline-flex}}
 .etl-go{display:flex;flex-direction:column;gap:6px;flex:none}.etl-cta a.go,.etl-cta a.go2{text-decoration:none;text-align:center;border-radius:8px;padding:9px 12px;font-weight:600;font-size:14px}.etl-cta a.go{background:var(--accent);color:#fff}.etl-cta a.go2{border:1px solid var(--accent);color:var(--accent)}@media(max-width:720px){.etl-cta{flex-direction:column;align-items:stretch}.etl-go{flex-direction:row}.etl-go a{flex:1}}
+
+/* Dark theme (theme.js sets data-theme from the device or your choice). */
+:root[data-theme="dark"]{--bg:#0e1514;--surface:#152020;--ink:#e2ebe7;--muted:#9bb0a9;--line:#2a3a36;--accent:#74c7aa;--done:#74c7aa;--code-bg:#101918;color-scheme:dark}
+:root[data-theme="dark"] button:hover,:root[data-theme="dark"] .button:hover{background:#1c2a28}
+:root[data-theme="dark"] button.primary,:root[data-theme="dark"] .button.primary,:root[data-theme="dark"] .etl-cta .go,:root[data-theme="dark"] .etl-cta a.go{color:#0e1514}
+:root[data-theme="dark"] nav a[aria-current]{background:#1d2e2a;color:#a8e0cb}
+:root[data-theme="dark"] .hero,:root[data-theme="dark"] .road-card .step,:root[data-theme="dark"] #notice:not(:empty){background:#1a2725;border-color:#2a3a36}
+:root[data-theme="dark"] .hero .orb{background:#223430;color:#a8e0cb}
+:root[data-theme="dark"] .filters button[aria-pressed=true]{background:#74c7aa;color:#0e1514}
+:root[data-theme="dark"] .badge{border-color:#355047;color:#a8e0cb}
+:root[data-theme="dark"] .empty,:root[data-theme="dark"] .info{background:#172322}
+:root[data-theme="dark"] .info.bad{background:#3a1f1a;color:#f3b9a9}
+:root[data-theme="dark"] .player{background:#152020;border-top-color:#2a3a36}
+:root[data-theme="dark"] .reference{border-left-color:#3f6a58}
+:root[data-theme="dark"] .skip:focus{background:#152020}
+:root[data-theme="dark"] .error-link{color:#f3a08a}
+:root[data-theme="dark"] .quiz-options label:has(input:checked),:root[data-theme="dark"] .competency thead th{background:#1d2e2a}
+:root[data-theme="dark"] .daily-hero{background:#1a2725!important}
+:root[data-theme="dark"] .plan-duration{border-color:#355047}
+:root[data-theme="dark"] .week-strip span{background:#172322}
+:root[data-theme="dark"] .week-strip .active,:root[data-theme="dark"] .badge.achieved{background:#21392f;color:#a8e0cb}
+.setup-grid .sync-card{grid-column:1/-1}
+header .header-tools{display:flex;align-items:center;gap:12px}
+input[data-sync-token]{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px}

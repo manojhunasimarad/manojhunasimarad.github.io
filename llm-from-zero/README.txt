@@ -9,7 +9,7 @@ Open: http://127.0.0.1:8765/studio.html
 Native practice: node tools/launch-native.mjs --port 8770 (Python 3.10+)
 Native practice data: py/data/
 
-Tests: node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs
+Tests: node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs
 Native and sync checks: python tools/check-native.py
 All reference exercises: python tools/audit-exercises.py
 Windows audio: node tools/export-audio.mjs
@@ -25,3 +25,7 @@ Preserve upstream and vendor licensing. No new top-level license is asserted. Se
 Version 4.2.0 adds Today, a 36-topic curriculum, projects, recall, evidence and quiz tests from 325 questions. Learning-plan backups include new quiz scores. Read REVIEW.html for the full 16-section report.
 
 Version 4.3.0 adds a separate section for the e-commerce ETL project (github.com/manojhunasimarad/ETL): the ETL project page (#/etl), 13 Data engineering lessons, 26 exercises in Python and SQLite, 31 quiz questions and 19 topics on the learning map (55 in all). On the ETL page you pick a goal, one step of the project or the whole of it, and see only what it needs: the prerequisite graph is walked backwards from the goal, the walk stops at topics you know (marked, demonstrated in the learning desk, or tested out of by solving the topic's checkpoint exercise), the rest is put in topological order and the longest chain of study hours is marked. The graph rules are in etl-core.mjs and tested in tools/etl.test.mjs.
+
+Version 4.5.0 adds sync across devices and a colour theme switch. Sync keeps the learning plan, Learn & listen notes, ETL checks and (from the practice app) exercises and recall in one secret gist in your own GitHub account, using a fine-grained token with only Gists read and write; each kind of data merges with the same rule as its backup file, and nothing is deleted by a sync (cloud-sync.mjs, sync-ui.mjs, tested in tools/sync.test.mjs). The theme follows the device by default; the header button switches System, Light and Dark, per device (theme.js).
+
+Version 4.6.0 adds "Download everything for offline" (Your free setup in the studio, Your devices in Settings): the service worker saves the app, all content, Python and NumPy, and the page asks the browser to keep that storage (offline.mjs, downloadAll in sw.js). Voices, exported audio, Open-Deep-ML problems and uploaded papers are listed there with their own steps.

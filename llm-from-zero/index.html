@@ -9,6 +9,7 @@
 if (!location.hash && document.querySelector('meta[name="token"]').content === 'web') location.replace('studio.html');
 </script>
 <title>LLM From Zero</title>
+<script src="theme.js"></script>
 <link rel="stylesheet" href="style.css">
 <script>
 window.MathJax = {
@@ -52,6 +53,7 @@ window.MathJax = {
     <a href="#/settings" data-nav="settings">Settings</a>
   </nav>
   <div id="focus-pill" class="focus-pill"></div>
+  <button type="button" class="theme-toggle" data-theme-toggle>◐ System</button>
 </header>
 <div id="focus-panel" class="focus-panel" role="dialog" aria-label="Focus session" hidden></div>
 <main id="view" tabindex="-1"><div class="boot" id="boot">
