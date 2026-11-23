@@ -123,3 +123,6 @@ async function start() {
   }catch(err){notice(err.message);$('#screen').innerHTML='<h1>The library could not open.</h1><p>Start the included server and reload. For offline use, open the studio online once and wait for its saved status.</p>';}
 }
 start();
+
+// phones: speed and voice sit behind the ⚙ button so the player stays small
+{const b=document.getElementById('opts');if(b)b.addEventListener('click',()=>{const p=document.querySelector('.player');const on=p.classList.toggle('show-options');b.setAttribute('aria-expanded',String(on));});}

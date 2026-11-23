@@ -1333,8 +1333,8 @@ async function etlPage(query) {
       .map(([k, t]) => `<span class="key"><i class="node ${k}"></i>${t}</span>`).join("")
       + `<span class="key"><i class="chainkey"></i>longest chain</span>`;
 
-    const goals = `<a href="#/etl?goal=whole"${goal === "whole" ? ' aria-current="page"' : ""}>Whole project</a>`
-      + steps.map(s => `<a href="#/etl?goal=${s.n}" title="${esc(s.title)}"${String(s.n) === goal ? ' aria-current="page"' : ""}>Step ${s.n}</a>`).join("");
+    const goals = `<a href="#/etl?goal=whole"${goal === "whole" ? ' aria-current="page"' : ""}>Whole project (all 10 steps)</a>`
+      + steps.map(s => `<a href="#/etl?goal=${s.n}" title="${esc(s.title)}" aria-label="Step ${s.n}: ${esc(s.title)}"${String(s.n) === goal ? ' aria-current="page"' : ""}>Step ${s.n}</a>`).join("");
     const head = step
       ? `<h2>Step ${step.n}: ${esc(step.title)}</h2><p>${esc(step.builds)} <a href="${esc(note(step.note))}" target="_blank" rel="noopener">Study note ↗</a></p>`
       : `<h2>${esc(etl.whole.title)}</h2><p>All ten steps, from source files to a tested star schema, Airflow and a Kafka stream. <a href="${esc(etl.repo)}" target="_blank" rel="noopener">The repository ↗</a></p>`;
@@ -1385,7 +1385,7 @@ async function etlPage(query) {
 
     view.innerHTML = `
       <div class="stack"><h1>ETL project</h1><p class="lede">${esc(etl.blurb)}</p></div>
-      <nav class="tabs" aria-label="Goal">${goals}</nav>
+      <p class="goal-label">Choose what to study for</p><nav class="tabs goal-chips" aria-label="Goal">${goals}</nav>
       ${summary}
       ${p.study.size || p.knownOnPath.size ? `<div class="row-flex legend">${legend}</div>
       <div class="map-wrap" id="etl-wrap"><div class="map-size" id="etl-size"><div class="map etl-map" id="etl-map" style="width:${W}px;height:${H}px">
