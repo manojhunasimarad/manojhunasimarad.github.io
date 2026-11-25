@@ -238,3 +238,44 @@ body[data-page="practice"] header.site-header.bar { flex-wrap: nowrap; }
   .site-header .focus-pill.on .lbl { display: none; }
   .site-header .sh-search, .site-header .sh-icon-btn { width: 38px; padding: 0; }
 }
+
+/* ---------------------------------------------------------------- "What now?" guide and reminders */
+.site-header .sh-now { color: var(--accent-strong); border-color: var(--accent-soft); background: var(--accent-soft); font-weight: 600; white-space: nowrap; }
+.site-header .sh-now .sh-ico { width: 18px; height: 18px; }
+@media (max-width: 1120px) { .site-header .sh-now span { display: none; } .site-header .sh-now { width: 38px; padding: 0; } }
+body.sh-clock-on .site-header .focus-pill:not(.on) { display: none; }
+.coach { position: fixed; inset: 0; z-index: 100; background: rgba(10, 14, 20, .5); display: flex; justify-content: center; align-items: flex-start; padding: 9vh 14px 14px; overflow-y: auto; }
+.coach[hidden] { display: none; }
+.coach-box { position: relative; width: min(560px, 100%); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-top: 6px solid var(--accent); border-radius: 14px; padding: 22px 24px 16px; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+.coach-box.learn { border-top-color: var(--learn); } .coach-box.recall { border-top-color: var(--recall); } .coach-box.use { border-top-color: var(--use); } .coach-box.rest { border-top-color: var(--rest); }
+.coach-box h2 { margin: 4px 40px 10px 0; font-size: 24px; line-height: 1.25; }
+.coach-box > p { margin: 0 0 12px; line-height: 1.55; }
+.coach-kicker { font-size: 12.5px !important; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 0 !important; }
+.coach-x { position: absolute; top: 12px; right: 12px; width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; }
+.coach-x:hover { color: var(--ink); border-color: var(--accent); }
+.coach-steps { margin: 0 0 16px; padding-left: 22px; line-height: 1.55; }
+.coach-steps li { margin: 4px 0; }
+.coach-act { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 4px; }
+.coach-act button { min-height: 44px; padding: 8px 16px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+.coach-act button:hover { border-color: var(--accent); background: var(--hover); }
+.coach-act button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.coach-act button.quiet { background: transparent; }
+.coach-rule { margin: 14px 0 8px; border-top: 1px solid var(--line); padding-top: 10px; }
+.coach-rule summary { cursor: pointer; font-weight: 600; color: var(--accent-strong); }
+.coach-rule p, .coach-rule ul { margin: 8px 0; line-height: 1.55; } .coach-rule ul { padding-left: 20px; }
+.coach-foot { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin: 8px 0 0 !important; font-size: 13px; color: var(--muted); }
+.coach-foot a { color: var(--accent-strong); }
+.coach-foot label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+@media (max-width: 720px) { .coach { padding-top: 12px; } .coach-box { padding: 18px 16px 12px; } .coach-box h2 { font-size: 20px; } .coach-act button { flex: 1 1 100%; } }
+.sh-prompt.coach-nudge { z-index: 89; }
+.sh-prompt.learn { border-left-color: var(--learn); } .sh-prompt.recall { border-left-color: var(--recall); } .sh-prompt.use { border-left-color: var(--use); } .sh-prompt.rest { border-left-color: var(--rest); }
+.sh-prompt .coach-act button { margin-top: 0; }
+.sh-prompt .coach-act button.quiet, .sh-prompt .coach-act .sh-prompt-close.quiet { background: transparent; color: var(--ink); border-color: var(--line); }
+.sh-prompt[hidden] { display: none; }
+form.prefilled { outline: 3px solid var(--accent); outline-offset: 6px; border-radius: 6px; }
+.timer-hint { margin: 10px 0 0; }
+.ck-rule { margin: 14px 0 6px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--ink); line-height: 1.55; }
+.ck-tally { margin: 0 0 14px; }
+button.linkish { border: 0; background: none; padding: 0; min-height: 0; color: var(--accent-strong); font-weight: 600; text-decoration: underline; cursor: pointer; }
+@media (max-width: 1600px) { .site-header .sh-search kbd, .site-header .sh-search-label { display: none; } .site-header .sh-search { min-width: 0; width: 38px; padding: 0; justify-content: center; } }
+body[data-page="studio"] .fields select { width: 100%; min-width: 0; max-width: 100%; }

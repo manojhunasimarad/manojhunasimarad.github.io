@@ -1,4 +1,4 @@
-LLM FROM ZERO — LOCAL LEARNING BUILD 4.9.0
+LLM FROM ZERO — LOCAL LEARNING BUILD 4.10.0
 
 Source: https://github.com/manojhunasimarad/manojhunasimarad.github.io/tree/main/llm-from-zero
 Baseline commit: 94c4cb8df1e4408826a520516b5a97593ff69ab4
@@ -9,7 +9,7 @@ Open: http://127.0.0.1:8765/studio.html
 Native practice: node tools/launch-native.mjs --port 8770 (Python 3.10+)
 Native practice data: py/data/
 
-Tests: npm test (or node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs tools/auth.test.mjs tools/clock.test.mjs)
+Tests: npm test (or node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs tools/auth.test.mjs tools/clock.test.mjs tools/coach.test.mjs)
 Native and sync checks: python tools/check-native.py
 All reference exercises: python tools/audit-exercises.py
 Windows audio: node tools/export-audio.mjs
@@ -34,3 +34,5 @@ Version 4.7.0 adds the resume projects (content/projects.json, #/projects): the 
 
 Version 4.8.0 adds Sign in with GitHub for sync (auth.mjs, auth.html; the helper that holds the OAuth secret is ../auth-worker/worker.js on Cloudflare Workers, set up as in ../auth-worker/README.md). Until it is configured, the sync panel keeps token paste. Sign out revokes the token. Tests: tools/auth.test.mjs.
 Version 4.9.0 gives both pages one navigation and adds the Study clock. The header (site-nav.mjs, site.css) has six sections, Today, Learn, Practice, Review, Projects and Progress, each with its own tabs; a gear for setup and settings; search over pages, topics, lessons and exercises (Ctrl+K or /, and g then a letter to jump to a section); and a bottom tab bar on phones. Tabs that open the practice app are marked Py. Both pages share one set of light and dark colours, and the learning map is drawn in theme colours. The two laptop servers now serve theme.js and the sync and offline modules (they did not, so the studio and dark mode broke when started locally); a test checks every file the pages load is served and saved for offline. The Study clock (studio.html#clock, clock-core.mjs, clock.mjs) builds a weekly learn → recall → use timetable from your routine, runs a timer with body breaks and recall prompts that keeps going on every page, and exports the week as a calendar file with alarms or as a list for the phone's Clock app (tools/clock.test.mjs).
+
+Version 4.10.0 adds "What now?" (coach-core.mjs, coach.mjs, tools/coach.test.mjs). When you open the site (after 45 minutes away, with no timer running) a card says what to do at this moment, from your Study clock routine and your learning plan: during a study block, which page to open and the timer plan that fits the minutes left; before a block, how to get ready; at work, that work comes first; in free time, one optional round; in the last hour before sleep, a 10-minute recall or nothing; at night, sleep. One button starts the timer and opens the page. The rule for when to press Start is on the card and on the Study clock: the moment the material is open, not while choosing. While a page is open the site also rings 5 minutes before and at the start of each block, at sleep time, and after 90 seconds on a lesson, topic, exercise or recall page with no timer running. "What now?" in the header reopens the card; both automatic parts can be switched off on the Study clock. Finished rounds are counted (lfz-clock-log) and "Log it on Today" fills in the log form. Today and every topic page have a button that starts the timer with the topic; a second timer asks before replacing the running one.

@@ -1,6 +1,6 @@
 {
   "name": "llm-from-zero-studio",
-  "version": "4.9.0",
+  "version": "4.10.0",
   "private": true,
   "description": "Free local-first learning and audio companion for LLM From Zero",
   "engines": {
@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node tools/serve.mjs",
     "practice": "node tools/launch-native.mjs --port 8770",
-    "test": "node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs tools/auth.test.mjs tools/clock.test.mjs",
+    "test": "node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs tools/auth.test.mjs tools/clock.test.mjs tools/coach.test.mjs",
     "audio": "node tools/export-audio.mjs"
   }
 }

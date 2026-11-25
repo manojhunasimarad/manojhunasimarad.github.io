@@ -3,6 +3,8 @@
 // calendar file / phone alarms that put it on your real clock. Pure logic is in clock-core.mjs.
 import { DAY, KINDS, BODY, RECALL, DEFAULTS, normalise, buildWeek, weekMinutes, nowAndNext, alarmList, weekIcs, startTimer, remaining, mmss, toMin } from './clock-core.mjs';
 import { href, TIMER_KEY, RECENT_KEY } from './site-nav.mjs';
+import { tally, RULE } from './coach-core.mjs';
+import { LOG_KEY, OPEN_KEY, NUDGE_KEY } from './coach.mjs';
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const read = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
@@ -25,6 +27,8 @@ export function renderClock(el) {
   <h1>Study clock</h1>
   <p class="intro">Every day follows the same loop: <b>learn</b> something new, <b>recall</b> it from memory, then <b>use</b> it. This page tells you which step is due now, runs the timer with short body breaks, and puts the week on your phone's or laptop's calendar so it rings at the right time.</p>
   <section class="ck-now" id="ck-now" aria-live="polite"></section>
+  <p class="ck-rule"><b>When to press Start:</b> ${esc(RULE)} <button type="button" class="linkish" id="ck-what">What should I do now?</button></p>
+  ${(() => { const t = tally(read(LOG_KEY, [])); return `<p class="ck-tally muted small">${t.week ? `Timed rounds finished: <b>${t.today}</b> today (${t.todayMins} min) · <b>${t.week}</b> in the last 7 days (${dur(t.weekMins)}).` : 'No timed rounds finished in the last 7 days yet. Start one below.'}</p>`; })()}
   <section class="ck-loop" aria-label="The daily loop">
     <a class="ck-step ck-learn" href="${esc(link('s:#library'))}"><span class="ck-n" aria-hidden="true">1</span><b>Learn</b><span>Read or listen to one lesson. Before you start, retest yesterday for 3 minutes. While reading, write 3 questions.</span><em>Learn &amp; listen →</em></a>
     <a class="ck-step ck-recall" href="${esc(link('p:#/recall'))}"><span class="ck-n" aria-hidden="true">2</span><b>Recall</b><span>Close everything and pull it back out: blurt on paper, explain aloud, or answer due recall cards. Before sleep is a good time.</span><em>Recall cards →</em></a>
@@ -49,6 +53,8 @@ export function renderClock(el) {
         <ul class="ck-alarms">${alarmList(week).map(a => `<li><b>${a.start}</b><span>${esc(a.label)}</span><span class="muted small">${esc(a.dayText)}</span></li>`).join('')}</ul>
         <p><button type="button" id="ck-copy">Copy the list</button> <span class="muted small" id="ck-copy-msg"></span></p></div>
       <div><h3>While this site is open</h3>
+        <label class="ck-toggle"><input type="checkbox" id="ck-coach"${read(OPEN_KEY, true) ? ' checked' : ''}> Show “What now?” when I open the site</label>
+        <label class="ck-toggle"><input type="checkbox" id="ck-nudge"${read(NUDGE_KEY, true) ? ' checked' : ''}> Ask me to start the timer when I work on a lesson or exercise without one</label>
         <label class="ck-toggle"><input type="checkbox" id="ck-notify"${read('lfz-clock-notify', false) ? ' checked' : ''}> Show a notification when a round or break ends</label>
         <label class="ck-toggle"><input type="checkbox" id="ck-awake"${read('lfz-clock-awake', true) ? ' checked' : ''}> Keep the screen on while a timer runs</label>
         <p class="muted small">Phones also vibrate. Browsers pause timers in background tabs, so for alarms that must ring with the phone locked, use the calendar or Clock app above; the timer here catches up the moment you come back.</p></div>
@@ -72,7 +78,7 @@ export function renderClock(el) {
     <p><b>Spacing.</b> Meeting the same idea again after a gap (morning read, commute listen, evening use, night recall, weekend test) works better than one long session.</p>
     <p><b>Use it.</b> Solving a problem with the idea shows what you only thought you knew.</p>
     <p><b>The body.</b> Getting up every 25–30 minutes breaks long sitting, the 20-20-20 rule rests eyes that stare at a screen, and slow breathing helps before a test. Recall just before sleep, then screens off.</p>
-    <p class="muted small">No timer schedule is proven best for everyone: the Focus log under Today shows which kind you actually finish.</p></div></details>`;
+    <p class="muted small">No timer schedule is proven best for everyone: the count of finished rounds at the top of this page shows which kind you actually finish.</p></div></details>`;
 
   const drawNow = () => {
     const box = el.querySelector('#ck-now'); if (!box) return clearInterval(ticker);
@@ -121,6 +127,9 @@ export function renderClock(el) {
     write('lfz-clock-notify', e.target.checked);
   };
   el.querySelector('#ck-awake').onchange = e => write('lfz-clock-awake', e.target.checked);
+  el.querySelector('#ck-coach').onchange = e => write(OPEN_KEY, e.target.checked);
+  el.querySelector('#ck-nudge').onchange = e => write(NUDGE_KEY, e.target.checked);
+  el.querySelector('#ck-what').onclick = () => window.lfzCoach?.open();
   const form = el.querySelector('#ck-form');
   form.onsubmit = e => {
     e.preventDefault(); const f = new FormData(form);

@@ -4,6 +4,7 @@
 // and the study-clock timer, which keeps running whichever page is open.
 // The map and the matching rules are plain data and functions, tested in tools/nav.test.mjs.
 import { KINDS, startTimer, advance, remaining, breakTip, recallTip, mmss } from './clock-core.mjs';
+import { mountCoach, logRound, prefillLog } from './coach.mjs';
 
 // Targets: "s:" is the learning desk (opens instantly, no Python), "p:" the practice app.
 export const SECTIONS = [
@@ -75,6 +76,7 @@ const ICONS = {
   chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
   clock: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/>'
 };
 const icon = (name, cls = 'sh-ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
@@ -93,7 +95,7 @@ function mount() {
   header.innerHTML = `<div class="sh-top">
       <a class="sh-brand" href="${esc(href('s:#today', page))}" aria-label="LLM From Zero, home"><span class="sh-mark" aria-hidden="true">L/Z</span><span class="sh-name">LLM From Zero</span></a>
       <nav class="sh-sections" aria-label="Main">${main.map(s => sectionLink(s, 'sh-sec')).join('')}</nav>
-      <div class="sh-tools"><span class="sh-keep"></span><a class="sh-timer" id="sh-timer" href="${esc(href('s:#clock', page))}" hidden></a>
+      <div class="sh-tools"><button type="button" class="sh-now" id="sh-now" aria-label="What should I do now?">${icon('compass')}<span>What now?</span></button><span class="sh-keep"></span><a class="sh-timer" id="sh-timer" href="${esc(href('s:#clock', page))}" hidden></a>
         <button type="button" class="sh-search" id="sh-search" aria-label="Search the site (Ctrl+K)">${icon('search')}<span class="sh-search-label">Search</span><kbd>Ctrl K</kbd></button>
         <button type="button" class="theme-toggle sh-icon-btn" data-theme-toggle>◐</button>
         <a class="sh-icon-btn" data-sec="settings" href="${esc(href('s:#setup', page))}" aria-label="Settings, sync and offline">${icon('gear')}</a></div>
@@ -131,6 +133,7 @@ function mount() {
   palette(page);
   timer(page);
   shortcuts(page);
+  try { mountCoach({ page, href, where, TIMER_KEY, RECENT_KEY, signal }); } catch (e) { console.error('What now guide did not start', e); }
   const setH = () => document.documentElement.style.setProperty('--bar-h', header.offsetHeight + 'px');
   if (window.ResizeObserver) new ResizeObserver(setH).observe(header); setH();
 }
@@ -147,6 +150,7 @@ function palette(page) {
   const q = dlg.querySelector('#sh-q'), res = dlg.querySelector('#sh-res');
   let items = null, shown = [], sel = 0, opener = null;
   const commands = [
+    { label: 'What should I do now?', kind: 'Guide', run: () => window.lfzCoach?.open() },
     { label: 'Start a 25-minute Learn session', kind: 'Study clock', run: () => go('s:#clock', 'learn') },
     { label: 'Start a Use session (exercise or project)', kind: 'Study clock', run: () => go('s:#clock', 'use') },
     { label: 'Start a 15-minute Recall session', kind: 'Study clock', run: () => go('s:#clock', 'recall') },
@@ -234,26 +238,28 @@ async function keepAwake(on) {
     if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
   } catch {}
 }
-function prompt(html) {
+function prompt(html, actions = []) {
   let p = document.getElementById('sh-prompt');
   if (!p) { p = document.createElement('div'); p.id = 'sh-prompt'; p.className = 'sh-prompt'; p.setAttribute('role', 'alertdialog'); p.setAttribute('aria-live', 'assertive'); document.body.append(p); }
   if (!html) { p.hidden = true; return; }
-  p.innerHTML = html + '<button type="button" class="sh-prompt-close">OK</button>'; p.hidden = false;
+  p.innerHTML = html + '<div class="coach-act">' + actions.map((a, i) => `<button type="button" data-a="${i}">${esc(a.label)}</button>`).join('') + '<button type="button" class="sh-prompt-close' + (actions.length ? ' quiet' : '') + '">OK</button></div>'; p.hidden = false;
+  p.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { p.hidden = true; actions[+b.dataset.a].run(); });
   p.querySelector('.sh-prompt-close').onclick = () => { p.hidden = true; };
-  p.querySelector('.sh-prompt-close').focus({ preventScroll: true });
+  (p.querySelector('[data-a]') || p.querySelector('.sh-prompt-close')).focus({ preventScroll: true });
 }
 export function timerEventHtml(event, st, now = new Date()) {
   if (event === 'work-done') { const b = breakTip(st.round, now), r = recallTip(st.round, now);
     return `<p class="sh-prompt-kicker">Round ${st.round - 0} of ${st.rounds} done · ${Math.round(st.rest / 60)}-minute break</p><h2>${esc(r.title)}, then move</h2><p>${esc(r.how)}</p><p><strong>${esc(b.title)}.</strong> ${esc(b.how)}</p>`; }
   if (event === 'break-done') return `<p class="sh-prompt-kicker">Break over · round ${st.round} of ${st.rounds}</p><h2>Back to it</h2><p>Sit down, read the one line you wrote, and carry on.</p>`;
   if (event === 'done') { const r = recallTip(9, now);
-    return `<p class="sh-prompt-kicker">Session finished</p><h2>${esc(r.title)}</h2><p>${esc(r.how)}</p><p>Then write one line: where do you pick up next time?</p>`; }
+    return `<p class="sh-prompt-kicker">Session finished · ${st.rounds * Math.round(st.work / 60)} min</p><h2>${esc(r.title)}</h2><p>${esc(r.how)}</p><p>Then log it on Today with one line: where do you pick up next time?</p>`; }
   return '';
 }
 function timer(page) {
   const pill = document.getElementById('sh-timer');
   function draw() {
     const st = read(TIMER_KEY, null);
+    document.body.classList.toggle('sh-clock-on', !!st);
     if (!st) { pill.hidden = true; keepAwake(false); if (document.title.includes(' · Study clock')) document.title = document.title.replace(/^.*? · Study clock · /, ''); return; }
     const left = remaining(st), rest = st.phase === 'break';
     pill.hidden = false; pill.className = 'sh-timer ' + (rest ? 'rest' : KINDS[st.kind].colour);
@@ -267,10 +273,14 @@ function timer(page) {
       const { state, event } = advance(st);
       if (event) {
         write(TIMER_KEY, state);
+        if (event === 'work-done' || event === 'done') logRound(st);
         if (event !== 'expired') {
           const title = event === 'work-done' ? 'Break time: move' : event === 'break-done' ? 'Break over' : 'Session finished';
           signal(title, event === 'work-done' ? breakTip(st.round).title + ' — ' + recallTip(st.round).title : 'Study clock');
-          prompt(timerEventHtml(event, event === 'break-done' ? state : st));
+          const acts = event === 'done' ? [
+            { label: 'Log it on Today', run: () => { prefillLog(st); const here = page === 'studio' && location.hash === '#today'; location.href = href('s:#today', page); if (here) window.dispatchEvent(new HashChangeEvent('hashchange')); } },
+            { label: 'What next?', run: () => window.lfzCoach?.open() }] : [];
+          prompt(timerEventHtml(event, event === 'break-done' ? state : st), acts);
         }
         window.dispatchEvent(new Event('lfz-clock'));
       }

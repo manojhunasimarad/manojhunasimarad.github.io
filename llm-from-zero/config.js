@@ -1,7 +1,7 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "4.9.2-spark-beginner-20261125-r2",
- "version": "4.9.2",
+ "build": "4.10.0-what-now-20261125",
+ "version": "4.10.0",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",
  "pyodideCore": [
@@ -93,6 +93,8 @@ self.LFZ_CONFIG = {
   "site.css",
   "clock-core.mjs",
   "clock.mjs",
+  "coach-core.mjs",
+  "coach.mjs",
   "auth.mjs",
   "auth.html",
   "offline.mjs",

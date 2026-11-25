@@ -1877,6 +1877,14 @@
       ],
       "ladder": [
         [
+          "de-spark-lazy",
+          1
+        ],
+        [
+          "de-spark-shuffle",
+          2
+        ],
+        [
           "de-skewed-tasks",
           1
         ],
@@ -1891,7 +1899,7 @@
       ],
       "quiz": null,
       "ml_block": null,
-      "about": "Stragglers, broadcast joins and indexes. Step 7."
+      "about": "Spark laziness and the shuffle, stragglers, broadcast joins and indexes. Step 7."
     },
     {
       "id": "de-orch",
