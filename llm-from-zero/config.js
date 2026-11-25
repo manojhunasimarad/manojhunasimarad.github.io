@@ -1,7 +1,7 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "4.9.1-study-loop-20261125-r1",
- "version": "4.9.1",
+ "build": "4.9.2-spark-beginner-20261125-r1",
+ "version": "4.9.2",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",
  "pyodideCore": [

@@ -1005,17 +1005,19 @@
       "lessons": [
         "de-05"
       ],
-      "summary": "Driver, executors and partitions; lazy transformations and actions; narrow operations and the shuffle; explicit schemas, ANSI mode and Parquet.",
+      "summary": "Spark runs table code (DataFrames) in parallel on every core or many machines. Learn what runs when (lazy plans and actions), why groupBy and join are slow (the shuffle), and why the lake is typed Parquet.",
       "question": "What runs when you chain filter and select on a DataFrame, and which operations cause a shuffle?",
       "answer": "Nothing runs until an action such as count or write: Spark records a plan and optimises it whole. Wide operations (groupBy, join, distinct, windows) shuffle rows by key across executors; filter and select do not.",
-      "project": "Read the silver orders with an explicit schema, count late deliveries per month, and find the shuffle in df.explain().",
+      "project": "Read the orders from the lake (data/lake/synthetic/silver/orders), count late deliveries per month, and find the shuffle in df.explain().",
       "source": "https://spark.apache.org/docs/latest/sql-programming-guide.html",
-      "outcome": "Demonstrate: Read the silver orders with an explicit schema, count late deliveries per month, and find the shuffle in df.explain().",
+      "outcome": "Demonstrate: Read the orders from the lake (data/lake/synthetic/silver/orders), count late deliveries per month, and find the shuffle in df.explain().",
       "practice": [
+        "de-spark-lazy",
+        "de-spark-shuffle",
         "mr-wordcount",
         "mr-mean"
       ],
-      "checkpoint": "mr-mean"
+      "checkpoint": "de-spark-lazy"
     },
     {
       "id": "de-cleaning",
