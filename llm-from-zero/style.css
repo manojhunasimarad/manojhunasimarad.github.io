@@ -447,3 +447,6 @@ button.node { font: inherit; text-align: left; cursor: pointer; }
   border-radius: 999px; padding: 4px 10px; min-height: 30px; cursor: pointer; white-space: nowrap; }
 .theme-toggle:hover { border-color: var(--accent); }
 input[data-sync-token] { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; }
+/* the theme button sits at the end of the bar; on wide screens it never wraps under the nav */
+.bar .theme-toggle { margin-left: auto; }
+@media (min-width: 900px) { .bar { flex-wrap: nowrap; } #nav { flex: 1 1 auto; min-width: 0; } }

@@ -70,6 +70,9 @@ const ROUTES = [
   [/^\/quiz\/run$/, quizRun, "quiz"],
   [/^\/etl(?:\?(.*))?$/, etlPage, "etl"],
   [/^\/etl\/check(?:\?(.*))?$/, etlCheck, "etl"],
+  [/^\/projects$/, projectsHome, "projects"],
+  [/^\/project\/([\w-]+)(?:\?(.*))?$/, projectPage, "projects"],
+  [/^\/project\/([\w-]+)\/check(?:\?(.*))?$/, projectCheck, "projects"],
   [/^\/certs$/, certs, "certs"],
   [/^\/lists\/(\w+)$/, lists, "lists"],
   [/^\/map$/, map, "map"],
@@ -1256,30 +1259,63 @@ async function etlJson(path) {
   return etlFiles[path];
 }
 
+// Every project page (the ETL project and the resume projects in content/projects.json) is the same
+// page over a different spec: its steps, its whole-project goal, its own saved plan and check.
+async function projectSpec(pid) {
+  if (pid === "etl") {
+    const data = await etlJson("content/etl.json");
+    return { pid, data, name: "ETL project", base: "#/etl", key: ETL_KEY, checkKey: "lfz-etl-check-v1", group: "Data engineering",
+      sets: ["de", "sql", "sys"], note: path => data.repo + "/blob/main/" + path };
+  }
+  const all = await etlJson("content/projects.json");
+  const data = all.projects.find(x => x.id === pid);
+  if (!data) throw new Error("There is no project called " + pid + ".");
+  return { pid, data, name: data.name, base: "#/project/" + pid, key: "lfz-proj-" + pid + "-v1", checkKey: "lfz-proj-" + pid + "-check-v1",
+    group: data.group, sets: [], note: path => data.code_base ? data.code_base + path : "" };
+}
+
+async function projectsHome() {
+  const all = await etlJson("content/projects.json");
+  const card = (href, name, title, blurb, extra) => `<li><span class="grow"><strong>${esc(title)}</strong><br><span class="muted small">${esc(blurb)}</span>${extra || ""}</span><a class="btn primary" href="${href}">Open ${esc(name)}</a></li>`;
+  view.innerHTML = `<div class="stack"><h1>Projects</h1><p class="lede">Each project page shows only what a goal needs, skips what you know, and links every step to its lesson and its code.</p></div>
+    <section class="panel"><ol class="rows etl-steps">
+      ${card("#/etl", "ETL project", "E-commerce batch and streaming ETL pipeline", "Python, PySpark, SQL, Airflow, Kafka, Docker. Ten steps.")}
+      ${all.projects.map(x => card("#/project/" + x.id, x.name, x.title, x.blurb, x.repo ? `<br><a class="small" href="${esc(x.repo)}" target="_blank" rel="noopener">Code on GitHub ↗</a>` : `<br><span class="small muted">Code: ${esc(x.local || "local")} (not on GitHub yet)</span>`)).join("")}
+    </ol></section>`;
+}
+
+async function etlCheck(query) { return projectCheck("etl", query); }
+
 // "Check what you know": one screen per topic with quick questions, a self-rating and skip/study.
-async function etlCheck(query) {
+async function projectCheck(pid, query) {
   const ticket = routeId;
-  const [C, E, Q, graph, etl, course, quiz] = await Promise.all([
+  const [C, E, Q, graph, spec, course, quiz] = await Promise.all([
     import("./etl-check.mjs"), import("./etl-core.mjs"), import("./quiz-core.mjs"),
-    etlJson("content/learning-graph.json"), etlJson("content/etl.json"), etlJson("content/lessons.json"), etlJson("content/quiz.json")
+    etlJson("content/learning-graph.json"), projectSpec(pid), etlJson("content/lessons.json"), etlJson("content/quiz.json")
   ]);
+  const etl = spec.data;
   if (ticket !== routeId) return;
   view.className = "";
   const titles = new Map();
-  const ctx = { graph, etl, quiz, course, E, recommendedTopic: Q.recommendedTopic, lsGet, lsSet, esc, toast, exTitle: id => titles.get(id) || id.replace(/[-_]/g, " ") };
+  const ctx = { graph, etl, quiz, course, E, recommendedTopic: Q.recommendedTopic, lsGet, lsSet, esc, toast, exTitle: id => titles.get(id) || id.replace(/[-_]/g, " "),
+    checkKey: spec.checkKey, knownKey: spec.key, base: spec.base, name: spec.name, group: spec.group };
   C.mountCheck(view, ctx, query);
   // exercise titles come from the practice engine; draw again with them once it answers
-  Promise.all(["de", "sql", "sys"].map(s => api("/api/exercises?set=" + s).catch(() => ({ rows: [] })))).then(sets => {
+  Promise.all(spec.sets.map(s => api("/api/exercises?set=" + s).catch(() => ({ rows: [] })))).then(sets => {
     sets.forEach(d => (d.rows || []).forEach(r => titles.set(r.id, r.title)));
     if (ticket === routeId && titles.size && /[?&]t=/.test(query || "")) { const y = window.scrollY; C.mountCheck(view, ctx, query); window.scrollTo(0, y); }
   });
 }
 
-async function etlPage(query) {
+async function etlPage(query) { return projectPage("etl", query); }
+
+async function projectPage(pid, query) {
   const ticket = routeId;
-  const [E, graph, etl, course, ...sets] = await Promise.all([
-    import("./etl-core.mjs"), etlJson("content/learning-graph.json"), etlJson("content/etl.json"), etlJson("content/lessons.json"),
-    ...["de", "sql", "sys"].map(s => api("/api/exercises?set=" + s).catch(() => ({ rows: [] })))
+  const spec = await projectSpec(pid);
+  const etl = spec.data;
+  const [E, graph, course, ...sets] = await Promise.all([
+    import("./etl-core.mjs"), etlJson("content/learning-graph.json"), etlJson("content/lessons.json"),
+    ...spec.sets.map(s => api("/api/exercises?set=" + s).catch(() => ({ rows: [] })))
   ]);
   if (ticket !== routeId) return;
   view.className = "wide";
@@ -1290,20 +1326,22 @@ async function etlPage(query) {
   const solved = new Set([...ex.values()].filter(r => r.status === "solved").map(r => r.id));
   const desk = lsGet("lfz-learning-v1", null);
   const demonstrated = new Set(Object.entries((desk && desk.topics) || {}).filter(([, t]) => t && t.status === "demonstrated").map(([id]) => id));
-  const saved = lsGet(ETL_KEY, {});
+  const saved = lsGet(spec.key, {});
   const marked = new Set((Array.isArray(saved.known) ? saved.known : []).filter(id => byId.has(id)));
   const params = new URLSearchParams(query || "");
   const steps = etl.steps;
   const asked = params.get("goal") || saved.goal || "whole";
   const goal = asked === "whole" || steps.some(s => String(s.n) === asked) ? asked : "whole";
   let selected = params.get("topic");
-  const store = () => lsSet(ETL_KEY, { goal, known: [...marked], updated: Date.now() });   // dated, so sync can tell which save is newer
+  const store = () => lsSet(spec.key, { goal, known: [...marked], updated: Date.now() });   // dated, so sync can tell which save is newer
   store();
 
-  const deNodes = graph.nodes.filter(n => n.group === "Data engineering");
+  const deNodes = graph.nodes.filter(n => n.group === spec.group);
   const step = goal === "whole" ? null : steps.find(s => String(s.n) === goal);
   const targets = step ? step.targets : etl.whole.targets;
-  const note = path => etl.repo + "/blob/main/" + path;
+  const note = st => st.lesson ? "#/lesson/" + st.lesson : spec.note(st.note);
+  const codeLink = st => st.code && spec.note(st.code) ? `<a class="btn quiet" href="${esc(spec.note(st.code))}" target="_blank" rel="noopener">Code ↗</a>` : "";
+  const internal = st => !!st.lesson;
   const exLink = id => { const r = ex.get(id); return `<a href="#/ex/${esc(id)}">${esc(r ? r.title : id)}</a>`; };
   const practiceDone = n => (n.practice || []).filter(id => solved.has(id)).length;
 
@@ -1353,11 +1391,11 @@ async function etlPage(query) {
       .map(([k, t]) => `<span class="key"><i class="node ${k}"></i>${t}</span>`).join("")
       + `<span class="key"><i class="chainkey"></i>longest chain</span>`;
 
-    const goals = `<a href="#/etl?goal=whole"${goal === "whole" ? ' aria-current="page"' : ""}>Whole project (all 10 steps)</a>`
-      + steps.map(s => `<a href="#/etl?goal=${s.n}" title="${esc(s.title)}" aria-label="Step ${s.n}: ${esc(s.title)}"${String(s.n) === goal ? ' aria-current="page"' : ""}>Step ${s.n}</a>`).join("");
+    const goals = `<a href="${spec.base}?goal=whole"${goal === "whole" ? ' aria-current="page"' : ""}>Whole project (all ${steps.length} steps)</a>`
+      + steps.map(s => `<a href="${spec.base}?goal=${s.n}" title="${esc(s.title)}" aria-label="Step ${s.n}: ${esc(s.title)}"${String(s.n) === goal ? ' aria-current="page"' : ""}>Step ${s.n}</a>`).join("");
     const head = step
-      ? `<h2>Step ${step.n}: ${esc(step.title)}</h2><p>${esc(step.builds)} <a href="${esc(note(step.note))}" target="_blank" rel="noopener">Study note ↗</a></p>`
-      : `<h2>${esc(etl.whole.title)}</h2><p>All ten steps, from source files to a tested star schema, Airflow and a Kafka stream. <a href="${esc(etl.repo)}" target="_blank" rel="noopener">The repository ↗</a></p>`;
+      ? `<h2>Step ${step.n}: ${esc(step.title)}</h2><p>${esc(step.builds)} <a href="${esc(note(step))}"${internal(step) ? "" : ' target="_blank" rel="noopener"'}>${internal(step) ? "Lesson" : "Study note ↗"}</a> ${codeLink(step)}</p>`
+      : `<h2>${esc(etl.whole.title)}</h2><p>${esc(etl.whole.summary || "All ten steps, from source files to a tested star schema, Airflow and a Kafka stream.")} ${etl.whole.lesson ? `<a href="#/lesson/${esc(etl.whole.lesson)}">The story ↗</a> ` : ""}${etl.repo ? `<a href="${esc(etl.repo)}" target="_blank" rel="noopener">The repository ↗</a>` : `<span class="muted small">Code: ${esc(etl.local || "local")}, not on GitHub yet.</span>`}</p>`;
     const skippedHours = p.fullHours - p.hours;
     const summary = `<section class="panel"><div class="body stack">${head}
       <div class="meters">${meter("Study left", p.hours, p.fullHours, `${p.hours} h of ${p.fullHours} h`)}
@@ -1366,7 +1404,7 @@ async function etlPage(query) {
       ${p.study.size ? `<p><strong>Start with:</strong> ${p.next.map(pick).join(" · ")}</p>
       <p><strong>Longest chain:</strong> ${p.critical.ids.map(pick).join(" → ")}. Each topic on it waits for the one before, so begin it early and fit the others around it.</p>`
       : `<p><strong>Nothing left to study for this goal.</strong> Every topic it needs is known. Build the step and tell its story.</p>`}
-      <p class="muted small">${why.size ? `What you know saves ${skippedHours} h here. ` : ""}${notNeeded.length} of the ${deNodes.length} data engineering topics are not needed for this goal at all.</p>
+      <p class="muted small">${why.size ? `What you know saves ${skippedHours} h here. ` : ""}${notNeeded.length} of the ${deNodes.length} ${esc(spec.group === "Data engineering" ? "data engineering" : spec.group)} topics are not needed for this goal at all.</p>
     </div></section>`;
 
     function detailHtml() {
@@ -1379,7 +1417,7 @@ async function etlPage(query) {
         <p class="muted small">${n.checkpoint ? "Solve the checkpoint, or every exercise, and this topic counts as known: you tested out of it." : "Solve every exercise and this topic counts as known."}</p>` : `<p class="muted small">No exercise here runs in the browser. Mark it known once you have done the outcome below.</p>`}
       <p><strong>Outcome:</strong> ${esc(n.outcome)}</p>
       <div class="row-flex">${why.has(selected) && reason !== "marked known" ? "" : `<button type="button" class="btn${marked.has(selected) ? "" : " primary"}" id="etl-mark">${marked.has(selected) ? "I still need this" : "I know this, skip it"}</button>`}
-        <a class="btn" href="#/etl/check?t=${esc(selected)}">Quick check</a><a class="btn quiet" href="studio.html#topic/${esc(selected)}">Explain it in the learning desk ↗</a><a class="btn quiet" href="${esc(n.source)}" target="_blank" rel="noopener">Reference ↗</a></div>
+        <a class="btn" href="${spec.base}/check?t=${esc(selected)}">Quick check</a><a class="btn quiet" href="studio.html#topic/${esc(selected)}">Explain it in the learning desk ↗</a><a class="btn quiet" href="${esc(n.source)}" target="_blank" rel="noopener">Reference ↗</a></div>
     </div></section>`;
 
     }
@@ -1401,12 +1439,12 @@ async function etlPage(query) {
     </div></section>`;
 
     const stepCards = steps.map(st => `<li><span class="num">${st.n}</span><span class="grow"><strong>${esc(st.title)}</strong><br><span class="muted small">${esc(st.builds)} Done when: ${st.done.map(esc).join("; ")}.</span></span>`
-      + `<a class="btn${String(st.n) === goal ? " primary" : ""}" href="#/etl?goal=${st.n}">What it needs</a><a class="btn quiet" href="${esc(note(st.note))}" target="_blank" rel="noopener">Note ↗</a></li>`).join("");
+      + `<a class="btn${String(st.n) === goal ? " primary" : ""}" href="${spec.base}?goal=${st.n}">What it needs</a><a class="btn quiet" href="${esc(note(st))}"${internal(st) ? ">Lesson" : ' target="_blank" rel="noopener">Note ↗'}</a>${codeLink(st)}</li>`).join("");
 
     view.innerHTML = `
-      <div class="stack"><h1>ETL project</h1><p class="lede">${esc(etl.blurb)}</p></div>
-      ${(() => { const c = lsGet("lfz-etl-check-v1", {}) || {}; const n = Object.values(c).filter(r => r && r.decision).length;
-        return `<a class="chk-cta" href="#/etl/check"><span><b>${n ? "Continue: check what you know" : "Not sure what you already know?"}</b><small>${n ? n + " topics checked. " : ""}Quick multiple-choice questions per topic, then skip what you know. About 15 minutes.</small></span><span class="go">${n ? "Continue" : "Start"} →</span></a>`; })()}
+      <div class="stack">${pid === "etl" ? "" : `<p class="small muted"><a href="#/projects">← Projects</a></p>`}<h1>${esc(pid === "etl" ? "ETL project" : etl.title)}</h1><p class="lede">${esc(etl.blurb)}</p></div>
+      ${(() => { const c = lsGet(spec.checkKey, {}) || {}; const n = Object.values(c).filter(r => r && r.decision).length;
+        return `<a class="chk-cta" href="${spec.base}/check"><span><b>${n ? "Continue: check what you know" : "Not sure what you already know?"}</b><small>${n ? n + " topics checked. " : ""}Quick multiple-choice questions per topic, then skip what you know. About 15 minutes.</small></span><span class="go">${n ? "Continue" : "Start"} →</span></a>`; })()}
       <p class="goal-label">Choose what to study for</p><nav class="tabs goal-chips" aria-label="Goal">${goals}</nav>
       ${summary}
       ${p.study.size || p.knownOnPath.size ? `<div class="row-flex legend">${legend}</div>
@@ -1417,11 +1455,11 @@ async function etlPage(query) {
         <section class="panel"><div class="head"><h2>Study in this order</h2><span class="num">${p.study.size} topics · ${p.hours} h</span></div>
           ${list ? `<ol class="rows etl-order">${list}</ol>` : `<div class="body"><p class="muted">Nothing left for this goal.</p></div>`}</section></div>
       ${skipped}
-      <section class="panel"><div class="head"><h2>The ten steps</h2><a class="small" href="#/learn">Lessons under Learn</a></div><ol class="rows etl-steps">${stepCards}</ol></section>
+      <section class="panel"><div class="head"><h2>The ${steps.length === 10 ? "ten" : steps.length} steps</h2><a class="small" href="#/learn">Lessons under Learn</a></div><ol class="rows etl-steps">${stepCards}</ol></section>
       <details class="panel etl-how"><summary>How the plan is worked out</summary><div class="body stack">
         <p>The learning map is a directed acyclic graph: an edge runs from a prerequisite to the topic that needs it. For a goal, the page walks the edges <em>backwards</em> from the goal's topics. Anything the walk does not reach is not needed. The walk stops at a topic you know, because knowing it covers what it needs; those prerequisites are skipped unless another path still needs them. A topic counts as known when you mark it, when you recorded it as demonstrated in the learning desk, or when you solved its checkpoint (or all of its exercises).</p>
         <p>The topics left are sorted topologically (Kahn's algorithm: repeatedly take a topic whose prerequisites are all done), and drawn one row per layer, each topic one row below its deepest prerequisite. The <strong>longest chain</strong> is the prerequisite path with the most study hours, found in one pass over that order: it is the part of the plan that cannot be shortened by reordering.</p>
-        <p>The same three ideas run the project itself: Airflow orders tasks topologically, a failed gate stops everything reachable from it, and the exercises <em>A run order for the DAG</em> and <em>What a failed gate stops</em> have you write them.</p>
+        ${pid !== "etl" ? "" : `<p>The same three ideas run the project itself: Airflow orders tasks topologically, a failed gate stops everything reachable from it, and the exercises <em>A run order for the DAG</em> and <em>What a failed gate stops</em> have you write them.</p>`}
       </div></details>`;
 
     const bindDetail = () => {

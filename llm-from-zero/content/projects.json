@@ -1,0 +1,303 @@
+{
+ "version": 1,
+ "projects": [
+  {
+   "id": "rag",
+   "name": "RAG assistant",
+   "title": "RAG & agentic knowledge assistant",
+   "group": "RAG project",
+   "repo": "https://github.com/manojhunasimarad/auto-rag-assistant",
+   "code_base": "https://github.com/manojhunasimarad/auto-rag-assistant/blob/main/",
+   "local": "D:\\sem3_4\\RAG\\auto-rag-assistant",
+   "blurb": "Chunking, exact vector search, grounded answers with citations, a ReAct agent with safe tools, retrieval evaluation and FastAPI, over your own in-vehicle engineering documents. Pick a goal; the page shows only what it needs.",
+   "steps": [
+    {
+     "n": 1,
+     "title": "Chunk the documents",
+     "lesson": "rp-01",
+     "code": "src/chunking.py",
+     "targets": [
+      "rp-chunking"
+     ],
+     "builds": "Paragraph- and sentence-aware chunks with overlap and source metadata.",
+     "done": [
+      "you can predict where chunk_text cuts a document",
+      "tests/test_chunking.py passes"
+     ]
+    },
+    {
+     "n": 2,
+     "title": "Embed and search",
+     "lesson": "rp-02",
+     "code": "src/vectorstore.py",
+     "targets": [
+      "rp-vectorsearch"
+     ],
+     "builds": "Normalised vectors, cosine as a dot product, top-k with argpartition, save and load.",
+     "done": [
+      "you can compute three cosines by hand and match the store",
+      "you can say when to switch to an ANN index"
+     ]
+    },
+    {
+     "n": 3,
+     "title": "Answer with citations",
+     "lesson": "rp-03",
+     "code": "src/rag_chain.py",
+     "targets": [
+      "rp-grounded"
+     ],
+     "builds": "Numbered context, a grounding prompt, sources in citation order.",
+     "done": [
+      "an unanswerable question gets 'not enough information'",
+      "you can say what the prompt cannot guarantee"
+     ]
+    },
+    {
+     "n": 4,
+     "title": "Add an agent",
+     "lesson": "rp-04",
+     "code": "src/agent.py",
+     "targets": [
+      "rp-react"
+     ],
+     "builds": "A ReAct loop, two tools, a safe calculator, and the same agent in LangChain.",
+     "done": [
+      "you can trace one agent run step by step",
+      "tests/test_agent.py passes"
+     ]
+    },
+    {
+     "n": 5,
+     "title": "Measure retrieval",
+     "lesson": "rp-05",
+     "code": "eval/eval_retrieval.py",
+     "targets": [
+      "rp-eval"
+     ],
+     "builds": "hit_rate@k and MRR@k on 12 labelled questions, TF-IDF against embeddings.",
+     "done": [
+      "you can compute MRR for one question by hand",
+      "you can explain why 1.00 is not the end of the story"
+     ]
+    },
+    {
+     "n": 6,
+     "title": "Serve and test",
+     "lesson": "rp-06",
+     "code": "src/api.py",
+     "targets": [
+      "rp-serving"
+     ],
+     "builds": "Pluggable backends, an offline test suite, FastAPI /health and /query.",
+     "done": [
+      "the suite passes with LLM_BACKEND=mock",
+      "curl /query returns an answer with sources"
+     ]
+    }
+   ],
+   "whole": {
+    "title": "The whole assistant",
+    "summary": "All six steps, from documents to an evaluated, tested API, and the story you tell about it.",
+    "targets": [
+     "rp-capstone"
+    ],
+    "lesson": "rp-07"
+   }
+  },
+  {
+   "id": "fl",
+   "name": "Federated testbed",
+   "title": "Federated learning testbed for vehicular edge clients",
+   "group": "Federated learning project",
+   "repo": null,
+   "code_base": null,
+   "local": "D:\\sem3_4\\automotive-fl",
+   "blurb": "FedAvg with Flower over gRPC, three heterogeneous vehicle clients (ROS2 container, lite container, bare-metal Raspberry Pi), features from live vehicle topics, and what makes the numbers credible. NITK minor project.",
+   "steps": [
+    {
+     "n": 1,
+     "title": "Understand FedAvg",
+     "lesson": "flp-01",
+     "code": "server/fl_server.py",
+     "targets": [
+      "flp-fedavg"
+     ],
+     "builds": "Rounds, local epochs, averaging weighted by examples.",
+     "done": [
+      "you can compute one weighted average by hand",
+      "you can explain why it is weighted"
+     ]
+    },
+    {
+     "n": 2,
+     "title": "Server and clients in Flower",
+     "lesson": "flp-02",
+     "code": "client/fl_client.py",
+     "targets": [
+      "flp-flower"
+     ],
+     "builds": "A logging FedAvg strategy, NumPyClients, metric aggregation.",
+     "done": [
+      "two clients finish 5 rounds",
+      "fit returns a real train_loss"
+     ]
+    },
+    {
+     "n": 3,
+     "title": "gRPC transport",
+     "lesson": "flp-03",
+     "code": "server/fl_server.py",
+     "targets": [
+      "flp-grpc"
+     ],
+     "builds": "Clients dial fl-server:8080; failures are counted, not fatal.",
+     "done": [
+      "you can explain why gRPC suits weights",
+      "a dropped client shows up as a failure"
+     ]
+    },
+    {
+     "n": 4,
+     "title": "A heterogeneous fleet",
+     "lesson": "flp-04",
+     "code": "docker-compose.yml",
+     "targets": [
+      "flp-containers"
+     ],
+     "builds": "Compose for two containers, the Pi bare-metal on aarch64, MIN_CLIENTS=3.",
+     "done": [
+      "three clients join one round",
+      "you can name what changes on aarch64"
+     ]
+    },
+    {
+     "n": 5,
+     "title": "Features from ROS2",
+     "lesson": "flp-05",
+     "code": "client/fl_client_ros2.py",
+     "targets": [
+      "flp-ros2"
+     ],
+     "builds": "A thread-safe sensor buffer and 12 features from speed and brake.",
+     "done": [
+      "published topics replace the synthetic fallback",
+      "the fallback is logged"
+     ]
+    },
+    {
+     "n": 6,
+     "title": "Evaluate honestly",
+     "lesson": "flp-06",
+     "code": "client/fl_client.py",
+     "targets": [
+      "flp-noniid"
+     ],
+     "builds": "Held-out evaluation per client, non-IID splits, a centralised baseline.",
+     "done": [
+      "no client returns a fixed accuracy",
+      "per-client and global accuracy are plotted per round"
+     ]
+    }
+   ],
+   "whole": {
+    "title": "The whole testbed",
+    "summary": "All six steps, from FedAvg to a mixed fleet with honest evaluation, and the story for the minor-project review.",
+    "targets": [
+     "flp-capstone"
+    ],
+    "lesson": "flp-07"
+   }
+  },
+  {
+   "id": "gpu",
+   "name": "GPU ML pipeline",
+   "title": "GPU-accelerated ML pipeline (heart disease)",
+   "group": "GPU ML project",
+   "repo": "https://github.com/manojhunasimarad/heart-disease-gpu",
+   "code_base": "https://github.com/manojhunasimarad/heart-disease-gpu/blob/main/",
+   "local": null,
+   "blurb": "A leak-free scikit-learn baseline, stratified metrics, the same data on RAPIDS cuML, logistic regression written as CUDA kernels, and speedups measured honestly with Amdahl's law. MA721 project.",
+   "steps": [
+    {
+     "n": 1,
+     "title": "CPU baseline",
+     "lesson": "gp-01",
+     "code": "src/cpu_baseline.py",
+     "targets": [
+      "gp-pipeline"
+     ],
+     "builds": "Imputation, scaling and one-hot encoding inside a Pipeline; a stratified split.",
+     "done": [
+      "the baseline runs",
+      "you can show the score with and without leakage"
+     ]
+    },
+    {
+     "n": 2,
+     "title": "Metrics that matter",
+     "lesson": "gp-02",
+     "code": "src/cross_validate.py",
+     "targets": [
+      "gp-metrics"
+     ],
+     "builds": "5-fold stratified CV, precision, recall, F1, a threshold chosen for recall.",
+     "done": [
+      "mean and spread per metric are reported",
+      "the threshold is chosen without the test set"
+     ]
+    },
+    {
+     "n": 3,
+     "title": "RAPIDS cuML",
+     "lesson": "gp-03",
+     "code": "src/gpu_baseline.py",
+     "targets": [
+      "gp-cuml"
+     ],
+     "builds": "Exported arrays, cuML logistic regression and random forest.",
+     "done": [
+      "CPU and GPU accuracy agree closely",
+      "both read the same .npy files"
+     ]
+    },
+    {
+     "n": 4,
+     "title": "CUDA kernels",
+     "lesson": "gp-04",
+     "code": "src/cuda_logreg/kernel.cu",
+     "targets": [
+      "gp-cuda-logreg"
+     ],
+     "builds": "Forward, error, gradient and SGD kernels with a host training loop.",
+     "done": [
+      "the kernels compile and train",
+      "weights match scikit-learn's closely"
+     ]
+    },
+    {
+     "n": 5,
+     "title": "Measure speedup",
+     "lesson": "gp-05",
+     "code": "src/ma721_real_speedup.py",
+     "targets": [
+      "gp-speedup"
+     ],
+     "builds": "Warm-up, repeats, small against large models, Amdahl's law.",
+     "done": [
+      "a table of median times per size",
+      "you can explain when the GPU loses"
+     ]
+    }
+   ],
+   "whole": {
+    "title": "The whole pipeline",
+    "summary": "All five steps, from a leak-free baseline to measured GPU speedups and their limits.",
+    "targets": [
+     "gp-capstone"
+    ],
+    "lesson": "gp-06"
+   }
+  }
+ ]
+}

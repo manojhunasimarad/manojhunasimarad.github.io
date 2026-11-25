@@ -28,7 +28,7 @@ export function reloadIfIdle(notify) {
 }
 
 export function autoSync(getParts, {onChanged = reloadIfIdle, notify} = {}) {
-  if (!readSettings().token) return;
+  if (!readSettings().token) return;   // work mode after the browser was closed: wait for the token
   const go = quietly => runSync(getParts).then(r => { if (r.changedHere) onChanged(notify); return r; })
     .catch(e => { if (!quietly) notify?.('Sync: ' + e.message); });
   go(true);
@@ -38,8 +38,14 @@ export function autoSync(getParts, {onChanged = reloadIfIdle, notify} = {}) {
 export function mountSyncPanel(el, getParts, {onChanged = reloadIfIdle, notify, practice = false} = {}) {
   const draw = (msg = '') => {
     const s = readSettings();
-    el.innerHTML = s.token ? `
-      <p><strong>On.</strong> This device syncs when the page opens and when you leave it. Last sync: ${esc(when(s.last))}.
+    const relogin = s.work && !s.token && s.gistId;
+    el.innerHTML = relogin ? `
+      <p><strong>Work mode.</strong> The token was forgotten when the browser closed. Paste it to sync this session.</p>
+      <div class="actions row-flex"><input type="password" data-sync-token placeholder="github_pat_…" autocomplete="off" spellcheck="false" aria-label="GitHub token" style="flex:1;min-width:220px">
+        <button type="button" class="primary btn" data-sync-connect data-work="1">Sync this session</button>
+        <button type="button" class="btn" data-sync-forget>Turn off on this device</button></div>
+      <p class="small muted" data-sync-msg role="status">${esc(msg)}</p>` : s.token ? `
+      <p><strong>On${s.work ? ' (work mode: the token is forgotten when the browser closes)' : ''}.</strong> This device syncs when the page opens and when you leave it. Last sync: ${esc(when(s.last))}.
         <a href="https://gist.github.com/${esc(s.gistId)}" target="_blank" rel="noopener">Your sync gist ↗</a></p>
       <div class="actions row-flex"><button type="button" class="primary btn" data-sync-now>Sync now</button>
         <button type="button" class="btn" data-sync-forget>Turn off on this device</button></div>
@@ -54,6 +60,7 @@ export function mountSyncPanel(el, getParts, {onChanged = reloadIfIdle, notify, 
       </ol>
       <div class="actions row-flex"><input type="password" data-sync-token placeholder="github_pat_…" autocomplete="off" spellcheck="false" aria-label="GitHub token" style="flex:1;min-width:220px">
         <button type="button" class="primary btn" data-sync-connect>Connect</button></div>
+      <label class="small"><input type="checkbox" data-sync-work> Work or shared computer: forget the token when the browser closes</label>
       <p class="small muted" data-sync-msg role="status">${esc(msg)}</p>
       <p class="small muted">A secret gist is unlisted, not encrypted: anyone with its link can read it. Keep passwords and work data out of your notes.
         On a work laptop, check that your employer allows a personal GitHub sign-in in the browser before connecting.</p>`;
@@ -61,7 +68,9 @@ export function mountSyncPanel(el, getParts, {onChanged = reloadIfIdle, notify, 
     el.querySelector('[data-sync-connect]')?.addEventListener('click', async () => {
       say('Connecting…');
       try {
-        await connect(el.querySelector('[data-sync-token]').value);
+        const btn = el.querySelector('[data-sync-connect]');
+        const work = btn.dataset.work === '1' || !!el.querySelector('[data-sync-work]')?.checked;
+        await connect(el.querySelector('[data-sync-token]').value, {work});
         say('Connected. Syncing…');
         const r = await runSync(getParts);
         draw(describe(r));

@@ -5,10 +5,11 @@
 
 export const CHECK_KEY = "lfz-etl-check-v1";
 export const ETL_KEY = "lfz-etl-v1";
+const DEFAULT_CHECK_KEY = CHECK_KEY, DEFAULT_KNOWN_KEY = ETL_KEY;
 const RATES = [["knew", "I knew it"], ["partly", "Partly"], ["new", "New to me"]];
 
 /** Topics of the whole project in study order, with the step that first needs each and its questions. */
-export function checkTopics(graph, etl, quiz, E, recommendedTopic) {
+export function checkTopics(graph, etl, quiz, E, recommendedTopic, group) {
   const byId = new Map(graph.nodes.map(n => [n.id, n]));
   const order = E.planFor(graph, etl.whole.targets, new Map()).order;
   const firstStep = new Map();
@@ -18,7 +19,7 @@ export function checkTopics(graph, etl, quiz, E, recommendedTopic) {
   const stepOf = id => firstStep.get(id) || 99;
   return order.map((id, i) => [id, i]).sort((a, b) => stepOf(a[0]) - stepOf(b[0]) || a[1] - b[1]).map(([id]) => {
     const node = byId.get(id);
-    const max = node.group === "Data engineering" ? 3 : 2;
+    const max = node.group === (group || "Data engineering") ? 3 : 2;
     return { id, node, step: firstStep.get(id) || null, questions: quiz.questions.filter(q => recommendedTopic(q) === id).slice(0, max) };
   });
 }
@@ -42,7 +43,10 @@ export function suggest(topic, rec = {}) {
 
 export function mountCheck(view, ctx, query) {
   const { graph, etl, quiz, E, recommendedTopic, lsGet, lsSet, esc } = ctx;
-  const topics = checkTopics(graph, etl, quiz, E, recommendedTopic);
+  // the ETL project by default; a resume project passes its own keys, route and name
+  const CHECK_KEY = ctx.checkKey || DEFAULT_CHECK_KEY, ETL_KEY = ctx.knownKey || DEFAULT_KNOWN_KEY;
+  const BASE = ctx.base || "#/etl", NAME = ctx.name || "ETL project";
+  const topics = checkTopics(graph, etl, quiz, E, recommendedTopic, ctx.group);
   const idx = new Map(topics.map((t, i) => [t.id, i]));
   const stepTitle = new Map(etl.steps.map(s => [s.n, s.title]));
   const lessonTitle = new Map(((ctx.course && ctx.course.lessons) || []).map(l => [l.id, l.title]));
@@ -57,7 +61,7 @@ export function mountCheck(view, ctx, query) {
   const setKnown = (id, on) => {
     const s = lsGet(ETL_KEY, {}), k = new Set(Array.isArray(s.known) ? s.known : []);
     if (on) k.add(id); else k.delete(id);
-    lsSet(ETL_KEY, { ...s, known: [...k] });
+    lsSet(ETL_KEY, { ...s, known: [...k], updated: Date.now() });
   };
   const decision = id => (recs[id] && recs[id].decision) || null;
   const stepLabel = t => t.step ? `Step ${t.step}` : "Whole project";
@@ -84,26 +88,26 @@ export function mountCheck(view, ctx, query) {
     groups.sort((a, b) => a.key - b.key);
     const chip = id => decision(id) === "skip" ? `<span class="chip ok">skip</span>` : decision(id) === "study" ? `<span class="chip medium">study</span>` : `<span class="chip">not checked</span>`;
     view.innerHTML = `
-      <div class="stack"><p class="small muted"><a href="#/etl">← ETL project</a></p><h1>Check what you know</h1>
-        <p class="lede">${topics.length} topics stand between you and the whole ETL project. For each one: read what it covers, answer ${nq ? "1 to 3 quick questions" : "a question"}, rate yourself, then <strong>skip it</strong> or <strong>study it</strong>. What you skip drops out of your study plan. About 15 minutes for all of them; stop and continue any time.</p></div>
+      <div class="stack"><p class="small muted"><a href="${BASE}">← ${esc(NAME)}</a></p><h1>Check what you know</h1>
+        <p class="lede">${topics.length} topics stand between you and the whole ${esc(NAME)}. For each one: read what it covers, answer ${nq ? "1 to 3 quick questions" : "a question"}, rate yourself, then <strong>skip it</strong> or <strong>study it</strong>. What you skip drops out of your study plan. About 15 minutes for all of them; stop and continue any time.</p></div>
       <section class="panel"><div class="body stack">
         <div class="meter"><div class="top"><span class="name">Checked</span><span class="num">${done} of ${topics.length} topics</span></div><div class="track"><i style="width:${pct}%"></i></div></div>
         <div class="chk-sum"><div><b>${skip.length}</b><span>to skip · saves ~${hours(skip)} h</span></div><div><b>${study.length}</b><span>to study · ~${hours(study)} h</span></div><div><b>${topics.length - done}</b><span>not checked yet</span></div></div>
-        <div class="row-flex">${next ? `<a class="btn primary big" href="#/etl/check?t=${esc(next.id)}">${done ? "Continue the check" : "Start the check"} →</a>` : `<span class="banner good">All topics checked.</span>`}
-          <a class="btn big" href="#/etl?goal=whole">See my study plan</a>
+        <div class="row-flex">${next ? `<a class="btn primary big" href="${BASE}/check?t=${esc(next.id)}">${done ? "Continue the check" : "Start the check"} →</a>` : `<span class="banner good">All topics checked.</span>`}
+          <a class="btn big" href="${BASE}?goal=whole">See my study plan</a>
           ${done ? `<button type="button" class="btn quiet" id="chk-reset">Start over</button>` : ""}</div>
       </div></section>
       <h2 class="chk-h">What's inside, step by step</h2>
       <p class="muted small">Tap a topic to check just that one. Each line shows the questions it has and the study time if you need it.</p>
       ${groups.map(g => `<section class="panel"><div class="head"><h2>${esc(g.title)}</h2></div><ul class="rows chk-list">${g.items.map(t => `
-        <li><a class="main" href="#/etl/check?t=${esc(t.id)}"><span class="t">${esc(t.node.title)}</span><span class="s">${esc(t.node.summary)}</span></a>
+        <li><a class="main" href="${BASE}/check?t=${esc(t.id)}"><span class="t">${esc(t.node.title)}</span><span class="s">${esc(t.node.summary)}</span></a>
           <span class="meta">${t.questions.length ? `<span class="chip">${t.questions.length} MCQ</span>` : `<span class="chip">explain</span>`}<span class="num">~${t.node.hours} h</span>${chip(t.id)}</span></li>`).join("")}</ul></section>`).join("")}`;
     const r = view.querySelector("#chk-reset");
     if (r) r.addEventListener("click", () => {
       if (!confirmReset()) return;
       const k = known();
       for (const t of topics) if (decision(t.id) === "skip") k.delete(t.id);
-      const s = lsGet(ETL_KEY, {}); lsSet(ETL_KEY, { ...s, known: [...k] });
+      const s = lsGet(ETL_KEY, {}); lsSet(ETL_KEY, { ...s, known: [...k], updated: Date.now() });
       recs = {}; save(); overview();
     });
   }
@@ -139,7 +143,7 @@ export function mountCheck(view, ctx, query) {
         ? `<strong>Suggestion: study it</strong> (~${n.hours} h). ${sug.total ? `You got ${sug.right} of ${sug.total} right${sug.answered < sug.total ? " so far" : ""}` : ""}${rec.rate ? `${sug.total ? " and" : "You"} rated it “${RATES.find(r => r[0] === rec.rate)[1].toLowerCase()}”` : ""}.`
         : `Answer the question${t.questions.length > 1 ? "s" : ""} above${t.questions.length ? " or rate yourself" : ""} to get a suggestion. You can also decide straight away.`;
     view.innerHTML = `
-      <div class="chk-bar"><a href="#/etl/check">← All topics</a><span class="num">Topic ${i + 1} of ${topics.length}</span></div>
+      <div class="chk-bar"><a href="${BASE}/check">← All topics</a><span class="num">Topic ${i + 1} of ${topics.length}</span></div>
       <div class="track chk-track"><i style="width:${Math.round(100 * (i + 1) / topics.length)}%"></i></div>
       <div class="stack"><h1>${esc(n.title)}</h1>
         <div class="row-flex"><span class="chip">${esc(stepLabel(t))}</span><span class="chip">~${n.hours} h to study</span><span class="chip">${esc(n.difficulty || "")}</span>${dec ? `<span class="chip ${dec === "skip" ? "ok" : "medium"}">decided: ${dec}</span>` : ""}</div></div>
@@ -163,9 +167,9 @@ export function mountCheck(view, ctx, query) {
           <button type="button" class="btn big${sug.kind === "skip" || dec === "skip" ? " primary" : ""}" data-decide="skip">Skip it: I know this</button>
           <button type="button" class="btn big${sug.kind === "study" || dec === "study" ? " primary" : ""}" data-decide="study">Study it</button>
         </div>
-        <p class="muted small">Skip marks it known on your ETL study plan. You can change it any time.</p>
+        <p class="muted small">Skip marks it known on your ${esc(NAME)} study plan. You can change it any time.</p>
       </div></section>
-      <div class="chk-nav">${prev ? `<a class="btn" href="#/etl/check?t=${esc(prev.id)}">← ${esc(prev.node.title)}</a>` : `<span></span>`}${next ? `<a class="btn" href="#/etl/check?t=${esc(next.id)}">${esc(next.node.title)} →</a>` : `<a class="btn" href="#/etl/check">Finish →</a>`}</div>`;
+      <div class="chk-nav">${prev ? `<a class="btn" href="${BASE}/check?t=${esc(prev.id)}">← ${esc(prev.node.title)}</a>` : `<span></span>`}${next ? `<a class="btn" href="${BASE}/check?t=${esc(next.id)}">${esc(next.node.title)} →</a>` : `<a class="btn" href="${BASE}/check">Finish →</a>`}</div>`;
 
     const redraw = () => { const y = window.scrollY; topicScreen(t); window.scrollTo(0, y); };
     view.querySelectorAll("[data-o]").forEach(b => b.addEventListener("click", () => {
@@ -185,7 +189,7 @@ export function mountCheck(view, ctx, query) {
       setKnown(t.id, r.decision === "skip");
       if (ctx.toast) ctx.toast(r.decision === "skip" ? `Skipping ${n.title}: marked known.` : `${n.title} stays in your study plan.`);
       const after = topics.slice(i + 1).find(x => !decision(x.id)) || topics.find(x => !decision(x.id));
-      location.hash = after ? "#/etl/check?t=" + after.id : "#/etl/check";
+      location.hash = after ? BASE + "/check?t=" + after.id : BASE + "/check";
     }));
   }
 }

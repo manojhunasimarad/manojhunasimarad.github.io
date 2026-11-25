@@ -9,7 +9,7 @@ Open: http://127.0.0.1:8765/studio.html
 Native practice: node tools/launch-native.mjs --port 8770 (Python 3.10+)
 Native practice data: py/data/
 
-Tests: node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs
+Tests: node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs
 Native and sync checks: python tools/check-native.py
 All reference exercises: python tools/audit-exercises.py
 Windows audio: node tools/export-audio.mjs
@@ -29,3 +29,5 @@ Version 4.3.0 adds a separate section for the e-commerce ETL project (github.com
 Version 4.5.0 adds sync across devices and a colour theme switch. Sync keeps the learning plan, Learn & listen notes, ETL checks and (from the practice app) exercises and recall in one secret gist in your own GitHub account, using a fine-grained token with only Gists read and write; each kind of data merges with the same rule as its backup file, and nothing is deleted by a sync (cloud-sync.mjs, sync-ui.mjs, tested in tools/sync.test.mjs). The theme follows the device by default; the header button switches System, Light and Dark, per device (theme.js).
 
 Version 4.6.0 adds "Download everything for offline" (Your free setup in the studio, Your devices in Settings): the service worker saves the app, all content, Python and NumPy, and the page asks the browser to keep that storage (offline.mjs, downloadAll in sw.js). Voices, exported audio, Open-Deep-ML problems and uploaded papers are listed there with their own steps.
+
+Version 4.7.0 adds the resume projects (content/projects.json, #/projects): the RAG & agentic knowledge assistant, the federated learning testbed and the GPU-accelerated ML pipeline, each with the ETL page's goal-based plan and "check what you know" (now one page over a project spec), 20 topics on the learning map, 20 lessons under Learn, 34 quiz questions and a studio track each. Sync carries their plans and checks. Work mode for sync keeps the GitHub token in session storage only, so a work or shared computer forgets it when the browser closes. Tests: tools/projects.test.mjs.

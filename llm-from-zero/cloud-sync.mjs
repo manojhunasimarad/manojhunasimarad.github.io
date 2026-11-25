@@ -29,11 +29,18 @@ const MAX_BYTES = 9_000_000;  // a gist file can be larger, but a phone should n
 
 export class SyncError extends Error {}
 
-export function readSettings(storage = globalThis.localStorage) {
-  try { return JSON.parse(storage.getItem(SYNC_KEY)) || {}; } catch { return {}; }
+export const TOKEN_KEY = 'lfz-sync-token';  // work mode: the token lives in sessionStorage only
+const sessionDefault = () => { try { return globalThis.sessionStorage || null; } catch { return null; } };
+
+export function readSettings(storage = globalThis.localStorage, session = sessionDefault()) {
+  let s = {};
+  try { s = JSON.parse(storage.getItem(SYNC_KEY)) || {}; } catch {}
+  if (s.work && !s.token && session) s.token = session.getItem(TOKEN_KEY) || undefined;
+  return s;
 }
 export function writeSettings(settings, storage = globalThis.localStorage) {
-  storage.setItem(SYNC_KEY, JSON.stringify(settings));
+  const {token, ...rest} = settings;   // in work mode the token never reaches localStorage
+  storage.setItem(SYNC_KEY, JSON.stringify(settings.work ? rest : settings));
 }
 
 // ------------------------------------------------------------------ GitHub
@@ -151,7 +158,8 @@ export function mergeEtl(local, remote) {
 
 export async function localParts({storage = globalThis.localStorage, base = '', fetchImpl = globalThis.fetch} = {}) {
   const load = async p => { const r = await fetchImpl(base + p); if (!r.ok) throw new SyncError('Could not load ' + p); return r.json(); };
-  const [graph, studio] = await Promise.all([load('content/learning-graph.json'), load('content/studio.json')]);
+  const [graph, studio, projects] = await Promise.all([load('content/learning-graph.json'), load('content/studio.json'),
+    load('content/projects.json').catch(() => ({projects: []}))]);
   const conceptIds = new Set(studio.concepts.map(c => c.id));
   const put = (k, v) => storage.setItem(k, JSON.stringify(v));
   return [
@@ -171,6 +179,12 @@ export async function localParts({storage = globalThis.localStorage, base = '', 
      read: () => readJson(storage, 'lfz-etl-v1', {}) || {},
      merge: mergeEtl,
      write: m => put('lfz-etl-v1', m)},
+    // each resume project keeps its plan and its check like the ETL project, under its own keys
+    ...projects.projects.flatMap(p => [
+      {file: `lfz-proj-${p.id}.json`, label: `${p.name} known topics`,
+       read: () => readJson(storage, `lfz-proj-${p.id}-v1`, {}) || {}, merge: mergeEtl, write: m => put(`lfz-proj-${p.id}-v1`, m)},
+      {file: `lfz-proj-${p.id}-check.json`, label: `${p.name} topic check`,
+       read: () => readJson(storage, `lfz-proj-${p.id}-check-v1`, {}) || {}, merge: (l, r) => newerRecords(l, r), write: m => put(`lfz-proj-${p.id}-check-v1`, m)}]),
   ];
 }
 
@@ -186,21 +200,28 @@ export function practicePart(api) {
 }
 
 // ------------------------------------------------------------------ connecting and syncing
-export async function connect(token, {storage = globalThis.localStorage, fetchImpl = globalThis.fetch} = {}) {
+// work: a work or shared computer. The token is kept in sessionStorage, so it is gone when the browser
+// closes; the next session asks for it again. Progress itself stays in this browser as usual.
+export async function connect(token, {storage = globalThis.localStorage, fetchImpl = globalThis.fetch, work = false, session = sessionDefault()} = {}) {
   token = String(token || '').trim();
   if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(token)) throw new SyncError('That does not look like a GitHub token (it starts with github_pat_ or ghp_).');
   const client = gistClient(token, fetchImpl);
   const gistId = (await client.find()) || (await client.create());
-  writeSettings({token, gistId, last: 0}, storage);
+  if (work) {
+    if (!session) throw new SyncError('This browser has no session storage; use personal mode or no sync here.');
+    session.setItem(TOKEN_KEY, token);
+  }
+  writeSettings({token, gistId, last: 0, work}, storage);
   return gistId;
 }
 
-export async function syncNow(parts, {storage = globalThis.localStorage, fetchImpl = globalThis.fetch} = {}) {
-  const s = readSettings(storage);
-  if (!s.token || !s.gistId) throw new SyncError('Sync is not set up on this device.');
+export async function syncNow(parts, {storage = globalThis.localStorage, fetchImpl = globalThis.fetch, session = sessionDefault()} = {}) {
+  const s = readSettings(storage, session);
+  if (!s.gistId) throw new SyncError('Sync is not set up on this device.');
+  if (!s.token) throw new SyncError(s.work ? 'Work mode: paste your token again for this browser session.' : 'Sync is not set up on this device.');
   const result = await syncParts(gistClient(s.token, fetchImpl), s.gistId, parts);
   writeSettings({...s, last: Date.now(), updated: result.updated}, storage);
   return result;
 }
 
-export function forget(storage = globalThis.localStorage) { storage.removeItem(SYNC_KEY); }
+export function forget(storage = globalThis.localStorage, session = sessionDefault()) { storage.removeItem(SYNC_KEY); session?.removeItem(TOKEN_KEY); }

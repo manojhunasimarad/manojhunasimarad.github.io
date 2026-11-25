@@ -151,3 +151,16 @@ test('offline download: the service worker knows the job and every new module is
   for (const f of ['offline.mjs', 'theme.js', 'cloud-sync.mjs', 'sync-ui.mjs']) assert.ok(cfg.includes(`"${f}"`), f);
   assert.match(cfg, /"offlinePackages": \[\s*"numpy"/);
 });
+
+test('work mode keeps the token in session storage only, and asks again after the browser closes', async () => {
+  const gh = fakeGitHub(), local = memoryStorage(), session = memoryStorage();
+  await connect(TOKEN, {storage: local, fetchImpl: gh.fetchImpl, work: true, session});
+  assert.ok(!local.getItem('lfz-sync-v1').includes(TOKEN), 'no token in localStorage');
+  assert.equal(readSettings(local, session).token, TOKEN);
+  const parts = await localParts({storage: local, fetchImpl: gh.fetchImpl});
+  await syncNow(parts, {storage: local, fetchImpl: gh.fetchImpl, session});
+  assert.ok(!local.getItem('lfz-sync-v1').includes(TOKEN), 'a sync does not write it back');
+  const closed = memoryStorage();                       // a new browser session
+  assert.equal(readSettings(local, closed).token, undefined);
+  await assert.rejects(syncNow(parts, {storage: local, fetchImpl: gh.fetchImpl, session: closed}), /paste your token again/);
+});

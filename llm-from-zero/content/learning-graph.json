@@ -28,6 +28,27 @@
       ]
     },
     {
+      "id": "rag-project",
+      "title": "Project: RAG assistant",
+      "targets": [
+        "rp-capstone"
+      ]
+    },
+    {
+      "id": "fl-project",
+      "title": "Project: federated testbed",
+      "targets": [
+        "flp-capstone"
+      ]
+    },
+    {
+      "id": "gpu-project",
+      "title": "Project: GPU ML pipeline",
+      "targets": [
+        "gp-capstone"
+      ]
+    },
+    {
       "id": "all",
       "title": "Explore the full map",
       "targets": [
@@ -85,7 +106,10 @@
         "de-kafka",
         "de-streaming",
         "de-cloud",
-        "de-capstone"
+        "de-capstone",
+        "rp-capstone",
+        "flp-capstone",
+        "gp-capstone"
       ]
     }
   ],
@@ -1286,6 +1310,428 @@
       "project": "Run the full pipeline in Docker, fill one story per step in STORIES.md and explain three rows of RESULTS.md.",
       "source": "https://github.com/manojhunasimarad/ETL/blob/main/docs/RESULTS.md",
       "outcome": "Demonstrate: Run the full pipeline in Docker, fill one story per step in STORIES.md and explain three rows of RESULTS.md.",
+      "practice": []
+    },
+    {
+      "id": "rp-chunking",
+      "title": "Chunking documents for retrieval",
+      "group": "RAG project",
+      "needs": [
+        "python",
+        "text"
+      ],
+      "hours": 2,
+      "difficulty": "Beginner",
+      "lessons": [
+        "rp-01"
+      ],
+      "summary": "Split documents on paragraph, then sentence, boundaries into ~800-character chunks with a 120-character overlap, and keep the source file and position with every chunk.",
+      "question": "Why split on paragraphs first, and why carry an overlap from one chunk into the next?",
+      "answer": "A chunk cut mid-sentence embeds badly and gives the model a broken thought; paragraphs are natural units. The overlap keeps a fact that sits on a boundary retrievable from either side.",
+      "project": "Run chunk_text on one document with chunk_size 400 and 800, count the chunks and explain where each boundary fell.",
+      "source": "https://github.com/manojhunasimarad/auto-rag-assistant/blob/main/src/chunking.py",
+      "outcome": "Demonstrate: Run chunk_text on one document with chunk_size 400 and 800, count the chunks and explain where each boundary fell.",
+      "practice": []
+    },
+    {
+      "id": "rp-vectorsearch",
+      "title": "Cosine similarity and exact vector search",
+      "group": "RAG project",
+      "needs": [
+        "rp-chunking",
+        "embeddings"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "rp-02"
+      ],
+      "summary": "Normalise every vector once at insert time, so cosine similarity is a dot product; score all chunks with one matrix-vector product and take the top k with argpartition.",
+      "question": "When is brute-force search the right choice, and when do you need an ANN index such as HNSW?",
+      "answer": "For thousands of chunks, a NumPy dot product is exact and takes milliseconds with no extra service. It is O(n) per query, so at hundreds of thousands to millions of vectors an approximate index trades a little recall for sub-linear time.",
+      "project": "Add 3 vectors to VectorStore by hand, query with a fourth and verify the order of scores by computing the cosines yourself.",
+      "source": "https://github.com/manojhunasimarad/auto-rag-assistant/blob/main/src/vectorstore.py",
+      "outcome": "Demonstrate: Add 3 vectors to VectorStore by hand, query with a fourth and verify the order of scores by computing the cosines yourself.",
+      "practice": []
+    },
+    {
+      "id": "rp-grounded",
+      "title": "Grounded answers with citations",
+      "group": "RAG project",
+      "needs": [
+        "rp-vectorsearch",
+        "llm-use"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "rp-03"
+      ],
+      "summary": "Retrieve the top-k chunks, number them in the prompt with their source, and instruct the model to answer only from them, cite [n] after every claim and say so when the context is not enough.",
+      "question": "What does the system prompt in rag_chain.py do against hallucination, and what can it not guarantee?",
+      "answer": "It restricts the answer to numbered context, demands a citation per claim and permits 'I don't know'. It lowers hallucination but cannot prevent it; only a verifier or critic step checks the answer against the sources.",
+      "project": "Ask one question the corpus answers and one it does not; show that the second gets an 'not enough information' answer with the mock and a real backend.",
+      "source": "https://github.com/manojhunasimarad/auto-rag-assistant/blob/main/src/rag_chain.py",
+      "outcome": "Demonstrate: Ask one question the corpus answers and one it does not; show that the second gets an 'not enough information' answer with the mock and a real backend.",
+      "practice": []
+    },
+    {
+      "id": "rp-react",
+      "title": "A ReAct agent loop with safe tools",
+      "group": "RAG project",
+      "needs": [
+        "rp-grounded",
+        "agents"
+      ],
+      "hours": 4,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "rp-04"
+      ],
+      "summary": "An agent is a prompt listing tools and a reply format, a loop that asks the model for its next step, a regex parser for Action and Final Answer, and code that runs the tool and appends the Observation. The calculator parses with ast, so model output can never run code.",
+      "question": "Why does the calculator evaluate an ast tree instead of calling eval on the model's text?",
+      "answer": "The expression comes from model output, which can be manipulated. Walking the AST and allowing only numbers and + - * / ** makes running arbitrary code impossible; anything else raises an error that goes back as an observation.",
+      "project": "Trace run_agent for 'What is 1722 * 2 + 8?' with the scripted fake LLM from tests/test_agent.py and write down every step of the transcript.",
+      "source": "https://github.com/manojhunasimarad/auto-rag-assistant/blob/main/src/agent.py",
+      "outcome": "Demonstrate: Trace run_agent for 'What is 1722 * 2 + 8?' with the scripted fake LLM from tests/test_agent.py and write down every step of the transcript.",
+      "practice": []
+    },
+    {
+      "id": "rp-eval",
+      "title": "Retrieval evaluation: hit rate and MRR",
+      "group": "RAG project",
+      "needs": [
+        "rp-vectorsearch",
+        "evaluation"
+      ],
+      "hours": 2,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "rp-05"
+      ],
+      "summary": "Twelve hand-labelled questions, each with the document that should be retrieved; hit_rate@k counts questions whose document is in the top k, MRR@k averages 1/rank of the first correct chunk.",
+      "question": "The TF-IDF backend already reaches hit_rate@3 = 1.00. What does that tell you, and what does it not?",
+      "answer": "On six small, topically distinct documents keyword overlap separates them well, so TF-IDF is a strong baseline here. It does not show how either backend handles paraphrases, synonyms or a large overlapping corpus, which is where dense embeddings pay off; the set is also too small to separate them.",
+      "project": "Write three paraphrased questions with no shared keywords, add them to eval_questions.json and compare TF-IDF against sentence-transformers.",
+      "source": "https://github.com/manojhunasimarad/auto-rag-assistant/blob/main/eval/eval_retrieval.py",
+      "outcome": "Demonstrate: Write three paraphrased questions with no shared keywords, add them to eval_questions.json and compare TF-IDF against sentence-transformers.",
+      "practice": []
+    },
+    {
+      "id": "rp-serving",
+      "title": "Pluggable backends, FastAPI and zero-cost tests",
+      "group": "RAG project",
+      "needs": [
+        "rp-grounded",
+        "git"
+      ],
+      "hours": 2,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "rp-06"
+      ],
+      "summary": "Embedders (sentence-transformers or TF-IDF) and LLMs (OpenAI, Anthropic or a deterministic mock) sit behind small interfaces chosen by configuration, so the whole pipeline is tested offline and served by FastAPI at /health and /query.",
+      "question": "Why does every component have a real and an offline implementation?",
+      "answer": "Tests then check the pipeline's logic without an API key, network, GPU or model download, so they run anywhere, for free, in CI. Swapping a backend changes configuration, not code.",
+      "project": "Run the test suite with LLM_BACKEND=mock, then call /query with curl and explain each field of the response.",
+      "source": "https://github.com/manojhunasimarad/auto-rag-assistant/blob/main/src/api.py",
+      "outcome": "Demonstrate: Run the test suite with LLM_BACKEND=mock, then call /query with curl and explain each field of the response.",
+      "practice": []
+    },
+    {
+      "id": "rp-capstone",
+      "title": "The RAG assistant, explained",
+      "group": "RAG project",
+      "needs": [
+        "rp-react",
+        "rp-eval",
+        "rp-serving"
+      ],
+      "hours": 3,
+      "difficulty": "Advanced",
+      "lessons": [
+        "rp-07"
+      ],
+      "summary": "Defend every design choice of auto-rag-assistant in an interview: chunking, exact search, the grounding prompt, two agents, evaluation numbers and their limits, and what you would add next.",
+      "question": "In two minutes: what does the assistant do, which number are you proudest of, and what is its biggest weakness?",
+      "answer": "Chunk, embed and search a small engineering corpus exactly, answer with citations, and let an agent pick retrieval or a calculator. hit_rate@3 and MRR@3 are 1.00 on 12 questions, which is honest only with the caveat that the set is small and keyword-friendly; the next step is a larger, paraphrased set and an answer-level check.",
+      "project": "Run build_index, eval_retrieval and the API end to end, and write the three-sentence pitch and the limitation in your own words.",
+      "source": "https://github.com/manojhunasimarad/auto-rag-assistant",
+      "outcome": "Demonstrate: Run build_index, eval_retrieval and the API end to end, and write the three-sentence pitch and the limitation in your own words.",
+      "practice": []
+    },
+    {
+      "id": "flp-fedavg",
+      "title": "FedAvg: averaging models, not data",
+      "group": "Federated learning project",
+      "needs": [
+        "pytorch",
+        "statistics"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "flp-01"
+      ],
+      "summary": "Each round the server sends the global weights, every client trains locally for a few epochs on its own data, and the server replaces the global model with the average of the client models weighted by their number of examples.",
+      "question": "Why weight the average by each client's number of examples?",
+      "answer": "FedAvg approximates training on the union of all data; a client with 300 samples should move the model three times as much as one with 100. An unweighted mean lets small or noisy clients dominate.",
+      "project": "By hand, average two clients' weight vectors with 300 and 100 samples, then check it against the train_loss aggregation in fl_server.py.",
+      "source": "https://flower.ai/docs/framework/tutorial-series-what-is-federated-learning.html",
+      "outcome": "Demonstrate: By hand, average two clients' weight vectors with 300 and 100 samples, then check it against the train_loss aggregation in fl_server.py.",
+      "practice": []
+    },
+    {
+      "id": "flp-flower",
+      "title": "A Flower server and NumPy clients",
+      "group": "Federated learning project",
+      "needs": [
+        "flp-fedavg",
+        "python"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "flp-02"
+      ],
+      "summary": "The server subclasses FedAvg to log every round and aggregates metrics with weighted means; each vehicle is a NumPyClient with get_parameters, fit (load weights, train 3 epochs, return weights and sample count) and evaluate.",
+      "question": "What must a NumPyClient return from fit, and what does the server do with each part?",
+      "answer": "The updated weights as NumPy arrays, the number of training examples and a metrics dict. The server averages the weights by example count and passes the metrics to fit_metrics_aggregation_fn, which here computes a weighted train_loss.",
+      "project": "Start the server with MIN_CLIENTS=2 and two lite clients in Docker Compose, then read one round's log line by line.",
+      "source": "https://flower.ai/docs/framework/how-to-implement-strategies.html",
+      "outcome": "Demonstrate: Start the server with MIN_CLIENTS=2 and two lite clients in Docker Compose, then read one round's log line by line.",
+      "practice": []
+    },
+    {
+      "id": "flp-grpc",
+      "title": "gRPC between the server and the fleet",
+      "group": "Federated learning project",
+      "needs": [
+        "flp-flower",
+        "linux"
+      ],
+      "hours": 2,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "flp-03"
+      ],
+      "summary": "Flower moves weights over gRPC: a long-lived HTTP/2 connection with binary protobuf messages. Clients dial fl-server:8080; the server waits until min_available_clients have connected before a round starts.",
+      "question": "Why gRPC rather than REST for shipping model weights every round?",
+      "answer": "Weights are large binary arrays sent repeatedly; protobuf over HTTP/2 is compact, typed and keeps one connection open with streaming, while JSON over REST would base64-inflate the arrays and reconnect each time. The same reasoning drove the KPIT telemetry bridge.",
+      "project": "Stop one client mid-training and read what the server logs as failures in aggregate_fit.",
+      "source": "https://grpc.io/docs/what-is-grpc/introduction/",
+      "outcome": "Demonstrate: Stop one client mid-training and read what the server logs as failures in aggregate_fit.",
+      "practice": []
+    },
+    {
+      "id": "flp-containers",
+      "title": "A heterogeneous fleet with Docker Compose",
+      "group": "Federated learning project",
+      "needs": [
+        "flp-grpc",
+        "de-docker"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "flp-04"
+      ],
+      "summary": "Compose puts the server, a ROS2 vehicle and a lite vehicle on one bridge network; the Raspberry Pi joins bare-metal on aarch64 with its own requirements, and MIN_CLIENTS goes from 2 to 3 when it does.",
+      "question": "What changes when one client is an aarch64 Raspberry Pi instead of another x86-64 container?",
+      "answer": "Wheels must exist for arm64 (hence rpi_requirements.txt and the extract_wheels script), training is slower so rounds wait for the slowest client, and the Pi reaches the server by the host's address, not the Compose service name.",
+      "project": "Bring up the stack with run_all.sh, add the Pi with MIN_CLIENTS=3 and time one round with and without it.",
+      "source": "https://docs.docker.com/compose/",
+      "outcome": "Demonstrate: Bring up the stack with run_all.sh, add the Pi with MIN_CLIENTS=3 and time one round with and without it.",
+      "practice": []
+    },
+    {
+      "id": "flp-ros2",
+      "title": "From ROS2 topics to training features",
+      "group": "Federated learning project",
+      "needs": [
+        "flp-flower",
+        "linux"
+      ],
+      "hours": 3,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "flp-05"
+      ],
+      "summary": "A thread-safe buffer collects speed and brake messages from ROS2 topics (last 300 samples) and builds a 12-feature matrix with derived signals such as acceleration from np.gradient; when ROS2 is missing or data is short, the client falls back to synthetic data.",
+      "question": "Why a lock around the sensor buffer, and what is the risk of the synthetic fallback?",
+      "answer": "The ROS2 callback thread appends while the Flower thread reads features; without a lock a read can see half-updated lists. The fallback keeps a round alive, but a client training on random data adds noise to the global model, so it must be logged and counted, not silent.",
+      "project": "Publish speed and brake at 10 Hz with ros2 topic pub and confirm the client switches from synthetic to real features.",
+      "source": "https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html",
+      "outcome": "Demonstrate: Publish speed and brake at 10 Hz with ros2 topic pub and confirm the client switches from synthetic to real features.",
+      "practice": []
+    },
+    {
+      "id": "flp-noniid",
+      "title": "Non-IID clients and honest evaluation",
+      "group": "Federated learning project",
+      "needs": [
+        "flp-fedavg",
+        "evaluation"
+      ],
+      "hours": 3,
+      "difficulty": "Advanced",
+      "lessons": [
+        "flp-06"
+      ],
+      "summary": "Vehicles see different data distributions, which makes local models drift apart and FedAvg slower or biased. Evaluation must use held-out real data per client; a client that returns a fixed accuracy makes the aggregated metric meaningless.",
+      "question": "fl_client.py's evaluate returns accuracy 0.5 for every round. What does that do to the server's weighted accuracy?",
+      "answer": "It pins that client's contribution at 0.5, so the aggregate mixes a real number with a constant and cannot show learning. Evaluate on a held-out split of the client's own data, or leave the client out of evaluation.",
+      "project": "Give two clients different label distributions, run 5 rounds and plot each client's accuracy against the global one.",
+      "source": "https://flower.ai/docs/framework/tutorial-series-what-is-federated-learning.html",
+      "outcome": "Demonstrate: Give two clients different label distributions, run 5 rounds and plot each client's accuracy against the global one.",
+      "practice": []
+    },
+    {
+      "id": "flp-capstone",
+      "title": "The federated testbed, explained",
+      "group": "Federated learning project",
+      "needs": [
+        "flp-containers",
+        "flp-ros2",
+        "flp-noniid"
+      ],
+      "hours": 3,
+      "difficulty": "Advanced",
+      "lessons": [
+        "flp-07"
+      ],
+      "summary": "Explain the testbed end to end for the minor-project review and interviews: FedAvg, Flower roles, gRPC, a mixed x86-64 and aarch64 fleet, ROS2 features, and what is still synthetic.",
+      "question": "In two minutes: what does the testbed show, and what would make its numbers credible?",
+      "answer": "A gRPC server runs FedAvg over three heterogeneous clients, containerised and bare-metal, with features from vehicle topics. Credible numbers need real held-out evaluation on every client, logged rounds, and a comparison with centralised training on the same data.",
+      "project": "Replace the fixed evaluate with a held-out split, run 5 rounds on 3 clients and record loss and accuracy per round.",
+      "source": "https://flower.ai/docs/framework/",
+      "outcome": "Demonstrate: Replace the fixed evaluate with a held-out split, run 5 rounds on 3 clients and record loss and accuracy per round.",
+      "practice": []
+    },
+    {
+      "id": "gp-pipeline",
+      "title": "A leak-free scikit-learn pipeline",
+      "group": "GPU ML project",
+      "needs": [
+        "supervised",
+        "python"
+      ],
+      "hours": 2,
+      "difficulty": "Beginner",
+      "lessons": [
+        "gp-01"
+      ],
+      "summary": "ColumnTransformer imputes (median for numbers, most frequent for categories), scales and one-hot encodes; the target becomes binary (num > 0); the split is stratified and the preprocessing is fitted on training data only.",
+      "question": "Why put imputation and scaling inside the Pipeline instead of applying them to the whole dataset first?",
+      "answer": "Fitting the imputer or scaler on all rows leaks test-set statistics into training and inflates the score. Inside the Pipeline they are fitted on the training fold only and replayed on the test fold.",
+      "project": "Score logistic regression with preprocessing fitted on all data and inside the pipeline; report both and explain the gap.",
+      "source": "https://github.com/manojhunasimarad/heart-disease-gpu/blob/main/src/cpu_baseline.py",
+      "outcome": "Demonstrate: Score logistic regression with preprocessing fitted on all data and inside the pipeline; report both and explain the gap.",
+      "practice": []
+    },
+    {
+      "id": "gp-metrics",
+      "title": "Stratified CV, precision, recall and F1",
+      "group": "GPU ML project",
+      "needs": [
+        "gp-pipeline",
+        "statistics"
+      ],
+      "hours": 2,
+      "difficulty": "Beginner",
+      "lessons": [
+        "gp-02"
+      ],
+      "summary": "Five stratified folds keep the disease rate equal in every fold; for a screening model, recall (missed patients) and precision (false alarms) say more than accuracy, and F1 balances them.",
+      "question": "For heart-disease screening, which error is worse, and which metric watches it?",
+      "answer": "A missed patient (false negative) is usually worse than a false alarm, so recall matters most; report precision too, because a model that flags everyone has perfect recall and is useless.",
+      "project": "Run 5-fold stratified CV, report mean and spread of each metric, and pick a decision threshold that gives recall of at least 0.9.",
+      "source": "https://github.com/manojhunasimarad/heart-disease-gpu/blob/main/src/cross_validate.py",
+      "outcome": "Demonstrate: Run 5-fold stratified CV, report mean and spread of each metric, and pick a decision threshold that gives recall of at least 0.9.",
+      "practice": []
+    },
+    {
+      "id": "gp-cuml",
+      "title": "RAPIDS cuML: the same API on the GPU",
+      "group": "GPU ML project",
+      "needs": [
+        "gp-pipeline"
+      ],
+      "hours": 2,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "gp-03"
+      ],
+      "summary": "cuML mirrors scikit-learn's estimators (LogisticRegression, RandomForestClassifier) on CUDA; the preprocessed arrays are exported once as .npy and loaded by both the CPU and GPU scripts so both train on identical data.",
+      "question": "Why export the preprocessed arrays instead of letting each script preprocess on its own?",
+      "answer": "Both sides must see byte-identical inputs, or a speed or accuracy difference may come from preprocessing rather than the hardware. It also keeps cuDF and pandas differences out of the comparison.",
+      "project": "Train cuML and scikit-learn logistic regression on the same .npy files and confirm their accuracies agree to two decimals.",
+      "source": "https://github.com/manojhunasimarad/heart-disease-gpu/blob/main/src/gpu_baseline.py",
+      "outcome": "Demonstrate: Train cuML and scikit-learn logistic regression on the same .npy files and confirm their accuracies agree to two decimals.",
+      "practice": []
+    },
+    {
+      "id": "gp-cuda-logreg",
+      "title": "Logistic regression as CUDA kernels",
+      "group": "GPU ML project",
+      "needs": [
+        "gp-cuml",
+        "calculus"
+      ],
+      "hours": 4,
+      "difficulty": "Advanced",
+      "lessons": [
+        "gp-04"
+      ],
+      "summary": "Four kernels, one thread per sample or weight: forward (sigmoid of X·w), error (prediction minus label), gradient (Xᵀ·error averaged over samples) and an SGD update; the host copies data once and loops the launches.",
+      "question": "What is the gradient of the logistic loss with respect to w, and which kernel computes it?",
+      "answer": "∇w = (1/n)·Xᵀ(σ(Xw) − y). compute_error forms σ(Xw) − y and compute_gradient reduces it with X over the samples, one thread per weight.",
+      "project": "Compile host.cu and kernel.cu with nvcc on the V100 or Kaggle, train 200 epochs and compare the weights with scikit-learn's.",
+      "source": "https://github.com/manojhunasimarad/heart-disease-gpu/blob/main/src/cuda_logreg/kernel.cu",
+      "outcome": "Demonstrate: Compile host.cu and kernel.cu with nvcc on the V100 or Kaggle, train 200 epochs and compare the weights with scikit-learn's.",
+      "practice": []
+    },
+    {
+      "id": "gp-speedup",
+      "title": "Measuring speedup honestly: overheads and Amdahl's law",
+      "group": "GPU ML project",
+      "needs": [
+        "gp-cuml",
+        "statistics"
+      ],
+      "hours": 2,
+      "difficulty": "Intermediate",
+      "lessons": [
+        "gp-05"
+      ],
+      "summary": "With a few hundred rows the GPU loses: transfers and kernel launches cost more than the work. The GPU wins when the work grows (thousands of trees, more rows); Amdahl's law caps the gain by the serial share of the run.",
+      "question": "If 20% of a run cannot be parallelised, what is the largest possible speedup?",
+      "answer": "1 / 0.2 = 5×, however many GPU cores you add (Amdahl: S = 1 / ((1 − p) + p/N) → 1/(1 − p)). That is why the honest headline is 'up to 5×' at scale, not '100×'.",
+      "project": "Time CPU and GPU random forests at 200 and 10,000 trees with a warm-up run and 3 repeats, and fit p from the two speedups.",
+      "source": "https://github.com/manojhunasimarad/heart-disease-gpu/blob/main/src/ma721_real_speedup.py",
+      "outcome": "Demonstrate: Time CPU and GPU random forests at 200 and 10,000 trees with a warm-up run and 3 repeats, and fit p from the two speedups.",
+      "practice": []
+    },
+    {
+      "id": "gp-capstone",
+      "title": "The GPU pipeline, explained",
+      "group": "GPU ML project",
+      "needs": [
+        "gp-metrics",
+        "gp-cuda-logreg",
+        "gp-speedup"
+      ],
+      "hours": 3,
+      "difficulty": "Advanced",
+      "lessons": [
+        "gp-06"
+      ],
+      "summary": "Defend the project: a leak-free CPU baseline, stratified metrics, the same data on cuML, a hand-written CUDA logistic regression, and speedups measured with warm-ups and stated limits.",
+      "question": "In two minutes: what did you accelerate, by how much, and when does the GPU not help?",
+      "answer": "Training on RAPIDS cuML and in hand-written CUDA kernels, with up to 5× speedup at large model sizes; on a few hundred rows the transfer and launch overhead makes the CPU faster, and Amdahl's law bounds the gain by the serial part.",
+      "project": "Rerun the CPU and GPU scripts on Kaggle's T4, record times with repeats in a table, and write the limits next to the numbers.",
+      "source": "https://github.com/manojhunasimarad/heart-disease-gpu",
+      "outcome": "Demonstrate: Rerun the CPU and GPU scripts on Kaggle's T4, record times with repeats in a table, and write the limits next to the numbers.",
       "practice": []
     }
   ],

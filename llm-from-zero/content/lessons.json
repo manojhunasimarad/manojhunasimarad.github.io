@@ -140,6 +140,47 @@
         "de-12",
         "de-13"
       ]
+    },
+    {
+      "id": "proj-rag",
+      "title": "Project: RAG & agentic knowledge assistant",
+      "when": "Resume project, about 3 weeks",
+      "lessons": [
+        "rp-01",
+        "rp-02",
+        "rp-03",
+        "rp-04",
+        "rp-05",
+        "rp-06",
+        "rp-07"
+      ]
+    },
+    {
+      "id": "proj-fl",
+      "title": "Project: federated learning testbed",
+      "when": "NITK minor project, about 3 weeks",
+      "lessons": [
+        "flp-01",
+        "flp-02",
+        "flp-03",
+        "flp-04",
+        "flp-05",
+        "flp-06",
+        "flp-07"
+      ]
+    },
+    {
+      "id": "proj-gpu",
+      "title": "Project: GPU-accelerated ML pipeline",
+      "when": "MA721 project, about 2 weeks",
+      "lessons": [
+        "gp-01",
+        "gp-02",
+        "gp-03",
+        "gp-04",
+        "gp-05",
+        "gp-06"
+      ]
     }
   ],
   "lessons": [
@@ -758,6 +799,166 @@
       "title": "Cloud platforms, and telling the story",
       "minutes": 5,
       "html": "<p>The pipeline runs on a laptop and in CI. The last step shows it is not tied to either, and turns the work into something you can explain in fifteen minutes.</p>\n<h3>Databricks</h3>\n<p>Databricks is managed Spark with notebooks, jobs and tables. Because the project's transformations are plain functions that take a Spark session and a lake location, the same silver and gold code runs there; only the entry point and the storage change (Unity Catalog volumes and tables instead of local folders). The Free Edition is enough to run the job on a sample and see the Spark UI on a real cluster.</p>\n<h3>Snowflake</h3>\n<p>Snowflake is a cloud warehouse that separates storage from compute: data sits in tables, and you pay for <strong>virtual warehouses</strong> only while they run queries. Loading the gold tables is the usual pattern: files to a <strong>stage</strong>, then <code>COPY INTO</code> a table, then the same analysis SQL with small dialect changes. A trial account is enough.</p>\n<h3>What changes in the cloud</h3>\n<ul><li>Credentials live in a secret store or environment variables, never in the repository.</li><li>Cost becomes a design input: auto-suspend warehouses, size clusters to the job, prune partitions.</li><li>Storage is object storage, so files are immutable: table formats such as Delta Lake and Iceberg add transactions, schema evolution and time travel on top of Parquet.</li></ul>\n<h3>The numbers, and where they came from</h3>\n<p>Every number on the resume comes from <code>RESULTS.md</code>, with the data, command, machine and date beside it: records ingested into the star schema, the 115 automated checks, the rows flagged per run, the runtime tuned from 176.9 s to 33.0 s. Say the conditions with the number. \"On 201,874 synthetic orders on a 4-core CI runner\" is a claim you can defend; \"5x faster\" alone is not.</p>\n<h3>The story</h3>\n<p>For each step, have one short story ready: the problem, the decision, what you measured, what you would do differently. <code>STORIES.md</code> in the repository has one per step. Good ones in this project: why bad rows go to quarantine instead of being dropped, why the customer dimension is Type 2, why the gates have no retries, and why exactly-once results need three mechanisms and not one.</p>\n<h3>In the project</h3>\n<p>Step 10: <a href=\"https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-10-cloud.md\" target=\"_blank\" rel=\"noopener\">STEP-10 cloud platforms and wrap-up</a>, then <a href=\"https://github.com/manojhunasimarad/ETL/blob/main/docs/RESULTS.md\" target=\"_blank\" rel=\"noopener\">RESULTS.md</a> and <a href=\"https://github.com/manojhunasimarad/ETL/blob/main/docs/STORIES.md\" target=\"_blank\" rel=\"noopener\">STORIES.md</a>.</p>\n<h3>Read beside it</h3>\n<ul><li><em>Snowflake Data Engineering</em> (Manning, on the O'Reilly platform), and Snowflake's own getting-started guides.</li><li>The Databricks Free Edition documentation: notebooks, jobs and volumes.</li><li><em>Fundamentals of Data Engineering</em>: ch. 3, Designing Good Data Architecture, and ch. 4, Choosing Technologies.</li></ul>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "rp-01",
+      "title": "Chunking documents for retrieval",
+      "minutes": 6,
+      "html": "<p>Retrieval can only return what chunking produced, so this is the first quality lever. <code>src/chunking.py</code> has no dependencies on purpose: it is pure text processing, so it is tested anywhere.</p>\n<h3>The algorithm</h3>\n<ol><li>Split the document into paragraphs on blank lines.</li><li>A paragraph longer than <code>chunk_size</code> (800 characters) is split into sentences.</li><li>Pack units greedily into a buffer; when the next one would overflow, flush the buffer as a chunk and start the next buffer with the last <code>overlap</code> (120) characters of the flushed one.</li></ol>\n<pre><code>candidate = f\"{buffer}\\n\\n{unit}\" if buffer else unit\nif len(candidate) &lt;= chunk_size or not buffer:\n    buffer = candidate\nelse:\n    chunks.append(buffer)\n    tail = buffer[-overlap:] if overlap else \"\"\n    buffer = f\"{tail}\\n\\n{unit}\" if tail else unit</code></pre>\n<h3>Trade-offs to say out loud</h3>\n<ul><li><strong>Characters, not tokens.</strong> No tokenizer dependency; at about 4 characters per token the two track closely for English prose. Token chunking is more precise near context limits.</li>\n<li><strong>Natural boundaries.</strong> A half sentence embeds badly and gives the model a broken thought.</li>\n<li><strong>Overlap</strong> keeps a fact on a boundary findable from both chunks, at the cost of some duplicate text.</li></ul>\n<p>Every chunk keeps <code>source</code> and <code>chunk_index</code>: citations later depend on it.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "rp-02",
+      "title": "Cosine similarity and exact vector search",
+      "minutes": 7,
+      "html": "<p><code>src/vectorstore.py</code> is a hand-rolled store: four methods (<code>add</code>, <code>query</code>, <code>save</code>, <code>load</code>) over a NumPy matrix.</p>\n<h3>Normalise once, then cosine is a dot product</h3>\n<pre><code>norms = np.linalg.norm(vectors, axis=1, keepdims=True)\nnorms[norms == 0] = 1.0          # a zero vector would divide by zero\nvectors = vectors / norms</code></pre>\n<p>With unit rows and a unit query, <code>scores = self._vectors @ q</code> gives every chunk's cosine similarity in one matrix-vector product.</p>\n<h3>Top k without sorting everything</h3>\n<pre><code>top_idx = np.argpartition(-scores, k - 1)[:k]        # O(n): the k best, unordered\ntop_idx = top_idx[np.argsort(-scores[top_idx])]     # sort only those k</code></pre>\n<h3>Why not Chroma or FAISS?</h3>\n<p>For thousands of chunks brute force <em>is</em> exact nearest-neighbour search, answers in milliseconds and needs no service. It is O(n) per query. At hundreds of thousands to millions of vectors you switch to an approximate index (HNSW, IVF) that trades a little recall for sub-linear time. The narrow interface means that swap would not touch <code>rag_chain.py</code> or the agent.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "rp-03",
+      "title": "Grounded answers with citations",
+      "minutes": 6,
+      "html": "<p><code>src/rag_chain.py</code> is the RAG step itself: embed the question, retrieve the top k chunks, build a prompt, call the model, return the answer with its sources.</p>\n<h3>The prompt is the main defence</h3>\n<p>Chunks are numbered with their source:</p>\n<pre><code>[1] (source: ieee1722_avtp_communication.md)\n...chunk text...\n[2] (source: autosar_adaptive_overview.md)</code></pre>\n<p>The system prompt has four rules: answer only from the chunks, put a citation like [1] after every claim, say plainly when the context is not enough, be concise. With no chunks at all, the user message itself tells the model to say it cannot answer.</p>\n<h3>What it does not guarantee</h3>\n<p>A prompt lowers hallucination; it does not prevent it. Only a check of the answer against its sources (a verifier or critic step, or an LLM-as-judge evaluation) catches a claim the chunks do not support. Say that in an interview before you are asked.</p>\n<h3>Sources in citation order</h3>\n<p><code>RagAnswer.sources</code> keeps each source file once, in retrieval order, so a UI can list them under the answer.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "rp-04",
+      "title": "A ReAct agent loop with safe tools",
+      "minutes": 8,
+      "html": "<p><code>src/agent.py</code> makes visible what LangChain's AgentExecutor hides. An agent is four things:</p>\n<ol><li>a system prompt listing the tools and an exact reply format (<code>Thought / Action / Action Input</code> or <code>Thought / Final Answer</code>);</li>\n<li>a loop of at most <code>max_steps</code> (4) calls to the model;</li>\n<li>regex parsers for the action and the final answer;</li>\n<li>code that runs the chosen tool and appends <code>Observation: ...</code> to the transcript.</li></ol>\n<h3>Two tools, so routing is visible</h3>\n<p><code>search_knowledge_base</code> calls the RAG retriever; <code>calculator</code> evaluates arithmetic. \"What is 1722 * 2 + 8?\" should go to the calculator, not to a document search.</p>\n<h3>Model output never runs as code</h3>\n<pre><code>tree = ast.parse(expression, mode=\"eval\")\nresult = _safe_eval(tree.body)   # numbers and + - * / ** only</code></pre>\n<p>Anything else (names, calls, attributes) raises, and the error becomes the observation. Calling <code>eval</code> on model text would be remote code execution.</p>\n<p>The same agent built with LangChain (<code>agent_langchain.py</code>) is what you demo when asked for LangChain; the hand-rolled one is what the tests cover, with a scripted fake model.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "rp-05",
+      "title": "Retrieval evaluation: hit rate and MRR",
+      "minutes": 5,
+      "html": "<p>If retrieval misses, no prompt saves the answer, so retrieval gets numbers first. <code>eval/eval_questions.json</code> has 12 questions, each labelled with the document that should come back.</p>\n<ul><li><strong>hit_rate@k</strong>: the share of questions whose expected document appears in the top k chunks.</li>\n<li><strong>MRR@k</strong>: the mean of 1/rank of the first chunk from the expected document (0 if absent). It rewards ranking the right document first.</li></ul>\n<pre><code>rank = next((i for i, s in enumerate(sources, 1) if s == expected), None)\nreciprocal_ranks.append(1.0 / rank if rank else 0.0)</code></pre>\n<h3>Reading 1.00 honestly</h3>\n<p>Even TF-IDF reaches hit_rate@3 = 1.00 here: six short, topically distinct documents are easy for keyword overlap. That is a finding, not a failure: TF-IDF is a strong baseline on small distinct corpora. Dense embeddings earn their cost on paraphrases, synonyms and large overlapping corpora, which this set does not test. Twelve questions also cannot separate two good backends. The next step is a larger set with paraphrased questions, then answer-level checks.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "rp-06",
+      "title": "Pluggable backends, FastAPI and zero-cost tests",
+      "minutes": 6,
+      "html": "<p>Every layer has a real and an offline implementation, chosen by configuration (<code>src/config.py</code>, <code>.env</code>):</p>\n<table><tr><th>Layer</th><th>Real</th><th>Offline</th></tr>\n<tr><td>Embeddings</td><td>sentence-transformers all-MiniLM-L6-v2</td><td>TF-IDF (scikit-learn)</td></tr>\n<tr><td>LLM</td><td>OpenAI or Anthropic</td><td>a deterministic mock</td></tr></table>\n<p>So the tests check the pipeline's logic (chunking, the store, prompt building, agent routing) with no key, network, GPU or download, and the suite costs nothing to run in CI. Swapping a model changes a setting, not code.</p>\n<h3>Serving</h3>\n<p><code>src/api.py</code> exposes <code>GET /health</code> and <code>POST /query</code> with <code>{\"question\": ..., \"mode\": \"rag\" | \"agent\"}</code>. Build the index once with <code>scripts/build_index.py</code>; the API loads it at start-up, not per request.</p>\n<h3>What is not tested, and why</h3>\n<p>The LangChain agent is left out of the suite: it needs LangChain and a real model. Say that, and say how you would test it (record and replay model responses).</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "rp-07",
+      "title": "The RAG assistant, explained",
+      "minutes": 5,
+      "html": "<p>Use this as the outline of your interview story.</p>\n<ol><li><strong>Problem.</strong> Engineers need answers from in-vehicle systems documents (AUTOSAR Adaptive, IEEE1722/AVTP, hypervisor bring-up, ROS2-cloud bridge) with sources they can check.</li>\n<li><strong>Design.</strong> Paragraph-aware chunks; exact cosine search over a NumPy matrix; a grounding prompt with numbered citations; two agents (hand-rolled ReAct, tested; LangChain, demoed); FastAPI.</li>\n<li><strong>Evidence.</strong> hit_rate@3 = 1.00 and MRR@3 = 1.00 on 12 labelled questions, and a test suite that runs offline at zero API cost.</li>\n<li><strong>Limits.</strong> A small, keyword-friendly question set; no answer-level evaluation; brute-force search.</li>\n<li><strong>Next.</strong> Paraphrased questions, hybrid BM25 plus dense retrieval with reranking, an answer faithfulness check, an ANN index if the corpus grows.</li></ol>\n<p>Why this corpus: it is your own engineering domain, so you can judge every answer yourself.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "flp-01",
+      "title": "FedAvg: averaging models, not data",
+      "minutes": 6,
+      "html": "<p>Federated learning trains one model over data that never leaves its owner. Each round:</p>\n<ol><li>the server sends the global weights to the selected clients;</li>\n<li>each client loads them, trains a few local epochs on its own data (3 in this testbed, Adam, cross-entropy) and returns the new weights and its sample count;</li>\n<li>the server averages the client weights, weighted by sample count, into the next global model.</li></ol>\n<pre><code>w_global = Σ_k (n_k / n) · w_k</code></pre>\n<p>The same weighting is applied to metrics in <code>server/fl_server.py</code>:</p>\n<pre><code>losses = [m.get(\"train_loss\", 0) * n for n, m in metrics]\nagg = sum(losses) / total</code></pre>\n<p>Weighting by examples makes FedAvg approximate training on the union of the data; an unweighted mean would let a client with 50 samples move the model as much as one with 5,000.</p>\n<p>The model here is a small MLP: 12 features → 32 → 16 → 3 classes.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "flp-02",
+      "title": "A Flower server and NumPy clients",
+      "minutes": 7,
+      "html": "<h3>The server</h3>\n<p><code>AggregationStrategy</code> subclasses Flower's <code>FedAvg</code> and overrides <code>aggregate_fit</code> and <code>aggregate_evaluate</code> to log each client's samples and metrics before calling the parent. Settings: 5 rounds, <code>min_fit_clients = min_evaluate_clients = min_available_clients = MIN_CLIENTS</code> (2, or 3 with the Pi), and <code>on_fit_config_fn</code> sends the round number and <code>local_epochs</code> to clients.</p>\n<h3>A client</h3>\n<pre><code>class VehicleClient(fl.client.NumPyClient):\n    def get_parameters(self, config): return [p.detach().numpy() for p in self.model.parameters()]\n    def fit(self, parameters, config):\n        # load global weights, train 3 epochs\n        return self.get_parameters(config), 300, {}\n    def evaluate(self, parameters, config): ...</code></pre>\n<p><code>fit</code> returns weights, the number of examples (the FedAvg weight) and a metrics dict. Returning <code>{}</code> means the server's weighted train_loss has nothing to average from that client: return <code>{\"train_loss\": loss.item()}</code> so the log means something.</p>\n<p>Flower 1.x prefers the <code>flower-supernode</code> and ServerApp/ClientApp style; the testbed uses <code>start_server</code> and <code>start_numpy_client</code>, which still work but are deprecated. Know both.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "flp-03",
+      "title": "gRPC between the server and the fleet",
+      "minutes": 4,
+      "html": "<p>Flower's transport is gRPC: one long-lived HTTP/2 connection per client, binary protobuf messages, streaming in both directions. Clients dial <code>fl-server:8080</code> (the Compose service name); the server listens on <code>0.0.0.0:8080</code>.</p>\n<h3>Why it fits</h3>\n<ul><li>Weights are large float arrays sent every round: protobuf carries them as bytes; JSON would base64-inflate them by a third.</li>\n<li>The connection stays open between rounds, so there is no reconnect per message.</li>\n<li>Typed messages catch mismatches early.</li></ul>\n<p>This is the same reasoning as the KPIT edge-to-cloud telemetry bridge: high-rate binary data from edge devices over gRPC.</p>\n<h3>Failures are normal</h3>\n<p><code>aggregate_fit</code> receives <code>results</code> and <code>failures</code>. A vehicle that drops mid-round lands in failures; the round still aggregates the others if at least <code>min_fit_clients</code> answered. Log failures; a fleet is never fully online.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "flp-04",
+      "title": "A heterogeneous fleet with Docker Compose",
+      "minutes": 6,
+      "html": "<p><code>docker-compose.yml</code> defines one bridge network, <code>fl-net</code>, and three services:</p>\n<ul><li><code>fl-server</code>, publishing port 8080;</li><li><code>vehicle-ros2</code>, a ROS2 image with <code>ROS_DOMAIN_ID=10</code>;</li><li><code>vehicle-lite</code>, a plain Python client.</li></ul>\n<p>Both vehicles <code>depends_on</code> the server, which orders start-up but does not wait for readiness: a client may need to retry its first connection.</p>\n<h3>The Raspberry Pi</h3>\n<p>The third client runs bare-metal on aarch64. That changes three things: Python wheels must exist for arm64 (<code>rpi_requirements.txt</code>, <code>extract_wheels.sh</code>); it reaches the server by the host's LAN address, not the service name; and it trains slowest, so every synchronous round waits for it. Start the server with <code>MIN_CLIENTS=3</code> when it joins.</p>\n<p>Scripts: <code>build_all.sh</code>, <code>run_all.sh</code>, <code>log_all.sh</code>, <code>rebuild_all.sh</code>.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "flp-05",
+      "title": "From ROS2 topics to training features",
+      "minutes": 6,
+      "html": "<p><code>client/fl_client_ros2.py</code> turns live vehicle topics into training data.</p>\n<pre><code>class SensorBuffer:\n    def add(self, speed, brake):\n        with self.lock:\n            self.speed.append(speed); self.brake.append(brake)\n            if len(self.speed) &gt; 300: self.speed.pop(0); self.brake.pop(0)</code></pre>\n<p>A ROS2 subscriber thread adds samples; the Flower thread reads them. The lock stops a read from seeing a half-updated pair of lists. Only the last 300 samples are kept, a sliding window.</p>\n<h3>Features</h3>\n<p><code>get_features</code> stacks speed, brake and derived signals such as acceleration (<code>np.gradient(speed)</code>) into 12 features per sample, matching the MLP's input.</p>\n<h3>The fallback</h3>\n<p>If ROS2 is not installed (<code>ROS2_AVAILABLE = False</code>) or fewer than 10 samples have arrived, the client trains on <code>torch.randn</code>. That keeps a round alive, but random data adds noise to the global model. Log it, count it per round, and exclude such clients from evaluation.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "flp-06",
+      "title": "Non-IID clients and honest evaluation",
+      "minutes": 6,
+      "html": "<p>Vehicles do not see the same data: one drives in the city, one on the highway. Data that is not independent and identically distributed (non-IID) makes local models drift in different directions; FedAvg then converges more slowly and can favour the largest client.</p>\n<h3>Remedies to know</h3>\n<ul><li>Fewer local epochs or a smaller learning rate, so clients drift less per round.</li>\n<li>FedProx: a penalty that keeps local weights close to the global ones.</li>\n<li>Reporting per-client accuracy beside the global one.</li></ul>\n<h3>The testbed's evaluation today</h3>\n<p>The lite client's <code>evaluate</code> returns <code>0.0, 100, {\"accuracy\": 0.5}</code> every round, and training data is synthetic until ROS2 data arrives. The weighted accuracy on the server therefore cannot show learning. Fix it before quoting numbers:</p>\n<ol><li>hold out 20% of each client's real data;</li><li>return the true loss and accuracy on it;</li><li>compare with a centralised model trained on the pooled data.</li></ol>\n<p>Saying this yourself in a review is a strength: it shows you know what the numbers mean.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "flp-07",
+      "title": "The federated testbed, explained",
+      "minutes": 5,
+      "html": "<ol><li><strong>Problem.</strong> Vehicles generate data that should not leave them; can a fleet train one model anyway, across very different hardware?</li>\n<li><strong>Design.</strong> Flower FedAvg over gRPC; a server that logs each round; a ROS2 vehicle, a lite container and a bare-metal Raspberry Pi (x86-64 and aarch64); shared feature extraction from speed and brake topics.</li>\n<li><strong>Engineering.</strong> Docker Compose for the containers, arm64 wheels for the Pi, a thread-safe sensor buffer, MIN_CLIENTS to admit the third client.</li>\n<li><strong>Honest status.</strong> Training falls back to synthetic data without ROS2 input, and one client reports a fixed accuracy, so today it demonstrates the system, not model quality.</li>\n<li><strong>Next.</strong> Real held-out evaluation per client, non-IID splits, FedProx, a centralised baseline, round-time measurements with and without the Pi.</li></ol>\n<p>This is also the through-line from automotive work (ECUs, ROS2, gRPC telemetry) to federated learning research.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "gp-01",
+      "title": "A leak-free scikit-learn pipeline",
+      "minutes": 5,
+      "html": "<p><code>src/cpu_baseline.py</code> builds the UCI heart-disease model.</p>\n<ul><li>Target: <code>y = (df['num'] &gt; 0)</code>, disease present or not.</li>\n<li>Numeric features (age, trestbps, chol, thalch, oldpeak, ca): median imputation, then standard scaling.</li>\n<li>Categorical features (sex, cp, fbs, restecg, exang, slope, thal): most-frequent imputation, then one-hot encoding with <code>handle_unknown='ignore'</code>.</li></ul>\n<pre><code>clf = Pipeline([('preprocess', preprocessor), ('model', LogisticRegression(max_iter=1000))])\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)</code></pre>\n<h3>Why everything sits inside the Pipeline</h3>\n<p>The imputer's medians and the scaler's means are learned from the data. Fitted on all rows, they leak the test set into training and inflate the score. Inside the Pipeline they are fitted on the training split only, and the same object is reused in cross-validation for each fold.</p>\n<p><code>stratify=y</code> keeps the disease rate the same in train and test.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "gp-02",
+      "title": "Stratified CV, precision, recall and F1",
+      "minutes": 5,
+      "html": "<p>One train/test split of a few hundred rows gives a noisy number. Five stratified folds give five, each with the same disease rate; report the mean and the spread.</p>\n<h3>Which metric</h3>\n<ul><li><strong>Recall</strong> = TP / (TP + FN): of the patients with disease, how many the model flags. A missed patient is the costly error in screening.</li>\n<li><strong>Precision</strong> = TP / (TP + FP): of the flagged, how many are ill. Low precision means many false alarms.</li>\n<li><strong>F1</strong>: their harmonic mean, high only when both are.</li>\n<li><strong>Accuracy</strong> hides the balance between the two error types.</li></ul>\n<p>Logistic regression outputs probabilities; the default threshold 0.5 is a choice. Lowering it raises recall at the cost of precision. Pick it from the cross-validated precision-recall curve, never from the test set.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "gp-03",
+      "title": "RAPIDS cuML: the same API on the GPU",
+      "minutes": 5,
+      "html": "<p>cuML reimplements scikit-learn's estimators on CUDA with the same interface:</p>\n<pre><code>from cuml.linear_model import LogisticRegression as cuLR\nfrom cuml.ensemble import RandomForestClassifier as cuRF\nlr_gpu = cuLR(max_iter=1000).fit(X_train, y_train)</code></pre>\n<p><code>src/export_preprocessed.py</code> runs the scikit-learn preprocessing once and saves <code>X_train.npy</code>, <code>X_test.npy</code>, <code>y_train.npy</code>, <code>y_test.npy</code> under <code>data/cuda/</code>. Every CPU and GPU script then loads the same arrays, so a difference in time or accuracy comes from the estimator and hardware, not from preprocessing.</p>\n<h3>What does not carry over</h3>\n<ul><li>Not every scikit-learn option exists in cuML; check the solver and parameters.</li>\n<li>Random forests split differently, so accuracies agree closely, not exactly.</li>\n<li>Metrics are computed with scikit-learn on the host, which is fine for a few hundred predictions.</li></ul>\n<p>Kaggle and the college V100 both run RAPIDS; the Dockerfile pins the environment.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "gp-04",
+      "title": "Logistic regression as CUDA kernels",
+      "minutes": 8,
+      "html": "<p><code>src/cuda_logreg/</code> trains logistic regression without any library: four kernels in <code>kernel.cu</code>, a training loop in <code>host.cu</code>.</p>\n<ol><li><code>logistic_forward</code>: one thread per sample, <code>pred[i] = sigmoid(X_i · w)</code>.</li>\n<li><code>compute_error</code>: <code>err[i] = pred[i] − y[i]</code>.</li>\n<li><code>compute_gradient</code>: one thread per weight, <code>grad[j] = (1/n) Σ_i err[i] · X[i][j]</code>.</li>\n<li><code>sgd_update</code>: <code>w[j] −= lr · grad[j]</code>.</li></ol>\n<p>That is gradient descent on the log loss, whose gradient is</p>\n<pre><code>∇w L = (1/n) · Xᵀ (σ(Xw) − y)</code></pre>\n<h3>Host side</h3>\n<p>Copy X and y to the GPU once, then launch the four kernels per epoch with <code>&lt;&lt;&lt;numBlocks, blockSize&gt;&gt;&gt;</code>; copy only the final weights back. Copying every epoch would cost more than the arithmetic.</p>\n<p>Check it: the learned weights should be close to scikit-learn's with the same preprocessing and no regularisation (<code>penalty=None</code>).</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "gp-05",
+      "title": "Measuring speedup honestly",
+      "minutes": 6,
+      "html": "<p><code>src/ma721_real_speedup.py</code> shows both sides:</p>\n<ul><li>200 trees on a few hundred rows: the GPU is <em>slower</em>. Transfers, kernel launches and cuML start-up outweigh tiny work.</li>\n<li>10,000 trees: the work dominates and the GPU wins.</li></ul>\n<h3>Amdahl's law</h3>\n<pre><code>S(N) = 1 / ((1 − p) + p / N)        →   1 / (1 − p) as N → ∞</code></pre>\n<p>If 80% of a run parallelises (p = 0.8), no GPU gives more than 5×. Data loading, preprocessing on the CPU and host-device copies are part of the serial share.</p>\n<h3>Timing rules</h3>\n<ol><li>Warm up once (the first GPU call includes initialisation).</li><li>Repeat and report the median.</li><li>Same data, same model size, same accuracy check.</li><li>State the machine and data size next to the number.</li></ol>\n<p>So the resume says \"up to 5×\", and the interview answer explains when it is 1× or less.</p>",
+      "exercises": [],
+      "reading": []
+    },
+    {
+      "id": "gp-06",
+      "title": "The GPU pipeline, explained",
+      "minutes": 4,
+      "html": "<ol><li><strong>Problem.</strong> Predict heart disease from 13 clinical features, and find out when GPUs speed up classical ML.</li>\n<li><strong>Baseline.</strong> A leak-free scikit-learn pipeline, stratified split, precision, recall and F1.</li>\n<li><strong>Acceleration.</strong> The same arrays on RAPIDS cuML (logistic regression, random forest), and logistic regression written as four CUDA kernels.</li>\n<li><strong>Result.</strong> Up to 5× faster training at large model sizes; slower than the CPU on small models, explained by overhead and Amdahl's law.</li>\n<li><strong>Next.</strong> Clean up the exploratory scripts into one benchmark with repeats, add a threshold chosen for recall, and record times per machine.</li></ol>",
       "exercises": [],
       "reading": []
     }

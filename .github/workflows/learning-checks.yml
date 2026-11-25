@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Learning graph, quizzes, retrieval and HTTP checks
-        run: node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs
+        run: node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs
       - name: Native grading and sync regressions
         run: python tools/check-native.py
       - name: All bundled reference solutions and starters
