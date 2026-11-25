@@ -5,8 +5,8 @@
 import {connect, forget, readSettings} from './cloud-sync.mjs';
 
 export const GITHUB_AUTH = {
-  clientId: '',        // the OAuth app's client ID, e.g. Ov23li...
-  helper: '',          // the worker's address, e.g. https://lfz-auth.<you>.workers.dev
+  clientId: 'Ov23liMUdKPIWsFYn4Bq',
+  helper: 'https://lfz-auth.manojh-252cd017.workers.dev',
 };
 const PENDING = 'lfz-auth-pending';
 export const configured = (cfg = GITHUB_AUTH) => !!(cfg.clientId && cfg.helper);
