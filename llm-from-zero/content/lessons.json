@@ -124,8 +124,9 @@
       "id": "de",
       "title": "Data engineering: the ETL project",
       "when": "Beside any stage, about 8 weeks",
-      "blurb": "Thirteen lessons, one per step of the e-commerce batch and streaming ETL project: contracts, keys and loading, Spark and the medallion lake, the star schema, data quality, analytics, tuning, Airflow, Kafka and the cloud. Each ends in exercises under Practice, Data engineering, and links to the step's study note in the repository. The ETL project page shows which lessons a goal needs.",
+      "blurb": "A SQL primer, then thirteen lessons, one per step of the e-commerce batch and streaming ETL project: contracts, keys and loading, Spark and the medallion lake, the star schema, data quality, analytics, tuning, Airflow, Kafka and the cloud. Each ends in exercises under Practice, Data engineering, and links to the step's study note in the repository. The ETL project page shows which lessons a goal needs.",
       "lessons": [
+        "de-00",
         "de-01",
         "de-02",
         "de-03",
@@ -656,6 +657,23 @@
         "mr-wordcount",
         "mr-mean",
         "mpi-tree"
+      ],
+      "reading": []
+    },
+    {
+      "id": "de-00",
+      "title": "SQL: filter, group and join",
+      "minutes": "8",
+      "html": "<p>Every step of the ETL project reads or writes SQL. This lesson covers the part you use every day: pick rows, group them, and join tables. The examples use the same small bank as the exercises: <code>customers</code>, <code>accounts</code> (a customer can have several, or none) and <code>transactions</code>.</p>\n<h3>1. The order SQL really runs in</h3>\n<p>You write <code>SELECT</code> first, but the database runs the clauses in this order. Most beginner mistakes come from forgetting it.</p>\n<ol><li><code>FROM</code> and <code>JOIN</code>: which rows exist</li><li><code>WHERE</code>: keep some rows</li><li><code>GROUP BY</code>: put rows into groups</li><li><code>HAVING</code>: keep some groups</li><li><code>SELECT</code>: work out the columns</li><li><code>ORDER BY</code>, then <code>LIMIT</code></li></ol>\n<p>That is why <code>WHERE</code> cannot use <code>SUM(amount)</code> (no groups exist yet) and why a column alias from <code>SELECT</code> usually cannot be used in <code>WHERE</code>.</p>\n<h3>2. Filter and sort</h3>\n<pre>SELECT id, ts, amount, merchant\nFROM transactions\nWHERE kind = 'debit' AND amount &gt; 5000\nORDER BY ts DESC, id;</pre>\n<p><code>ORDER BY ts DESC, id</code> sorts newest first, and breaks ties by the lower id. Without a tie-breaker the order of equal rows is not guaranteed, and a report that changes between runs is a bug.</p>\n<h3>3. Group and aggregate</h3>\n<pre>SELECT category, COUNT(*) AS n, SUM(amount) AS spent\nFROM transactions\nWHERE kind = 'debit'\nGROUP BY category\nHAVING SUM(amount) &gt; 10000\nORDER BY spent DESC;</pre>\n<p>Every column in <code>SELECT</code> is either in <code>GROUP BY</code> or inside an aggregate (<code>COUNT</code>, <code>SUM</code>, <code>AVG</code>, <code>MIN</code>, <code>MAX</code>). <strong>WHERE filters rows before grouping; HAVING filters groups after.</strong></p>\n<h3>4. Buckets with CASE</h3>\n<pre>SELECT id,\n       CASE WHEN amount &gt;= 10000 THEN 'large'\n            WHEN amount &gt;= 1000  THEN 'medium'\n            ELSE 'small' END AS size\nFROM transactions;</pre>\n<p>The first true branch wins, so put the most specific test first, just as with <code>if</code> and <code>elif</code> in Python.</p>\n<h3>5. NULL means \"unknown\"</h3>\n<ul><li><code>city = NULL</code> is never true. Write <code>city IS NULL</code> or <code>city IS NOT NULL</code>.</li><li><code>COUNT(*)</code> counts rows; <code>COUNT(city)</code> skips NULLs. <code>SUM</code> and <code>AVG</code> skip them too.</li><li><code>COALESCE(city, 'unknown')</code> swaps a NULL for a value you choose.</li></ul>\n<h3>6. Joins</h3>\n<ul><li><strong>INNER JOIN</strong>: only pairs that match. A customer with no account disappears.</li><li><strong>LEFT JOIN</strong>: every row on the left, with NULLs on the right where nothing matches.</li><li><strong>Anti join</strong>: a left join, then keep the rows where the right side is NULL. This is how the ETL project finds orphans.</li><li><strong>Self join</strong>: a table joined to itself under two aliases, for example two customers in the same city.</li></ul>\n<pre>-- customers who have no account\nSELECT c.id, c.name\nFROM customers c\nLEFT JOIN accounts a ON a.customer_id = c.id\nWHERE a.id IS NULL;</pre>\n<p>Put a condition on the right-hand table in <code>ON</code>, not <code>WHERE</code>, when you want to keep the unmatched rows. A <code>WHERE</code> on a right-hand column throws the NULL rows away and quietly turns your left join into an inner join.</p>\n<h3>7. A join can multiply rows</h3>\n<p>A customer with two accounts appears twice after <code>JOIN accounts</code>. Counting customers after that join needs <code>COUNT(DISTINCT c.id)</code>. Joining two child tables of the same parent, such as order lines and payments, multiplies them together. Step 2 of the project calls this fan-out.</p>\n<h3>In the exercises</h3>\n<p>Type just the query. The practice page runs it for you. The 8 exercises follow this lesson's order, and <em>Customers who never transacted</em> is the checkpoint: solve it and this topic counts as known.</p>\n<h3>Say it out loud</h3>\n<p>Before you open the exercises, explain these in a sentence each: the difference between WHERE and HAVING, between an inner and a left join, and why <code>= NULL</code> never matches.</p>",
+      "exercises": [
+        "sql-filter",
+        "sql-group",
+        "sql-having",
+        "sql-case",
+        "sql-nulls",
+        "sql-left-join",
+        "sql-anti-join",
+        "sql-self-join"
       ],
       "reading": []
     },

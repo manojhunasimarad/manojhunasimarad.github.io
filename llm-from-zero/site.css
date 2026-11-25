@@ -45,7 +45,7 @@ header.site-header {
 .site-header .sh-sec:hover { color: var(--ink); background: var(--hover); }
 .site-header .sh-sec[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); }
 .sh-ico { width: 19px; height: 19px; flex: none; }
-.site-header .sh-tools { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.site-header .sh-tools { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; flex-shrink: 1; }
 .site-header .sh-keep:empty { display: none; }
 .site-header .sh-keep .focus-pill { margin: 0; }
 .site-header button, .site-header .sh-icon-btn {
@@ -78,7 +78,9 @@ header.site-header {
 
 /* phones: the sections move to a bottom bar, as in most learning apps */
 .sh-bottom { display: none; }
-@media (max-width: 980px) {
+/* the six labels, search box and theme label do not fit together below ~1120px: drop the labels first */
+@media (max-width: 1200px) { .site-header .tt-label { display: none; } }
+@media (max-width: 1120px) {
   .site-header .sh-sec span { display: none; }
   .site-header .sh-sec { padding: 0 10px; }
   .site-header .sh-search { min-width: 0; }

@@ -849,7 +849,9 @@
       "needs": [],
       "hours": 5,
       "difficulty": "Beginner",
-      "lessons": [],
+      "lessons": [
+        "de-00"
+      ],
       "summary": "SELECT, WHERE, GROUP BY with HAVING, CASE, NULL handling and the four joins. Every later step reads or writes SQL, and an anti join (rows with no match) is how orphans are found.",
       "question": "What is the difference between WHERE and HAVING, and between an inner and a left join?",
       "answer": "WHERE filters rows before grouping; HAVING filters groups after aggregation. An inner join keeps only matching pairs; a left join keeps every left row and fills the right side with NULL when nothing matches, which is how rows without a match are found.",

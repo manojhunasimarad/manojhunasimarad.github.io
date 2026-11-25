@@ -409,6 +409,17 @@ function nextHtml(rec, label) {
     + `<span class="muted">${esc(rec.why)}</span></div>`;
 }
 
+/* SQL exercises expect QUERY = """...""". A learner who types only the query (SELECT ... or WITH x AS (...))
+   gets it wrapped for them instead of a Python SyntaxError. Python code and code that already sets QUERY are untouched. */
+function sqlAsQuery(code) {
+  const s = String(code || "");
+  if (/\bQUERY\s*=/.test(s) || s.includes('"""')) return s;
+  const body = s.replace(/^(\s*--[^\n]*(\n|$))*/, "");
+  if (!/^\s*(select\b|with\s+\w+(\s*\([^)]*\))?\s+as\s*\()/i.test(body)) return s;
+  return 'QUERY = """\n' + s.trim() + '\n"""\n';
+}
+const isSqlExercise = d => d.set === "sql" || /\bQUERY\s*=/.test(d.code || "");
+
 /* The code editor: Tab indents, Enter keeps the indent, Ctrl+Enter runs, and the text is kept as a draft. */
 function setupEditor(ed, draftKey, run) {
   let escaped = false;
@@ -467,7 +478,7 @@ async function exercise(id) {
     <div class="split">
       <div class="stack">
         <article class="prose" id="statement">${d.statement}</article>
-        ${d.given ? `<details class="box" open><summary>Already defined for you</summary><div class="stack"><p class="small muted">This code runs before yours on every test. Read it, use its names, and do not paste it into the editor.</p><pre>${esc(d.given)}</pre></div></details>` : ""}
+        ${d.given ? `<details class="box"${isSqlExercise(d) ? "" : " open"}><summary>Already defined for you${isSqlExercise(d) ? " (the tables and their rows)" : ""}</summary><div class="stack"><p class="small muted">This code runs before yours on every test. Read it, use its names, and do not paste it into the editor.</p><pre>${esc(d.given)}</pre></div></details>` : ""}
         ${d.sample.length ? `<details class="box"><summary>What a test looks like</summary><div class="stack"><p class="small muted">Each test runs your code, then this, and compares what is printed. There ${d.tests === 1 ? "is 1 test" : "are " + d.tests + " tests"}.</p><pre>${esc(d.sample[0].ran)}</pre><p class="small muted">expected output</p><pre>${esc(d.sample[0].expected)}</pre></div></details>` : ""}
         ${d.lesson ? `<p class="small">Lesson: <a href="#/lesson/${esc(d.lesson.id)}">${esc(d.lesson.title)}</a></p>` : ""}
         ${d.link ? `<p class="small"><a href="${esc(d.link)}" target="_blank" rel="noopener">Open this problem on deep-ml</a> (needs internet)</p>` : ""}
@@ -494,6 +505,7 @@ async function exercise(id) {
           <button class="btn" id="reset">Reset</button>
           <span class="muted small">Ctrl+Enter runs. Tab indents; press Esc, then Tab, to leave the editor.</span>
         </div>
+        ${isSqlExercise(d) ? `<p class="muted small">SQL: type just the query (SELECT …). It runs as <code>QUERY</code> for you; keeping <code>QUERY = """ … """</code> works too.</p>` : ""}
         <p class="muted small">${WEB ? "Saved in this browser each time you run." : `Saved to <code>${esc(d.file)}</code> each time you run, so you can also edit it in your own editor and reload this page.`}${draft != null && draft !== d.code ? " An unsaved draft from this browser was restored." : ""}</p>
         <div class="stack" id="results"></div>
         ${d.set === "ml" ? `<div><button class="btn quiet" id="mark-solved">${d.solved ? "Clear the solved mark" : "Mark as solved by hand"}</button></div>` : ""}
@@ -593,7 +605,7 @@ async function exercise(id) {
     const b = $("#run");
     b.disabled = true; b.textContent = "Running";
     try {
-      const r = await api("/api/run", { id: d.id, code: ed.value });
+      const r = await api("/api/run", { id: d.id, code: sqlAsQuery(ed.value) });
       if (ticket !== routeId) return;
       lsDel(draftKey);
       let head;
@@ -688,7 +700,7 @@ async function review(id) {
     const b = $("#run");
     b.disabled = true; b.textContent = "Running";
     try {
-      const r = await api("/api/run", { id: d.id, code: ed.value, review: true, secs: secs() });
+      const r = await api("/api/run", { id: d.id, code: sqlAsQuery(ed.value), review: true, secs: secs() });
       if (ticket !== routeId) return;
       let head;
       if (r.solved) {

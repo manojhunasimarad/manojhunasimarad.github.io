@@ -143,7 +143,7 @@ export function mountCheck(view, ctx, query) {
         ? `<strong>Suggestion: study it</strong> (~${n.hours} h). ${sug.total ? `You got ${sug.right} of ${sug.total} right${sug.answered < sug.total ? " so far" : ""}` : ""}${rec.rate ? `${sug.total ? " and" : "You"} rated it “${RATES.find(r => r[0] === rec.rate)[1].toLowerCase()}”` : ""}.`
         : `Answer the question${t.questions.length > 1 ? "s" : ""} above${t.questions.length ? " or rate yourself" : ""} to get a suggestion. You can also decide straight away.`;
     view.innerHTML = `
-      <div class="chk-bar"><a href="${BASE}/check">← All topics</a><span class="num">Topic ${i + 1} of ${topics.length}</span></div>
+      <div class="chk-bar"><a href="${BASE}/check">← All topics</a><span class="num" title="The check goes step by step through the project, so its order can differ from the study plan.">Topic ${i + 1} of ${topics.length} · in project-step order</span></div>
       <div class="track chk-track"><i style="width:${Math.round(100 * (i + 1) / topics.length)}%"></i></div>
       <div class="stack"><h1>${esc(n.title)}</h1>
         <div class="row-flex"><span class="chip">${esc(stepLabel(t))}</span><span class="chip">~${n.hours} h to study</span><span class="chip">${esc(n.difficulty || "")}</span>${dec ? `<span class="chip ${dec === "skip" ? "ok" : "medium"}">decided: ${dec}</span>` : ""}</div></div>
