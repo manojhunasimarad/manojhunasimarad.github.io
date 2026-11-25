@@ -11,16 +11,21 @@
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
-    const allowed = (env.ALLOWED_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
+    // "https://site.io/", "https://site.io/llm-from-zero" and "site.io" all mean the origin https://site.io
+    const toOrigin = v => { try { return new URL(/^https?:\/\//.test(v) ? v : 'https://' + v).origin; } catch { return ''; } };
+    const allowed = (env.ALLOWED_ORIGIN || '').split(',').map(s => toOrigin(s.trim())).filter(Boolean);
     const cors = {
-      'Access-Control-Allow-Origin': allowed.includes(origin) ? origin : 'null',
+      // the page may always read our answer: a refusal then says why instead of looking like a network failure
+      'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Vary': 'Origin',
     };
     const reply = (status, body) => new Response(JSON.stringify(body), {status, headers: {...cors, 'Content-Type': 'application/json'}});
     if (request.method === 'OPTIONS') return new Response(null, {status: 204, headers: cors});
-    if (!allowed.includes(origin)) return reply(403, {error: 'origin not allowed'});
+    if (!env.CLIENT_ID || !env.CLIENT_SECRET) return reply(500, {error: 'the helper is missing CLIENT_ID or CLIENT_SECRET in its settings'});
+    if (!allowed.length) return reply(500, {error: 'the helper has no ALLOWED_ORIGIN setting; set it to ' + (origin || 'your site address')});
+    if (!allowed.includes(origin)) return reply(403, {error: `origin not allowed: ALLOWED_ORIGIN is ${allowed.join(', ')}, this page is ${origin || 'unknown'}`});
     if (request.method !== 'POST') return reply(405, {error: 'POST only'});
     let body;
     try { body = await request.json(); } catch { return reply(400, {error: 'JSON body required'}); }

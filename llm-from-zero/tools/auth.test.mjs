@@ -84,7 +84,10 @@ test('the helper exchanges codes only for the site, keeps the secret server-side
     assert.equal(r.headers.get('Access-Control-Allow-Origin'), env.ALLOWED_ORIGIN);
     assert.equal(JSON.parse(seen[0].opt.body).client_secret, 's3cret');          // only ever sent to GitHub
     r = await call('/exchange', {code: 'goodcode123'}, 'https://evil.example');
-    assert.equal(r.status, 403);
+    assert.equal(r.status, 403); assert.match((await r.json()).error, /ALLOWED_ORIGIN is https:\/\/manojhunasimarad.github.io/);
+    for (const v of ['https://manojhunasimarad.github.io/', 'https://manojhunasimarad.github.io/llm-from-zero', 'manojhunasimarad.github.io'])
+      assert.equal((await worker.fetch(new Request('https://w.example/exchange', {method: 'POST', headers: {Origin: env.ALLOWED_ORIGIN}, body: '{"code":"goodcode123"}'}), {...env, ALLOWED_ORIGIN: v})).status, 200, v);
+    assert.equal((await worker.fetch(new Request('https://w.example/exchange', {method: 'POST', headers: {Origin: env.ALLOWED_ORIGIN}, body: '{"code":"goodcode123"}'}), {...env, ALLOWED_ORIGIN: ''})).status, 500);
     r = await call('/exchange', {code: 'wrongcode1'});
     assert.equal(r.status, 400);
     r = await call('/exchange', {code: '../../x'});
