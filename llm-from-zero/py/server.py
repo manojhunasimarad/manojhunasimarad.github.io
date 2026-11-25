@@ -792,6 +792,16 @@ class Api:
                 nxt = suggestion(rec)
             elif rec and not all_ok:
                 nxt = suggestion(rec)
+        # Exercises outside the skill graph (the ETL ones) have no path of their own, so the engine's
+        # fallback would jump to another topic. Stay in the lesson: the next unsolved exercise in it.
+        lesson = C.lessons.get(full.get("lesson") or "")
+        if all_ok and ex["id"] not in C.G.skill_of and lesson:
+            ids = [i for i in lesson.get("exercises", []) if i in C.exercises]
+            rest = ids[ids.index(ex["id"]) + 1:] + ids[:ids.index(ex["id"])] if ex["id"] in ids else ids
+            stay = next((i for i in rest if not st.get(i, {}).get("solved")), None)
+            if stay:
+                nxt = suggestion({"id": stay, "kind": "path", "why": "Next in the lesson “%s”." % lesson["title"],
+                                  "skill": None})
         if all_ok and mine:
             t = C.G.then.get(ex["id"])
             if mine["clean"] and t in C.titles and not st.get(t, {}).get("solved") and (not nxt or nxt["id"] != t):
