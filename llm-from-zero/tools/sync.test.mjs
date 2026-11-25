@@ -138,10 +138,11 @@ test('every page loads the theme script before its styles', async () => {
   for (const page of ['studio.html', 'index.html']) {
     const html = await fs.readFile(new URL(page, root), 'utf8');
     assert.ok(html.indexOf('theme.js') > 0 && html.indexOf('theme.js') < html.indexOf('.css"'), page);
-    assert.match(html, /data-theme-toggle/, page);
+    assert.match(html, /site-nav\.mjs/, page);   // the shared header draws the theme button
   }
-  const css = await fs.readFile(new URL('studio.css', root), 'utf8');
-  assert.match(css, /:root\[data-theme="dark"\]\{--bg:/);
+  assert.match(await fs.readFile(new URL('site-nav.mjs', root), 'utf8'), /data-theme-toggle/);
+  const css = await fs.readFile(new URL('site.css', root), 'utf8');
+  assert.match(css, /:root\[data-theme="dark"\] \{\s*--bg:/);
 });
 
 test('offline download: the service worker knows the job and every new module is precached', async () => {

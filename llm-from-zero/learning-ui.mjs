@@ -44,10 +44,10 @@ export async function createLearning({notice,download,items,listen}) {
   function neighborhood(id){
     const n=byId.get(id),left=n.needs.map(x=>byId.get(x)),right=graph.nodes.filter(x=>x.needs.includes(id));
     const count=Math.max(left.length,right.length,1),h=Math.max(180,count*66+55),cy=h/2;
-    const node=(x,y,n,center=false)=>`<a href="#topic/${n.id}" aria-label="Open ${esc(n.title)}"><rect x="${x}" y="${y-22}" width="230" height="44" rx="9" fill="${center?'#245b4d':'#fffefa'}" stroke="#afc5b3"/><text x="${x+115}" y="${y+4}" text-anchor="middle" fill="${center?'#fff':'#193333'}" font-size="12">${esc(n.title.length>31?n.title.slice(0,29)+'…':n.title)}</text></a>`;
-    let svg=`<svg class="dependency-svg" viewBox="0 0 850 ${h}" role="img" aria-labelledby="map-title map-desc"><title id="map-title">Prerequisites and next topics for ${esc(n.title)}</title><desc id="map-desc">Arrows point from a required prerequisite to a topic that depends on it. The same connections are listed as links below.</desc><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#698a79"/></marker></defs>`;
-    left.forEach((p,i)=>{const y=45+i*66;svg+=`<path d="M240 ${y} C280 ${y},280 ${cy},310 ${cy}" fill="none" stroke="#698a79" marker-end="url(#arrow)"/>`+node(10,y,p);});
-    right.forEach((p,i)=>{const y=45+i*66;svg+=`<path d="M540 ${cy} C580 ${cy},580 ${y},610 ${y}" fill="none" stroke="#698a79" marker-end="url(#arrow)"/>`+node(610,y,p);});
+    const node=(x,y,n,center=false)=>`<a href="#topic/${n.id}" aria-label="Open ${esc(n.title)}"><rect x="${x}" y="${y-22}" width="230" height="44" rx="9" style="fill:${center?'var(--accent)':'var(--surface)'};stroke:var(--line-strong)"/><text x="${x+115}" y="${y+4}" text-anchor="middle" style="fill:${center?'var(--accent-ink)':'var(--ink)'}" font-size="12">${esc(n.title.length>31?n.title.slice(0,29)+'…':n.title)}</text></a>`;
+    let svg=`<svg class="dependency-svg" viewBox="0 0 850 ${h}" role="img" aria-labelledby="map-title map-desc"><title id="map-title">Prerequisites and next topics for ${esc(n.title)}</title><desc id="map-desc">Arrows point from a required prerequisite to a topic that depends on it. The same connections are listed as links below.</desc><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" style="fill:var(--muted)"/></marker></defs>`;
+    left.forEach((p,i)=>{const y=45+i*66;svg+=`<path d="M240 ${y} C280 ${y},280 ${cy},310 ${cy}" fill="none" style="stroke:var(--muted)" marker-end="url(#arrow)"/>`+node(10,y,p);});
+    right.forEach((p,i)=>{const y=45+i*66;svg+=`<path d="M540 ${cy} C580 ${cy},580 ${y},610 ${y}" fill="none" style="stroke:var(--muted)" marker-end="url(#arrow)"/>`+node(610,y,p);});
     return svg+node(310,cy,n,true)+'</svg>';
   }
   function roadmap(){

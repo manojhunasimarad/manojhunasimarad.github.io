@@ -4,6 +4,7 @@ import {createQuiz} from './quiz-ui.mjs';
 import {autoSync, mountSyncPanel} from './sync-ui.mjs';
 import {localParts} from './cloud-sync.mjs';
 import {mountOffline} from './offline.mjs';
+import {renderClock} from './clock.mjs';
 let quiz;
 let learning;
 const $ = s => document.querySelector(s), esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -44,7 +45,7 @@ function speak() {
   utterance.onerror=e=>{ if(turn===generation) { playing=false; audioStatus(`Audio stopped (${e.error}). Try Play or use exported audio.`); } };
   $('#audio-progress').max=parts.length; $('#audio-progress').value=part; audioStatus(`Paragraph ${part+1} of ${parts.length} · keep the browser open`); player.speak(utterance);
 }
-function choose(id, start=true) { halt(); active=items.find(x=>x.id===id); if(!active) return; parts=segments(narration(active)); part=Math.max(0,Math.min(Number(positions[id])||0,parts.length)); $('#now-title').textContent=active.title; $('#audio-progress').max=parts.length; $('#audio-progress').value=part; audioStatus(`Ready · ${parts.length} short paragraphs`); if(start) speak(); }
+function choose(id, start=true) { halt(); active=items.find(x=>x.id===id); if(!active) return; document.body.classList.add('has-track'); parts=segments(narration(active)); part=Math.max(0,Math.min(Number(positions[id])||0,parts.length)); $('#now-title').textContent=active.title; $('#audio-progress').max=parts.length; $('#audio-progress').value=part; audioStatus(`Ready · ${parts.length} short paragraphs`); if(start) speak(); }
 $('#play').onclick=()=>playing?halt():speak(); $('#stop').onclick=halt;
 $('#previous').onclick=()=>{ if(!active) return; halt(); part=Math.max(0,part-1); speak(); };
 $('#next').onclick=()=>{ if(!active) return; halt(); part=Math.min(parts.length-1,part+1); speak(); };
@@ -105,7 +106,7 @@ function setup() {
   mountSyncPanel($('#sync-panel'), () => localParts(), {notify: notice});
   mountOffline($('#offline-panel'));
 }
-function render() {routeGeneration++;if(request)request.abort();const hash=location.hash.slice(1)||'today';document.querySelectorAll('nav a').forEach(a=>{if(a.hash==='#'+(hash.startsWith('topic/')?'roadmap':hash.split('/')[0]))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});if(learning?.render(hash)||quiz?.render(hash)){}else if(hash.startsWith('lesson/'))lesson(hash.slice(7));else({library,notebook,lab,setup}[hash]||library)();window.scrollTo(0,0);$('#main').focus({preventScroll:true});}
+function render() {routeGeneration++;if(request)request.abort();const hash=location.hash.slice(1)||'today';document.querySelectorAll('aside nav a').forEach(a=>{if(a.hash==='#'+(hash.startsWith('topic/')?'roadmap':hash.split('/')[0]))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});if(learning?.render(hash)||quiz?.render(hash)){}else if(hash.startsWith('lesson/'))lesson(hash.slice(7));else if(hash==='clock')renderClock($('#screen'));else({library,notebook,lab,setup}[hash]||library)();window.scrollTo(0,0);$('#main').focus({preventScroll:true});}
 async function start() {
   try {
     [data,course]=await Promise.all(['content/studio.json','content/lessons.json'].map(async p=>{const r=await fetch(p);if(!r.ok)throw Error('Could not load '+p);return r.json();}));

@@ -90,7 +90,7 @@ test('Every step goal prunes: knowing its prerequisites leaves only the step, kn
 test('The page is routed, linked and served',async()=>{
   const [app,index,server,serve]=await Promise.all(['app.js','index.html','py/server.py','tools/serve.mjs'].map(read));
   assert(app.includes('[/^\\/etl(?:\\?(.*))?$/, etlPage, "etl"]'));assert(app.includes('import("./etl-core.mjs")'));
-  assert(index.includes('<a href="#/etl" data-nav="etl">ETL project</a>'));
+  const nav=await read('site-nav.mjs');assert(nav.includes("{ name: 'ETL project', to: 'p:#/etl?goal=whole'"));assert(index.includes('site-nav.mjs'));
   assert(server.includes('"etl-core.mjs"'));assert(serve.includes("'etl-core.mjs'"));
 });
 

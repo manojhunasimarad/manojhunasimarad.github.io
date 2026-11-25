@@ -57,7 +57,7 @@ test('Pages are routed, linked, served, precached and synced', async () => {
   const [app, index, studio, serve, server, config, sync] = await Promise.all(['app.js', 'index.html', 'studio.html', 'tools/serve.mjs', 'py/server.py', 'config.js', 'cloud-sync.mjs'].map(read));
   assert(app.includes('[/^\\/project\\/([\\w-]+)(?:\\?(.*))?$/, projectPage, "projects"]'));
   assert(app.includes('[/^\\/projects$/, projectsHome, "projects"]'));
-  assert(index.includes('<a href="#/projects" data-nav="projects">Projects</a>'));
+  assert(index.includes('site-nav.mjs') && (await read('site-nav.mjs')).includes("to: 'p:#/projects'"));   // the shared header links it
   assert(studio.includes('index.html#/projects'));
   for (const f of ['etl-check.mjs', 'theme.js', 'cloud-sync.mjs', 'sync-ui.mjs', 'offline.mjs']) { assert(serve.includes(`'${f}'`), f); assert(server.includes(`"${f}"`), f); }
   assert(config.includes('"content/projects.json"'));

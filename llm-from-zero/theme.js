@@ -13,7 +13,7 @@
     root.setAttribute("data-theme-choice", c);
     var buttons = document.querySelectorAll("[data-theme-toggle]");
     for (var i = 0; i < buttons.length; i++) {
-      buttons[i].textContent = c === "system" ? "◐ System" : c === "dark" ? "☾ Dark" : "☀ Light";
+      buttons[i].innerHTML = '<span aria-hidden="true">' + (c === "system" ? "◐" : c === "dark" ? "☾" : "☀") + '</span><span class="tt-label">' + (c === "system" ? "Auto" : c === "dark" ? "Dark" : "Light") + "</span>";
       buttons[i].setAttribute("aria-label", "Colour theme: " + c + ". Press to change.");
     }
   }

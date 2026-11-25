@@ -1,7 +1,7 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "4.8.0-signin-20261125-r2",
- "version": "4.8.0",
+ "build": "4.9.0-nav-clock-20261125-r1",
+ "version": "4.9.0",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",
  "pyodideCore": [
@@ -89,6 +89,10 @@ self.LFZ_CONFIG = {
  ],
  "precache": [
   "theme.js",
+  "site-nav.mjs",
+  "site.css",
+  "clock-core.mjs",
+  "clock.mjs",
   "auth.mjs",
   "auth.html",
   "offline.mjs",

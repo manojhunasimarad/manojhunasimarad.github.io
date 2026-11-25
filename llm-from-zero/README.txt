@@ -1,4 +1,4 @@
-LLM FROM ZERO — LOCAL LEARNING BUILD 4.3.0
+LLM FROM ZERO — LOCAL LEARNING BUILD 4.9.0
 
 Source: https://github.com/manojhunasimarad/manojhunasimarad.github.io/tree/main/llm-from-zero
 Baseline commit: 94c4cb8df1e4408826a520516b5a97593ff69ab4
@@ -9,7 +9,7 @@ Open: http://127.0.0.1:8765/studio.html
 Native practice: node tools/launch-native.mjs --port 8770 (Python 3.10+)
 Native practice data: py/data/
 
-Tests: node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs tools/auth.test.mjs
+Tests: npm test (or node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs tools/auth.test.mjs tools/clock.test.mjs)
 Native and sync checks: python tools/check-native.py
 All reference exercises: python tools/audit-exercises.py
 Windows audio: node tools/export-audio.mjs
@@ -33,3 +33,4 @@ Version 4.6.0 adds "Download everything for offline" (Your free setup in the stu
 Version 4.7.0 adds the resume projects (content/projects.json, #/projects): the RAG & agentic knowledge assistant, the federated learning testbed and the GPU-accelerated ML pipeline, each with the ETL page's goal-based plan and "check what you know" (now one page over a project spec), 20 topics on the learning map, 20 lessons under Learn, 34 quiz questions and a studio track each. Sync carries their plans and checks. Work mode for sync keeps the GitHub token in session storage only, so a work or shared computer forgets it when the browser closes. Tests: tools/projects.test.mjs.
 
 Version 4.8.0 adds Sign in with GitHub for sync (auth.mjs, auth.html; the helper that holds the OAuth secret is ../auth-worker/worker.js on Cloudflare Workers, set up as in ../auth-worker/README.md). Until it is configured, the sync panel keeps token paste. Sign out revokes the token. Tests: tools/auth.test.mjs.
+Version 4.9.0 gives both pages one navigation and adds the Study clock. The header (site-nav.mjs, site.css) has six sections, Today, Learn, Practice, Review, Projects and Progress, each with its own tabs; a gear for setup and settings; search over pages, topics, lessons and exercises (Ctrl+K or /, and g then a letter to jump to a section); and a bottom tab bar on phones. Tabs that open the practice app are marked Py. Both pages share one set of light and dark colours, and the learning map is drawn in theme colours. The two laptop servers now serve theme.js and the sync and offline modules (they did not, so the studio and dark mode broke when started locally); a test checks every file the pages load is served and saved for offline. The Study clock (studio.html#clock, clock-core.mjs, clock.mjs) builds a weekly learn → recall → use timetable from your routine, runs a timer with body breaks and recall prompts that keeps going on every page, and exports the week as a calendar file with alarms or as a list for the phone's Clock app (tools/clock.test.mjs).
