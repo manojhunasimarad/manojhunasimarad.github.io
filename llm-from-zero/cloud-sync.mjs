@@ -202,16 +202,16 @@ export function practicePart(api) {
 // ------------------------------------------------------------------ connecting and syncing
 // work: a work or shared computer. The token is kept in sessionStorage, so it is gone when the browser
 // closes; the next session asks for it again. Progress itself stays in this browser as usual.
-export async function connect(token, {storage = globalThis.localStorage, fetchImpl = globalThis.fetch, work = false, session = sessionDefault()} = {}) {
+export async function connect(token, {storage = globalThis.localStorage, fetchImpl = globalThis.fetch, work = false, session = sessionDefault(), via = 'token'} = {}) {
   token = String(token || '').trim();
-  if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(token)) throw new SyncError('That does not look like a GitHub token (it starts with github_pat_ or ghp_).');
+  if (!/^(github_pat_|ghp_|gho_)[A-Za-z0-9_]{20,}$/.test(token)) throw new SyncError('That does not look like a GitHub token (it starts with github_pat_ or ghp_).');
   const client = gistClient(token, fetchImpl);
   const gistId = (await client.find()) || (await client.create());
   if (work) {
     if (!session) throw new SyncError('This browser has no session storage; use personal mode or no sync here.');
     session.setItem(TOKEN_KEY, token);
   }
-  writeSettings({token, gistId, last: 0, work}, storage);
+  writeSettings({token, gistId, last: 0, work, via}, storage);
   return gistId;
 }
 

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>Signing in · LLM From Zero</title>
+<script src="theme.js"></script><link rel="stylesheet" href="style.css"></head>
+<body><main id="view" style="max-width:640px;margin:60px auto;padding:0 16px"><h1>Signing in…</h1><p id="msg" class="muted">Connecting your GitHub account to sync.</p></main>
+<script type="module">
+import {finishSignIn} from './auth.mjs';
+const msg = document.getElementById('msg');
+const search = location.search;
+history.replaceState(null, '', location.pathname);        // the one-time code leaves the address bar at once
+finishSignIn({search}).then(back => {
+  msg.textContent = 'Signed in. Taking you back…';
+  location.replace(back && back.startsWith(location.origin) ? back : 'studio.html#setup');
+}).catch(e => {
+  document.querySelector('h1').textContent = 'Sign-in did not finish';
+  msg.innerHTML = '';
+  msg.append(e.message + ' ');
+  const a = document.createElement('a'); a.href = 'studio.html#setup'; a.textContent = 'Back to the studio'; msg.append(a);
+});
+</script></body></html>
