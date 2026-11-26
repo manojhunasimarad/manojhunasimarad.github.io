@@ -5,6 +5,7 @@
 // The map and the matching rules are plain data and functions, tested in tools/nav.test.mjs.
 import { KINDS, startTimer, advance, remaining, breakTip, recallTip, mmss } from './clock-core.mjs';
 import { mountCoach, logRound, prefillLog } from './coach.mjs';
+import { mountRail } from './rail.mjs';
 
 // Targets: "s:" is the learning desk (opens instantly, no Python), "p:" the practice app.
 export const SECTIONS = [
@@ -28,6 +29,7 @@ export const SECTIONS = [
     { name: 'Topic tests', to: 's:#quiz', match: ['s:quiz'] }] },
   { id: 'projects', name: 'Projects', key: 'j', icon: 'box', tabs: [
     { name: 'Resume projects', to: 'p:#/projects', match: ['p:/projects', 'p:/project/'] },
+    { name: 'ETL step guide', to: 's:#etl', match: ['s:etl', 's:etl/'] },
     { name: 'ETL project', to: 'p:#/etl?goal=whole', match: ['p:/etl'] },
     { name: 'Check what you know', to: 'p:#/etl/check', match: ['p:/etl/check'] },
     { name: 'Your projects', to: 's:#projects', match: ['s:projects'] },
@@ -134,6 +136,7 @@ function mount() {
   timer(page);
   shortcuts(page);
   try { mountCoach({ page, href, where, TIMER_KEY, RECENT_KEY, signal }); } catch (e) { console.error('What now guide did not start', e); }
+  mountRail({ page, href, where }).catch(e => console.error('Progress bar did not start', e));
   const setH = () => document.documentElement.style.setProperty('--bar-h', header.offsetHeight + 'px');
   if (window.ResizeObserver) new ResizeObserver(setH).observe(header); setH();
 }
@@ -150,7 +153,10 @@ function palette(page) {
   const q = dlg.querySelector('#sh-q'), res = dlg.querySelector('#sh-res');
   let items = null, shown = [], sel = 0, opener = null;
   const commands = [
-    { label: 'What should I do now?', kind: 'Guide', run: () => window.lfzCoach?.open() },
+    { label: 'What should I do now?', kind: 'Guide', run: () => window.lfzCoach?.open(1) },
+    { label: 'Daily start: where am I?', kind: 'Guide', run: () => window.lfzCoach?.open(0) },
+    { label: 'Take the tour of the site again', kind: 'Guide', run: () => window.lfzCoach?.tour(0) },
+    { label: 'ETL step guide: continue', kind: 'Projects', run: () => { location.href = href('s:#etl', page); } },
     { label: 'Start a 25-minute Learn session', kind: 'Study clock', run: () => go('s:#clock', 'learn') },
     { label: 'Start a Use session (exercise or project)', kind: 'Study clock', run: () => go('s:#clock', 'use') },
     { label: 'Start a 15-minute Recall session', kind: 'Study clock', run: () => go('s:#clock', 'recall') },

@@ -1,7 +1,7 @@
 {
  "app": "llm-from-zero",
- "version": "4.4.0",
- "date": "2026-11-23",
+ "version": "5.0.0",
+ "date": "2026-11-26",
  "counts": {
   "subscriptions": 111,
   "channels_used": 68,
@@ -39,6 +39,62 @@
   "Every exercise is checked before release: its reference solution must pass its tests and its starter must fail them."
  ],
  "changelog": [
+  {
+   "version": "5.0.0",
+   "date": "2026-11-26",
+   "changes": [
+    "Frozen for learning: from here on only fixes and content, no new features.",
+    "First-visit tour: a short pop-up sequence that shows what each section is for, sets your goal and time, and ends at your first session. Reopen it from Settings or search.",
+    "Daily start: \"What now?\" is now three steps you can move between with Back and Next, the arrow keys or a swipe: where you are, what to do now (one button starts the timer and opens the page), and how to finish the session.",
+    "A progress bar on every page: how far along your goal you are and the hours left, the topic to work on now, the ETL guide's ticks, and today's five steps (plan, learn, use, recall, log), which tick themselves as you work.",
+    "ETL step guide (Projects → ETL step guide): all eleven steps of your pipeline with what you learn, the exact PowerShell and Docker commands, the output you should see, questions with answers, and boxes you tick yourself. Ticks sync across devices.",
+    "Today is two columns on a laptop: the next step, the session and the log on the left; today's steps, your goal's path, the week and shortcuts on the right.",
+    "Solved exercises, topics marked known and guide ticks now move the progress bar and Progress & reviews, not only self-assessed demonstrations.",
+    "Fixed: the bottom tab bar on phones was invisible in light mode."
+   ]
+  },
+  {
+   "version": "4.10.0",
+   "date": "2026-11-25",
+   "changes": [
+    "\"What now?\": a card that says what to do at this moment from your Study clock routine and your plan, reminders before each study block and at sleep time, and \"Log it on Today\" after a timed session."
+   ]
+  },
+  {
+   "version": "4.9.0",
+   "date": "2026-11-25",
+   "changes": [
+    "One navigation for both pages with six sections, search (Ctrl+K) and a bottom tab bar on phones; the Study clock with a weekly learn, recall and use timetable, a timer on every page and phone alarms."
+   ]
+  },
+  {
+   "version": "4.8.0",
+   "date": "2026-11-25",
+   "changes": [
+    "Sign in with GitHub for sync."
+   ]
+  },
+  {
+   "version": "4.7.0",
+   "date": "2026-11-25",
+   "changes": [
+    "Resume projects (RAG assistant, federated learning testbed, GPU ML pipeline) with goal-based plans, lessons and quizzes; work-computer mode for sync."
+   ]
+  },
+  {
+   "version": "4.6.0",
+   "date": "2026-11-23",
+   "changes": [
+    "Download everything for offline use."
+   ]
+  },
+  {
+   "version": "4.5.0",
+   "date": "2026-11-23",
+   "changes": [
+    "Sync across devices through a secret gist in your own GitHub account; a light, dark or automatic colour theme."
+   ]
+  },
   {
    "version": "4.4.0",
    "date": "2026-11-23",

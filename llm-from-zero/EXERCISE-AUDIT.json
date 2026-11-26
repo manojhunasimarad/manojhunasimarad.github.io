@@ -1,9 +1,9 @@
 {
-  "exercises": 196,
-  "tests": 526,
-  "passed": 526,
-  "starters_rejected": 196,
-  "seconds": 37.3,
+  "exercises": 198,
+  "tests": 536,
+  "passed": 536,
+  "starters_rejected": 198,
+  "seconds": 34.8,
   "results": [
     {
       "id": "py-celsius",
@@ -1241,6 +1241,20 @@
       "id": "de-sql-core-load",
       "reference_passed": 3,
       "tests": 3,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-spark-lazy",
+      "reference_passed": 5,
+      "tests": 5,
+      "starter_rejected": true,
+      "failures": []
+    },
+    {
+      "id": "de-spark-shuffle",
+      "reference_passed": 5,
+      "tests": 5,
       "starter_rejected": true,
       "failures": []
     },

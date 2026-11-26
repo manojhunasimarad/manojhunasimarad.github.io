@@ -4,6 +4,8 @@
 import { KINDS, DEFAULTS, normalise, buildWeek, startTimer, remaining } from './clock-core.mjs';
 import { RULE, advise, planText, WORK_PAGE, NUDGE_AFTER, blockAlarm, isNight, tally } from './coach-core.mjs';
 import { emptyState, mergeLearning, plan } from './learning-engine.mjs';
+import { openSequence, sequenceOpen, startTour, tourDue } from './tour.mjs';
+import { current as railNow, ready as railReady, goalPanel, todayPanel, markPlanned } from './rail.mjs';
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const read = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
@@ -18,7 +20,10 @@ async function learningStep() {
   let state = emptyState();
   try { const saved = read('lfz-learning-v1', null); if (saved) state = mergeLearning(state, saved, graph); } catch {}
   const p = plan(graph, state);
-  return { due: p.due[0] ? { id: p.due[0].id, title: p.due[0].title } : null, next: p.next ? { id: p.next.id, title: p.next.title, practice: p.next.practice || [] } : null };
+  // The next topic is the progress bar's "Now": it also counts topics marked known or tested out of.
+  const now = railNow()?.goal?.now;
+  const next = now ? { id: now.id, title: now.title, practice: now.practice || [] } : p.next ? { id: p.next.id, title: p.next.title, practice: p.next.practice || [] } : null;
+  return { due: p.due[0] ? { id: p.due[0].id, title: p.due[0].title } : null, next };
 }
 
 export function mountCoach({ page, href, where, TIMER_KEY, RECENT_KEY, signal }) {
@@ -38,54 +43,59 @@ export function mountCoach({ page, href, where, TIMER_KEY, RECENT_KEY, signal })
     if (navigate && link) go(link);
   }
 
-  /* ---------------------------------------------------------------- the guide (dialog) */
-  const dlg = document.createElement('div');
-  dlg.className = 'coach'; dlg.hidden = true; dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-labelledby', 'coach-title');
-  document.body.append(dlg);
-  let opener = null, current = null;
+  /* ---------------------------------------------------------------- the daily start (a three-step pop-up) */
+  // 1 Where you are: goal progress, today's five steps, where you stopped last time.
+  // 2 Do now: what this moment is for (study block, free time, work, night) and one button that
+  //   starts the timer and opens the page.  3 Finish well: what to do when the timer rings.
+  let current = null, seq = null;
+  const closeGuide = () => { if (seq) seq.close('done'); };
+  const guideOpen = () => sequenceOpen();
 
-  async function openGuide(auto = false) {
+  async function openGuide(auto = false, at = 1) {
+    if (sequenceOpen() && auto) return;
     const s = settings(), step = await learningStep();
     const a = advise({ now: new Date(), settings: s, week: buildWeek(s), timer: timerNow(), step, recent: read(RECENT_KEY, []), log: read(LOG_KEY, []) });
     if (auto && a.mode === 'running') return;
     current = a; write(SEEN_KEY, Date.now()); write(SNOOZE_KEY, null);
+    await railReady();
     const st = a.start, planLabel = st ? (st.plan[2] > 1 ? `${st.plan[2]} × ${st.plan[0]} min` : `${st.plan[0]} min`) : '';
     const t = tally(read(LOG_KEY, []));
-    dlg.innerHTML = `<div class="coach-box ${esc(a.tone)}">
-      <button type="button" class="coach-x" data-c="close" aria-label="Close">×</button>
-      <p class="coach-kicker">${esc(a.kicker)}</p>
-      <h2 id="coach-title">${esc(a.title)}</h2>
-      <p>${esc(a.text)}</p>
+    const where = () => {
+      markPlanned();
+      const j = railNow(); if (!j) return '<p>Your progress appears here once the learning map has loaded.</p>';
+      const last = j.lastSession;
+      return `<div class="ds-grid"><div class="ds-col">${goalPanel(j)}</div><div class="ds-col"><h3 class="ds-h">Today · ${j.steps.done} of 5</h3>${todayPanel(j, { compact: true })}</div></div>
+        ${last ? `<p class="ds-last"><b>Last time</b> (${esc(last.day)}, ${esc(String(last.minutes))} min): ${esc(last.note)}</p>` : ''}
+        ${j.recallDue ? `<p class="ds-due"><b>${j.recallDue} recall review${j.recallDue > 1 ? 's' : ''} due.</b> Do them first: 5 to 15 minutes from memory.</p>` : ''}
+        <label class="ds-auto"><input type="checkbox" data-c="auto"${read(OPEN_KEY, true) ? ' checked' : ''}> Open this daily start when I come to the site</label>`;
+    };
+    const doNow = () => `<div class="coach-now ${esc(a.tone)}"><p class="coach-kicker">${esc(a.kicker)}</p><p class="coach-title">${esc(a.title)}</p><p>${esc(a.text)}</p>
       ${a.steps.length ? `<ol class="coach-steps">${a.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
-      <div class="coach-act">
-        ${st ? `<button type="button" class="${a.quiet ? '' : 'primary'}" data-c="start">${a.mode === 'work' ? 'I have a break: ' : '▶ Start '}${esc(planLabel)} · open ${esc(st.short)}</button>` : ''}
-        ${a.open ? `<button type="button" data-c="open">${esc(a.open.label)}</button>` : ''}
-        ${st && !a.quiet ? `<button type="button" data-c="snooze">Remind me in 10 min</button>` : ''}
-        ${(!st && !a.open) || a.quiet ? `<button type="button" class="${st ? 'quiet' : 'primary'}" data-c="close">OK</button>` : ''}
-      </div>
+      <div class="coach-act">${a.open ? `<button type="button" data-c="open">${esc(a.open.label)}</button>` : ''}${st && !a.quiet ? '<button type="button" data-c="snooze">Remind me in 10 min</button>' : ''}</div>
       <details class="coach-rule"><summary>When do I press Start?</summary><p>${esc(RULE)}</p>
-        <ul><li><b>Learn</b>: 25 min, 5-min break, 25 min. Morning, before work.</li><li><b>Use</b>: exercise or one project step, 25-min rounds. Evening.</li><li><b>Recall</b>: 15 min, no notes, about 50 min before sleep.</li><li>Opened a lesson or exercise without a timer? After ${NUDGE_AFTER} seconds the site asks whether to start one.</li></ul></details>
-      <p class="coach-foot"><span>${t.week ? `This week: ${t.week} rounds, ${t.weekMins} min` : 'No timed rounds yet this week'}</span>
-        <a href="${esc(href('s:#clock', page))}" data-c="clock">Study clock &amp; phone alarms</a>
-        <label><input type="checkbox" data-c="auto"${read(OPEN_KEY, true) ? ' checked' : ''}> Show this when I open the site</label></p></div>`;
-    opener = document.activeElement; dlg.hidden = false; document.body.classList.add('sh-modal');
-    (dlg.querySelector('[data-c="start"]') || dlg.querySelector('.coach-act button'))?.focus({ preventScroll: true });
+        <ul><li><b>Learn</b>: 25 min, 5-min break, 25 min. Morning, before work.</li><li><b>Use</b>: exercise or one project step, 25-min rounds. Evening.</li><li><b>Recall</b>: 15 min, no notes, about 50 min before sleep.</li><li>Opened a lesson or exercise without a timer? After ${NUDGE_AFTER} seconds the site asks whether to start one.</li></ul></details></div>`;
+    const finish = () => `<ol class="seq-list"><li><b>When the timer rings</b>: write one line of where you stopped, then stand up and move for the break.</li>
+        <li><b>When the session ends</b>: press <i>Log it on Today</i> (it fills in the topic and minutes) and add one line: what you did, where you pick up.</li>
+        <li><b>About 50 minutes before sleep</b>: 15 minutes of recall, from memory, no notes.</li>
+        <li><b>Away from the site?</b> Tick a step by hand on the progress bar's daily start, or on Today.</li></ol>
+      <p class="seq-note">${t.week ? `This week: ${t.week} timed rounds, ${t.weekMins} min.` : 'No timed rounds yet this week.'} <a href="${esc(href('s:#clock', page))}" data-c="clock">Study clock &amp; phone alarms</a> · <a href="${esc(href('s:#today', page))}" data-c="clock">Log on Today</a></p>`;
+    const steps = [
+      { label: 'Where you are', kicker: new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }), title: 'Where you are', html: where,
+        onShow: () => markPlanned(), primary: { label: 'What do I do now? →' } },
+      { label: 'Do now', kicker: 'This moment', title: a.mode === 'night' ? 'Sleep comes first' : 'What to do now', html: doNow,
+        primary: st ? { label: `${a.mode === 'work' ? 'I have a break: ' : '▶ Start '}${planLabel} · open ${st.short}`, quiet: !!a.quiet, run: () => { startSession(st); return false; } } : { label: 'Next →' } },
+      { label: 'Finish well', kicker: 'After the timer', title: 'Close the loop', html: finish, primary: { label: 'Got it' } }
+    ];
+    markPlanned();   // opening the daily start at any step is today's "Plan"
+    seq = openSequence({ id: 'daily', steps, start: Math.max(0, Math.min(2, at)), finishLabel: 'Got it', closeLabel: 'Close the daily start', onClose: () => { seq = null; } });
+    seq.el.addEventListener('click', e => {
+      const c = e.target.closest('[data-c]')?.dataset.c;
+      if (c === 'clock') closeGuide();
+      else if (c === 'open' && current?.open) { closeGuide(); go(current.open.to); }
+      else if (c === 'snooze') { write(SNOOZE_KEY, Date.now() + 10 * 60000); closeGuide(); }
+    });
+    seq.el.addEventListener('change', e => { if (e.target.dataset.c === 'auto') write(OPEN_KEY, e.target.checked); });
   }
-  function closeGuide() { if (dlg.hidden) return; dlg.hidden = true; document.body.classList.remove('sh-modal'); if (opener && opener.focus) opener.focus({ preventScroll: true }); }
-  dlg.addEventListener('click', e => {
-    if (e.target === dlg) return closeGuide();
-    const c = e.target.closest('[data-c]')?.dataset.c;
-    if (c === 'close' || c === 'clock') closeGuide();
-    else if (c === 'start' && current?.start) startSession(current.start);
-    else if (c === 'open' && current?.open) { closeGuide(); go(current.open.to); }
-    else if (c === 'snooze') { write(SNOOZE_KEY, Date.now() + 10 * 60000); closeGuide(); }
-  });
-  dlg.addEventListener('change', e => { if (e.target.dataset.c === 'auto') write(OPEN_KEY, e.target.checked); });
-  dlg.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); closeGuide(); }
-    if (e.key === 'Tab') { const f = [...dlg.querySelectorAll('button, a[href], input, summary')]; if (!f.length) return; const i = f.indexOf(document.activeElement);
-      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
-  });
 
   /* ---------------------------------------------------------------- small reminders */
   const nudge = document.createElement('div');
@@ -129,7 +139,7 @@ export function mountCoach({ page, href, where, TIMER_KEY, RECENT_KEY, signal })
     last = now;
     // 3. working on something with no timer running
     const p = where(page, location.hash), secs = (Date.now() - since) / 1000;
-    if (!tm && nudge.hidden && dlg.hidden && read(NUDGE_KEY, true) && WORK_PAGE.test(p) && secs >= NUDGE_AFTER && !dismissed().includes(p) && !isNight(s, now) && document.visibilityState === 'visible') {
+    if (!tm && nudge.hidden && !guideOpen() && read(NUDGE_KEY, true) && WORK_PAGE.test(p) && secs >= NUDGE_AFTER && !dismissed().includes(p) && !isNight(s, now) && document.visibilityState === 'visible') {
       const kind = kindFor(p), k = KINDS[kind], pl = kind === 'recall' ? [15, 0, 1] : k.plan, title = pageTitle() || k.name;
       nudge.dataset.kind = 'work';
       showNudge(k.colour, `<p class="sh-prompt-kicker">No timer running</p><h2>Working on “${esc(title)}”?</h2><p>Start the timer now, so the break comes on time and this counts in your week. ${esc(k.name)}: ${esc(planText(pl))}.</p>`,
@@ -157,13 +167,15 @@ export function mountCoach({ page, href, where, TIMER_KEY, RECENT_KEY, signal })
         : { keep: { label: 'Keep it, open the page', run: () => ses.link && go(ses.link) }, replace: { label: 'Start a new one', run: () => startSession(ses) } });
   });
 
-  window.lfzCoach = { open: () => openGuide(false) };
-  const btn = document.getElementById('sh-now'); if (btn) btn.addEventListener('click', () => openGuide(false));
+  window.lfzCoach = { open: (at = 1) => openGuide(false, at), tour: (at = 0) => startTour({ go: to => href(to, page), page, at }) };
+  const btn = document.getElementById('sh-now'); if (btn) btn.addEventListener('click', () => openGuide(false, 1));
 
   // Open by itself when you come to the site: not on every page change, not while a timer runs.
-  const seen = read(SEEN_KEY, 0), snoozed = read(SNOOZE_KEY, null);
-  if (read(OPEN_KEY, true) && Date.now() - seen > SHOW_AGAIN_MIN * 60000 && !(snoozed && snoozed > Date.now()) && !timerNow() && !new URLSearchParams(location.search).has('nocoach'))
-    setTimeout(() => openGuide(true), 600);
+  const seen = read(SEEN_KEY, 0), snoozed = read(SNOOZE_KEY, null), quiet = new URLSearchParams(location.search).has('nocoach');
+  // The very first visit (on each device) gets the tour; after that, the daily start when you come back.
+  if (!quiet && tourDue()) setTimeout(() => { if (!sequenceOpen()) startTour({ go: to => href(to, page), page }); }, 700);
+  else if (read(OPEN_KEY, true) && Date.now() - seen > SHOW_AGAIN_MIN * 60000 && !(snoozed && snoozed > Date.now()) && !timerNow() && !quiet)
+    setTimeout(() => openGuide(true, 0), 700);
 }
 
 // Called by the header timer when a round ends: keeps the log the guide and the clock page count from.

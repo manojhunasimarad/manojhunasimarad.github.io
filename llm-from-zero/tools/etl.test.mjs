@@ -59,8 +59,9 @@ test('ETL content: topics, practice, checkpoints, lessons, steps and quiz all co
   for(const e of exercises.exercises.filter(e=>e.set==='de'))assert(practised.has(e.id),'no topic practises '+e.id);
   const taught=new Set(de.flatMap(n=>n.lessons));
   for(const id of course.courses.find(c=>c.id==='de').lessons)assert(taught.has(id),'no topic teaches '+id);
-  assert.equal(etl.steps.length,10);assert.deepEqual(etl.steps.map(s=>s.n),[1,2,3,4,5,6,7,8,9,10]);
-  for(const s of etl.steps){assert(s.targets.length&&s.targets.every(t=>byId.get(t)?.group==='Data engineering'),s.title);assert(s.note.startsWith('docs/'));}
+  assert.equal(etl.steps.length,11);assert.deepEqual(etl.steps.map(s=>s.n),[1,2,3,4,5,6,7,8,9,10,11]);
+  // steps 1-10 are pure data engineering; step 11 (LLM enrichment) also needs the LLM topics
+  for(const s of etl.steps){assert(s.targets.length&&s.targets.every(t=>byId.has(t))&&s.targets.some(t=>byId.get(t).group==='Data engineering'),s.title);if(s.n<=10)assert(s.targets.every(t=>byId.get(t).group==='Data engineering'),s.title);assert(s.note.startsWith('docs/'));}
   const whole=closure(graph,etl.whole.targets);
   for(const n of de)assert(whole.has(n.id),'the whole project does not need '+n.id);
   assert.deepEqual(graph.tracks.find(t=>t.id==='etl').targets,etl.whole.targets);

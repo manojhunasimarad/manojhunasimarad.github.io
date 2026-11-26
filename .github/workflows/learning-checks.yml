@@ -24,8 +24,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-      - name: Learning graph, quizzes, retrieval and HTTP checks
-        run: node --test tools/check.test.mjs tools/learning.test.mjs tools/learning-render.test.mjs tools/quiz.test.mjs tools/etl.test.mjs tools/sync.test.mjs tools/projects.test.mjs tools/auth.test.mjs
+      - name: All JavaScript test suites (the list in package.json)
+        run: npm test
       - name: Native grading and sync regressions
         run: python tools/check-native.py
       - name: All bundled reference solutions and starters

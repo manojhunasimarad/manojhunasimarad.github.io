@@ -1823,7 +1823,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.send(200, f.read(), "application/pdf")
         rel = "index.html" if url.path in ("/", "") else url.path.lstrip("/")
         full = os.path.normpath(os.path.join(WEB, rel))
-        public_root = {"auth.mjs", "auth.html", "etl-check.mjs", "theme.js", "cloud-sync.mjs", "sync-ui.mjs", "offline.mjs", "index.html", "studio.html", "studio.mjs", "studio-core.mjs", "learning-engine.mjs", "etl-core.mjs", "learning-ui.mjs", "quiz-core.mjs", "quiz-ui.mjs", "learning.css", "studio.css", "studio.webmanifest", "style.css", "app.js", "manifest.webmanifest", "site-nav.mjs", "site.css", "clock-core.mjs", "clock.mjs", "coach-core.mjs", "coach.mjs"}
+        public_root = {"auth.mjs", "auth.html", "etl-check.mjs", "theme.js", "cloud-sync.mjs", "sync-ui.mjs", "offline.mjs", "index.html", "studio.html", "studio.mjs", "studio-core.mjs", "learning-engine.mjs", "etl-core.mjs", "learning-ui.mjs", "quiz-core.mjs", "quiz-ui.mjs", "learning.css", "studio.css", "studio.webmanifest", "style.css", "app.js", "manifest.webmanifest", "site-nav.mjs", "site.css", "clock-core.mjs", "clock.mjs", "coach-core.mjs", "coach.mjs", "journey-core.mjs", "rail.mjs", "tour.mjs", "etl-guide.mjs"}
         public_dir = rel.replace("\\", "/").split("/")[0]
         if (rel not in public_root and public_dir not in ("content", "vendor", "icons", "audio")) or not full.startswith(WEB + os.sep) or not os.path.isfile(full):
             return self.send(404, "Not found", "text/plain; charset=utf-8")

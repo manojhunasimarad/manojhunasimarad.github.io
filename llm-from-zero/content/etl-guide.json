@@ -1,0 +1,1688 @@
+{
+ "version": 1,
+ "checked": "2026-11-25",
+ "repo": "https://github.com/manojhunasimarad/ETL",
+ "pr": "https://github.com/manojhunasimarad/ETL/pull/11",
+ "title": "ETL project: step-by-step guide",
+ "sections": [
+  {
+   "id": "start",
+   "kind": "intro",
+   "title": "Start here",
+   "short": "Start here",
+   "summary": "How to use this guide, and where each command runs on your laptop.",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Work from top to bottom. Each step says what you learn, the commands, what you should see and when it counts as done. Tick a box only when you have done it yourself: the word **done** in the repository README means \"built and passing CI on GitHub\", not \"run and learned by you\"."
+    },
+    {
+     "t": "p",
+     "text": "Your ticks are saved on this device and synced with your other devices when sync is on. The full study notes stay in the repository, linked from each step."
+    },
+    {
+     "t": "h",
+     "text": "Where each command runs"
+    },
+    {
+     "t": "p",
+     "text": "Plain-Python commands run in PowerShell; every Spark command runs in Docker, because Spark on Windows needs Java 17 plus Hadoop's `winutils` to write files."
+    },
+    {
+     "t": "table",
+     "rows": [
+      [
+       "Where",
+       "Commands",
+       "Why there"
+      ],
+      [
+       "PowerShell, inside the project's `.venv`",
+       "`generate`, `profile`, `validate`, `download-olist`, `load-raw`, `build-core`, `analyze`, `ask`, `ask-eval`, `enrich-reviews`, `load-snowflake`, `pytest`, `streamlit run`",
+       "pandas and psycopg only: starts in a second, nothing to build"
+      ],
+      [
+       "Docker: `docker compose run --rm pipeline <command>`",
+       "`bronze`, `silver`, `gold`, `load-gold`, `quality`, `run`, `benchmark`, `produce`, `stream`, `export-snowflake`",
+       "The image has Java 17, Spark 4 and the Postgres driver"
+      ],
+      [
+       "Docker services: `docker compose ... up -d`",
+       "Postgres, pgAdmin, dashboard, Airflow, Kafka",
+       "Long-running servers"
+      ],
+      [
+       "WSL (Ubuntu)",
+       "GPU benchmark on the laptop",
+       "NVIDIA's Spark plugin runs only on Linux"
+      ],
+      [
+       "PowerShell to the V100",
+       "`scripts\\gpu\\run_on_server.ps1`",
+       "Large GPU runs over SSH"
+      ],
+      [
+       "Browser",
+       "Databricks notebook, Kaggle notebook, Snowflake worksheet",
+       "Free cloud compute"
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "You can mix them. Docker sees the same `data\\` and `reports\\` folders, so you can generate data in PowerShell and process it in Docker."
+    },
+    {
+     "t": "p",
+     "text": "Two rules that save hours:"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Don't install the `spark` extra in the Windows `.venv`. Once PySpark is installed, the Spark tests stop skipping and fail on Windows.",
+      "Start Postgres before anything that touches the database: `docker compose up -d postgres`."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "setup",
+   "kind": "setup",
+   "title": "One-time setup",
+   "short": "Setup",
+   "minutes": 20,
+   "summary": "Python environment, your Gemini key, Postgres and the pipeline image in Docker, and your git name.",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "About 20 minutes, most of it the Docker build. Every later command assumes you are in `D:\\sem3_4\\ETL` with the `.venv` active."
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "cd D:\\sem3_4\\ETL\npython --version                         # needs 3.10 or newer\npython -m venv .venv                     # skip if .venv already exists\n.venv\\Scripts\\Activate.ps1               # if blocked: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned\npython -m pip install --upgrade pip\npip install -e \".[dev,postgres,dashboard,kaggle]\"   # no \"spark\" here, on purpose"
+    },
+    {
+     "t": "p",
+     "text": "Your Gemini key goes in `.env`, which git ignores. The first line copies the template only if `.env` doesn't exist yet, so an existing key is never overwritten:"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "if (-not (Test-Path .env)) { Copy-Item .env.example .env }\nnotepad .env                             # set GEMINI_API_KEY=<your key from Google AI Studio>"
+    },
+    {
+     "t": "p",
+     "text": "Docker (Docker Desktop must be running):"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker version                           # must show a \"Server\" section\ndocker compose up -d postgres\ndocker compose --profile pipeline build pipeline   # first time: several minutes"
+    },
+    {
+     "t": "p",
+     "text": "Commit author check, so only manojhunasimarad appears on GitHub:"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "git config user.name                     # must print: manojhunasimarad\ngit config user.email                    # must print: 89728596+manojhunasimarad@users.noreply.github.com"
+    },
+    {
+     "t": "p",
+     "text": "If either is wrong, set it with `git config user.name \"manojhunasimarad\"` and `git config user.email \"89728596+manojhunasimarad@users.noreply.github.com\"`."
+    },
+    {
+     "t": "p",
+     "text": "Then `pytest -q`. What matters is **0 failed**. Skips are fine: each one names what it is waiting for (Spark, Kafka, Airflow, or \"your turn\")."
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "setup:docker-desktop-runs",
+       "text": "Docker Desktop runs"
+      },
+      {
+       "id": "setup:venv-created-and-active",
+       "text": "`.venv` created and active"
+      },
+      {
+       "id": "setup:packages-installed",
+       "text": "Packages installed"
+      },
+      {
+       "id": "setup:gemini-key-in-env",
+       "text": "Gemini key in `.env`"
+      },
+      {
+       "id": "setup:postgres-up-and-pipeline-image-built",
+       "text": "Postgres up and pipeline image built"
+      },
+      {
+       "id": "setup:git-name-and-email-correct",
+       "text": "Git name and email correct"
+      },
+      {
+       "id": "setup:pytest-q-shows-0-failed",
+       "text": "`pytest -q` shows 0 failed"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "latest",
+   "kind": "setup",
+   "title": "Get the latest code",
+   "short": "Latest code",
+   "minutes": 10,
+   "summary": "Step 11 and the review fixes are in pull request #11. Merge it, then bring your laptop up to date.",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Pull request #11 holds step 11 (LLM enrichment) and the review of every command in the docs, including a fix for the Snowflake load after a Docker export. Merge it first: the Kaggle notebook installs the project from GitHub's `main`, so until then it installs a version without `enrich-reviews`."
+    },
+    {
+     "t": "p",
+     "text": "On GitHub: open [pull request #11](https://github.com/manojhunasimarad/ETL/pull/11), wait for the green tick, press **Merge pull request**. Then on the laptop:"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "cd D:\\sem3_4\\ETL\ngit status                               # nothing to commit? good. Otherwise commit or stash first\ngit switch main\ngit pull                                 # brings step 11 and the review fixes\npython -m pytest -q                      # 0 failed\npython -m ecom_etl enrich-reviews --source sample --dry-run   # prints requests and tokens; spends nothing"
+    },
+    {
+     "t": "p",
+     "text": "You can delete `reports\\_claude_src.tgz` if it is still there; it was only a working copy. The branch `step-11-llm-enrichment` can go too: `git branch -d step-11-llm-enrichment`."
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "latest:pull-request-11-merged-with-ci-green",
+       "text": "Pull request #11 merged with CI green"
+      },
+      {
+       "id": "latest:local-main-updated-with-git-pull",
+       "text": "Local `main` updated with `git pull`"
+      },
+      {
+       "id": "latest:pytest-q-shows-0-failed-on-main",
+       "text": "`pytest -q` shows 0 failed on `main`"
+      },
+      {
+       "id": "latest:dry-run-of-enrich-reviews-prints-a-plan",
+       "text": "Dry run of `enrich-reviews` prints a plan"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s1",
+   "kind": "step",
+   "n": 1,
+   "title": "Data sources and profiling",
+   "short": "Step 1",
+   "summary": "You learn to understand the source before transforming it: what one row means, what can be wrong, and a tool that finds it.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-01-data-sources.md",
+   "topics": [
+    "de-profiling"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Grain** = what one row stands for. `order_items` is one order line; payments are a different grain, so joining the two row to row multiplies revenue.",
+      "`customer_id` is new for every order; the real person is `customer_unique_id`. Counting `customer_id` overcounts repeat buyers.",
+      "The **data contract** (`contracts.py`) lists every column, type, allowed value and key. Every later step reads it.",
+      "The profiler reads every value **as text**. Otherwise the zip `01037` silently becomes 1037 and the price `129,90` becomes NaN.",
+      "Each defect gets one action: **fix** it, **dedupe** it, **quarantine** it, or **accept** it as legitimate.",
+      "The generator writes every defect it injects to `_defects.csv`. That ground truth is what lets step 5 measure the checks."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "PowerShell"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "python -m ecom_etl generate              # 10,000 orders into data\\raw\\synthetic\npython -m ecom_etl profile               # report: reports\\profile_synthetic.md"
+    },
+    {
+     "t": "p",
+     "text": "What you should see (checked on 25 Nov): `generate` writes 10,115 customers, 10,103 orders, 11,310 order lines and 10,599 payments, with 1,424 injected defects. `profile` prints 17 findings and `Injected vs detected: 14/14 defect types match exactly`."
+    },
+    {
+     "t": "p",
+     "text": "**Your turn: write customers_without_orders** in `src\\ecom_etl\\profiling.py`. Its docstring explains the anti join and gives hints."
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "pytest -rs tests/test_your_turn.py       # 3 skipped: your task\n# write the function, then:\npytest -q                                # 0 failed, and the 3 \"your turn\" skips are gone\npython -m ecom_etl profile               # one new [warn] finding: customers_without_orders"
+    },
+    {
+     "t": "p",
+     "text": "Predict its count before you run it. Check: it should equal the `not_null:customer_id` count in the same profile."
+    },
+    {
+     "t": "h",
+     "text": "Real Olist data",
+     "sub": ""
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "# kaggle.json from kaggle.com > Settings > API goes in C:\\Users\\<you>\\.kaggle\\\npython -m ecom_etl download-olist\npython -m ecom_etl profile --source olist"
+    },
+    {
+     "t": "p",
+     "text": "No token? Download the zip from the dataset page, then `python -m ecom_etl download-olist --zip C:\\path\\to\\archive.zip`."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "What is the grain of `order_items`, and why can't payments be columns on it?",
+       "a": "One row per order line (`order_id` + `order_item_id`). Payments have their own grain, one row per payment of an order, and their number differs per order. Joining the two row to row repeats each payment for every line, so revenue is multiplied (a fan-out)."
+      },
+      {
+       "q": "What goes wrong if you count customers with `customer_id`?",
+       "a": "In Olist `customer_id` is new for every order, so counting it counts orders, not people. Repeat buyers are overcounted as new customers and the repeat rate looks like zero. People are `customer_unique_id`."
+      },
+      {
+       "q": "Why is a null `product_category_name` acceptable but a null `customer_id` not?",
+       "a": "A product without a category is still a real product you can sell: accept it and show it as unknown. An order without a customer breaks the key relationship: it cannot be joined to anyone, so it is quarantined."
+      },
+      {
+       "q": "Why does the generator use two random generators?",
+       "a": "One generator draws the clean data and the second one draws the defects. Changing `--defect-rate` then changes only the defects, never the underlying orders, so runs at different rates stay comparable and `_defects.csv` stays exact."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s1:generate-and-profile-ran",
+       "text": "`generate` and `profile` ran"
+      },
+      {
+       "id": "s1:each-synthetic-finding-traced-to-its-lin",
+       "text": "Each synthetic finding traced to its line in `generator.py`"
+      },
+      {
+       "id": "s1:customers-without-orders-written-its-3-t",
+       "text": "`customers_without_orders` written; its 3 tests pass"
+      },
+      {
+       "id": "s1:olist-downloaded-and-profiled",
+       "text": "Olist downloaded and profiled"
+      },
+      {
+       "id": "s1:fix-dedupe-quarantine-or-accept-decided",
+       "text": "Fix, dedupe, quarantine or accept decided for each Olist finding"
+      },
+      {
+       "id": "s1:olist-row-counts-added-to-results-md",
+       "text": "Olist row counts added to `RESULTS.md`"
+      },
+      {
+       "id": "s1:the-8-questions-in-the-note-answered-wit",
+       "text": "The 8 questions in the note answered without looking"
+      },
+      {
+       "id": "s1:step-1-story-written-in-stories-md",
+       "text": "Step 1 story written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "kind": "step",
+   "n": 2,
+   "title": "Postgres landing zone and normalization",
+   "short": "Step 2",
+   "summary": "You load the files into Postgres without losing a row, then build a clean 3NF copy whose rules the database itself enforces.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-02-postgres.md",
+   "topics": [
+    "de-postgres"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Docker basics**: an image is a packaged filesystem, a container is a running image, and the `pgdata` volume keeps the database when containers stop. Inside Compose the database is `postgres`; from your laptop it is `localhost:5432`.",
+      "**Landing zone first**: `synthetic_raw` stores every value as `TEXT` with no constraints, so loading can't fail and nothing is lost.",
+      "**COPY** streams each file into Postgres in 1 MB pieces: the fastest bulk load, with the same memory for 5 KB or 5 GB.",
+      "**Normal forms**: 1NF, one value per cell (three products = three `order_items` rows). 2NF, nothing depends on part of a key (`customer_id` lives in `orders`). 3NF, nothing depends on another non-key column (the English category name lives in `category_translation`).",
+      "**Constraints as a safety net**: one bad row aborts a whole `INSERT`, so `core.sql` filters bad rows first and the constraints prove the filter right.",
+      "**ELT patterns**: safe casts with `pg_input_is_valid`, dedupe with `DISTINCT ON ... ORDER BY _raw_id`, and cascade rejection of children whose order was rejected."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "PowerShell, Postgres in Docker"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose up -d postgres\npython -m ecom_etl generate --orders 5000     # the size the numbers below use\npython -m ecom_etl load-raw --source synthetic\npython -m ecom_etl build-core --source synthetic\npytest -q -rs                                 # the Postgres tests now run instead of skipping"
+    },
+    {
+     "t": "p",
+     "text": "What `build-core` should print (rerun on Postgres 16 on 25 Nov, exactly these counts):"
+    },
+    {
+     "t": "code",
+     "lang": "text",
+     "code": "  table                        raw      core   removed\n  customers                  5,062     5,000        62\n  sellers                      156       156         0\n  category_translation          20        22        -2\n  products                   1,666     1,666         0\n  orders                     5,061     4,805       256\n  order_items                5,656     5,333       323\n  order_payments             5,286     4,914       372"
+    },
+    {
+     "t": "p",
+     "text": "The `-2` is not a bug: two categories had no English name, so core adds them with `is_translated = FALSE` instead of rejecting their products."
+    },
+    {
+     "t": "p",
+     "text": "To look inside: `docker compose --profile tools up -d pgadmin`, open http://localhost:5050, server \"ecom (docker)\", password `ecom`."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "Why keep a raw copy instead of loading straight into typed tables?",
+       "a": "TEXT columns with no constraints cannot reject a row, so the load never fails and nothing is lost. You can always rebuild core from raw, audit every decision, and compare raw with core counts. Typed tables would refuse or silently coerce bad values at load time."
+      },
+      {
+       "q": "Give one 1NF, one 2NF and one 3NF violation using these tables.",
+       "a": "1NF: three product ids in one cell of `orders` (one value per cell instead: three `order_items` rows). 2NF: `customer_id` stored in `order_items`, where it depends only on `order_id`, part of the key. 3NF: the English category name stored in `products`, where it depends on the category, not on the product."
+      },
+      {
+       "q": "Why does one bad row abort a whole `INSERT ... SELECT`, and how does `core.sql` avoid it?",
+       "a": "A statement is atomic: if one row breaks a constraint the whole `INSERT ... SELECT` is rolled back. `core.sql` filters the bad rows out in the `WHERE` first (safe casts with `pg_input_is_valid`, duplicates, cascades), and the constraints then prove the filter right."
+      },
+      {
+       "q": "What does `DISTINCT ON` do, and why does the `ORDER BY` matter?",
+       "a": "`DISTINCT ON (key)` keeps one row per key: the first one in the `ORDER BY`. Ordering by `_raw_id` keeps the first loaded copy, so the result is the same on every run. Without the `ORDER BY` Postgres keeps any copy."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s2:load-raw-and-build-core-ran-and-match-th",
+       "text": "`load-raw` and `build-core` ran and match the table"
+      },
+      {
+       "id": "s2:you-can-explain-the-2-and-every-removed",
+       "text": "You can explain the `-2` and every removed count"
+      },
+      {
+       "id": "s2:postgres-tests-pass",
+       "text": "Postgres tests pass"
+      },
+      {
+       "id": "s2:each-where-condition-in-the-orders-inser",
+       "text": "Each `WHERE` condition in the `orders` insert of `core.sql` explained"
+      },
+      {
+       "id": "s2:olist-loaded-too-source-olist-on-both-co",
+       "text": "Olist loaded too (`--source olist` on both commands)"
+      },
+      {
+       "id": "s2:step-2-trade-off-line-written-in-stories",
+       "text": "Step 2 trade-off line written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "kind": "step",
+   "n": 3,
+   "title": "Spark: bronze to silver",
+   "short": "Step 3",
+   "summary": "You turn raw CSV into clean, typed Parquet, and every rejected row lands in quarantine with its reason.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-03-spark.md",
+   "topics": [
+    "de-cleaning"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Spark** splits data into partitions and works on them in parallel. Nothing runs until an action (`count`, `write`). **Wide** operations (join, groupBy, window) shuffle data between partitions, and that is the expensive part.",
+      "**Medallion layers**: bronze is the source as it arrived (all text plus lineage columns), silver is clean and typed, quarantine holds rejected rows with `_reasons`.",
+      "Bronze declares every column as a string. Guessing types (`inferSchema`) would turn zip `01037` into 1037.",
+      "**Silver, in order**: apply the step-1 fixes (recorded in `_fixes`), remove exact duplicates keeping the first loaded copy, cast safely with `try_cast` (Spark 4's ANSI mode kills the job on a bad plain cast), tag every broken rule as a reason code, then split.",
+      "**Orphan or cascade**: a child whose parent never existed gets `fk:...`; a child whose parent was itself rejected gets `parent_quarantined:...`. Step 5 needs that difference to score the checks honestly.",
+      "**The invariant** bronze = duplicates + quarantine + silver is tested for every table: no row disappears without a reason."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "Docker; the 5,000 orders from step 2 are still in `data\\raw\\synthetic`"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose run --rm pipeline bronze --source synthetic\ndocker compose run --rm pipeline silver --source synthetic"
+    },
+    {
+     "t": "p",
+     "text": "`silver` prints one row per table. These counts come from CI; the silver counts must equal step 2's core counts:"
+    },
+    {
+     "t": "code",
+     "lang": "text",
+     "code": "  table                     bronze   dupes  quarantine    silver\n  customers                  5,062      62           0     5,000\n  orders                     5,061      61         195     4,805\n  order_items                5,656       0         323     5,333\n  order_payments             5,286      59         313     4,914"
+    },
+    {
+     "t": "p",
+     "text": "To look at the quarantine, open Python inside the container with `docker compose run --rm --entrypoint python pipeline`, then:"
+    },
+    {
+     "t": "code",
+     "lang": "python",
+     "code": "from ecom_etl.spark.session import get_spark\nspark = get_spark()\nspark.read.parquet(\"data/lake/synthetic/quarantine/order_items\").select(\"order_id\", \"price\", \"_reasons\").show(truncate=False)"
+    },
+    {
+     "t": "p",
+     "text": "The Spark UI needs its port published: `docker compose run --rm -p 4040:4040 pipeline silver --source synthetic`, then open http://localhost:4040 while it runs."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "What is lazy evaluation, and which operations trigger work?",
+       "a": "Transformations (select, filter, join, groupBy) only build a plan. Work starts when an action needs a result: `count`, `show`, `collect`, `take`, `write`, `toPandas`. Then Spark optimises the whole plan at once."
+      },
+      {
+       "q": "How does silver tell an orphan from a child of a rejected parent?",
+       "a": "It left-joins two key sets from the parent: the valid keys and the quarantined keys. Missing from both means the parent never existed: `fk:` (a real orphan). Found only among the quarantined keys means the parent was rejected: `parent_quarantined:` (a cascade)."
+      },
+      {
+       "q": "Why does Spark 4 need `try_cast`?",
+       "a": "Spark 4 runs in ANSI mode by default: a plain `cast('abc' as int)` raises an error and kills the whole job. `try_cast` returns NULL instead, and a rule turns \"value present but NULL after the cast\" into the reason `type:<column>`."
+      },
+      {
+       "q": "What does bronze = duplicates + quarantine + silver protect you from?",
+       "a": "From silent data loss. Every bronze row must end as a duplicate, in quarantine or in silver, so a bug that drops rows (a wrong join or filter) breaks the equation and the test fails."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s3:bronze-and-silver-ran-in-docker",
+       "text": "`bronze` and `silver` ran in Docker"
+      },
+      {
+       "id": "s3:silver-counts-equal-step-2-s-core-counts",
+       "text": "Silver counts equal step 2's core counts"
+      },
+      {
+       "id": "s3:each-reason-code-traced-to-its-rule-in-s",
+       "text": "Each reason code traced to its rule in `silver.py`"
+      },
+      {
+       "id": "s3:silver-flow-drawn-from-memory",
+       "text": "Silver flow drawn from memory"
+      },
+      {
+       "id": "s3:silver-run-on-olist-reasons-compared-wit",
+       "text": "Silver run on Olist; reasons compared with your step 1 decisions"
+      },
+      {
+       "id": "s3:step-3-result-and-trade-off-written-in-s",
+       "text": "Step 3 result and trade-off written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s4",
+   "kind": "step",
+   "n": 4,
+   "title": "Star schema and SCD Type 2",
+   "short": "Step 4",
+   "summary": "You reshape silver into a star schema that answers business questions with one join hop, then load it into Postgres.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-04-star-schema.md",
+   "topics": [
+    "de-dimensional"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "A **fact** table records events with numbers you add up (price, freight); a **dimension** describes who, what, where and when.",
+      "**Declare the grain first**: `fact_order_line` is one row per order line. Payments have their own grain, so they get their own fact, `fact_payment`.",
+      "**Surrogate keys** are `xxhash64` of the natural key: the same key on every rerun, and no database sequence. Every dimension also has an **unknown member** (`-1`), so a fact with a missing dimension row doesn't vanish from joins.",
+      "**SCD Type 2**: `dim_customer` keeps one row per person per location, with `effective_from`, `effective_to` and `is_current`.",
+      "The **point-in-time join** `effective_from <= purchased_at < effective_to` makes each order count in the state where the customer lived when ordering.",
+      "`v_order_lines` is a view that gives analysts one wide table over the star."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "Docker, on the same 5,000 orders"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose run --rm pipeline gold --source synthetic\ndocker compose run --rm pipeline load-gold --source synthetic"
+    },
+    {
+     "t": "p",
+     "text": "Counts from CI: `dim_date` 651, `dim_customer` 4,660, `dim_product` 1,667, `dim_seller` 157, `fact_order_line` 5,333, `fact_payment` 4,914, `agg_daily_sales` 606. The facts equal silver's order lines and payments. Each dimension has one extra row: the unknown member."
+    },
+    {
+     "t": "p",
+     "text": "Then in pgAdmin:"
+    },
+    {
+     "t": "code",
+     "lang": "sql",
+     "code": "SELECT category, customer_state, round(sum(line_total), 2) AS revenue\nFROM synthetic_gold.v_order_lines\nWHERE order_status NOT IN ('canceled', 'unavailable')\nGROUP BY 1, 2 ORDER BY revenue DESC LIMIT 10;"
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "What is the grain of each fact, and why two facts?",
+       "a": "`fact_order_line`: one row per order line. `fact_payment`: one row per payment. They are two facts because their grains differ: an order can have three lines and two payments, and one table would repeat values and multiply totals."
+      },
+      {
+       "q": "Why join on `product_sk` and not `product_id`?",
+       "a": "The fact stores `product_sk`, not `product_id`: an integer from `xxhash64`, the same on every rerun, that points to the unknown member (-1) when the product is missing. Joining facts to dimensions on surrogate keys is the star schema's contract; on an SCD2 dimension such as `dim_customer` the natural key is not even unique."
+      },
+      {
+       "q": "Explain SCD types 1, 2 and 3 with a customer who moves.",
+       "a": "Type 1 overwrites the state: history is lost and old orders now count in the new state. Type 2 adds a new row with `effective_from`, `effective_to` and `is_current`: each order joins to the state where the customer lived when ordering. Type 3 adds a `previous_state` column: one step of history only."
+      },
+      {
+       "q": "What is the unknown member for?",
+       "a": "A dimension row with key -1 meaning \"unknown\". A fact whose dimension key is missing points to it, so inner joins do not drop the fact and the totals stay complete."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s4:gold-and-load-gold-ran-counts-match",
+       "text": "`gold` and `load-gold` ran; counts match"
+      },
+      {
+       "id": "s4:star-schema-and-each-table-s-grain-drawn",
+       "text": "Star schema and each table's grain drawn from memory"
+      },
+      {
+       "id": "s4:a-customer-with-two-versions-found-with",
+       "text": "A customer with two versions found, with the orders on each"
+      },
+      {
+       "id": "s4:scd2-build-and-point-in-time-join-explai",
+       "text": "SCD2 build and point-in-time join explained line by line"
+      },
+      {
+       "id": "s4:gold-built-and-loaded-for-olist-too",
+       "text": "Gold built and loaded for Olist too"
+      },
+      {
+       "id": "s4:step-4-result-and-trade-off-written-in-s",
+       "text": "Step 4 result and trade-off written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s5",
+   "kind": "step",
+   "n": 5,
+   "title": "Data quality framework",
+   "short": "Step 5",
+   "summary": "You turn step 1's findings into 115 automated checks that run every time, stop bad data before it is published, and are themselves measured.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-05-data-quality.md",
+   "topics": [
+    "de-quality"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Two kinds of check.** 80 row-level rules run inside silver: a failing row goes to quarantine and the rest flows on. 35 table-level gates check a whole layer; 32 of them block the pipeline. Both counted from the check registry.",
+      "The 3 gates that only warn are freshness, payment reconciliation and volume change. Real Olist ends in 2018, so freshness always fires there, and that must not stop a historical load.",
+      "**Write, audit, publish**: bronze, silver, silver gates, gold, gold gates, then the Postgres load. A blocking gate stops the run with exit code 2, and the report explaining why is still written.",
+      "**Checks are measured** like a classifier against `_defects.csv`. Recall is the share of injected bad rows caught; precision is the share of caught rows that really were bad. Rows rejected only because their parent was (`parent_quarantined:`) don't count toward precision.",
+      "Results land in `reports\\dq_report_synthetic.md`, in a JSON report per run, and in Postgres `synthetic_dq.check_results` for history."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "Docker, at the note's size of 20,000 orders"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose run --rm pipeline generate --orders 20000\ndocker compose run --rm pipeline run --source synthetic       # the whole pipeline with gates\ndocker compose run --rm pipeline quality --source synthetic   # re-check only"
+    },
+    {
+     "t": "p",
+     "text": "Expected from CI:"
+    },
+    {
+     "t": "code",
+     "lang": "text",
+     "code": "Data quality: 115 checks (80 row-level, 35 table-level), 14 flagged, 0 blocking\n  bronze records 91,521: quarantined 3,497, duplicates removed 622, fixed 471\n  vs injected defects: quarantine precision 100.0%, recall 100.0%\n  [warn] orders.volume_change: 4805 -> 19194 rows\n  [warn] orders.payment_reconciliation: 100 orders differ by more than 1.00"
+    },
+    {
+     "t": "p",
+     "text": "Regenerated on 25 Nov: 91,521 records, 1,762 defects to quarantine and 622 duplicates, the same as above. The volume warning is right: the previous run had 5,000 orders."
+    },
+    {
+     "t": "p",
+     "text": "See a gate block: set `MAX_QUARANTINE_RATE = 0.01` in `src\\ecom_etl\\spark\\quality.py`, rerun `run`, then `echo $LASTEXITCODE` (prints 2). Set it back to `0.10` afterwards."
+    },
+    {
+     "t": "p",
+     "text": "Olist: `docker compose run --rm pipeline run --source olist`."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "Why do row rules quarantine but never block, while gates block?",
+       "a": "One bad row should not stop the business: row rules move it to quarantine and let the good rows flow. A gate looks at a whole layer; if too much is bad or a table-level rule breaks, publishing it would be wrong, so the pipeline stops before the load."
+      },
+      {
+       "q": "What is write-audit-publish?",
+       "a": "Write the new data where nobody reads it yet, audit it with checks, and publish only if the checks pass. Here: bronze, silver, silver gates, gold, gold gates, and only then the Postgres load."
+      },
+      {
+       "q": "Why are `parent_quarantined` rows left out of precision?",
+       "a": "Those rows were rejected because their parent was rejected, not because a check fired wrongly on them, and `_defects.csv` does not list them as injected. Counting them as false positives would punish the checks for the correct cascade."
+      },
+      {
+       "q": "How do you avoid alert fatigue?",
+       "a": "Block only on what needs action now; make expected conditions warnings (freshness on 2018 Olist data); tune thresholds on real runs; keep one alert per problem; attach the report that says why."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s5:run-succeeded-on-20-000-orders-and-match",
+       "text": "`run` succeeded on 20,000 orders and matches"
+      },
+      {
+       "id": "s5:dq-report-synthetic-md-read",
+       "text": "`dq_report_synthetic.md` read"
+      },
+      {
+       "id": "s5:gate-blocked-on-purpose-exit-code-2-seen",
+       "text": "Gate blocked on purpose, exit code 2 seen, threshold restored"
+      },
+      {
+       "id": "s5:run-on-olist-its-bad-record-counts-added",
+       "text": "`run` on Olist; its bad-record counts added to `RESULTS.md`"
+      },
+      {
+       "id": "s5:every-blocking-gate-explained-and-why-th",
+       "text": "Every blocking gate explained, and why the 3 warnings don't block"
+      },
+      {
+       "id": "s5:step-5-trade-off-written-in-stories-md",
+       "text": "Step 5 trade-off written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s6",
+   "kind": "step",
+   "n": 6,
+   "title": "SQL analysis and dashboard",
+   "short": "Step 6",
+   "summary": "You use the star schema the way analysts do: ten business questions in SQL, and a dashboard that shows the numbers beside their data quality.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-06-analysis-dashboard.md",
+   "topics": [
+    "de-analytics",
+    "de-dashboard"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Ten questions, ten techniques**, one file each in `src\\ecom_etl\\sql\\analysis\\`: `LAG` for month-on-month growth, a window over an aggregate for category share, `RANK`, `COUNT(*) FILTER`, running totals for the 80/20 seller curve, and `NTILE` for RFM segments.",
+      "**Window functions** compute over related rows without collapsing them: `PARTITION BY` groups, `ORDER BY` orders, and the frame decides what a running sum covers.",
+      "**ROW_NUMBER, RANK, DENSE_RANK** give 1, 2, 3 / 1, 1, 3 / 1, 1, 2 on a tie.",
+      "**Metric definitions are decisions**: revenue leaves out canceled and unavailable orders and includes freight; repeat rate counts people (`customer_unique_id`).",
+      "**Dashboard as code**: Streamlit reuses the same SQL files as `analyze`, so the report and the dashboard can't disagree."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "gold from step 5 is already loaded"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose run --rm pipeline analyze --source synthetic     # writes reports\\analysis_synthetic.md\ndocker compose --profile dashboard up -d dashboard              # http://localhost:8501"
+    },
+    {
+     "t": "p",
+     "text": "Both also run natively: `python -m ecom_etl analyze --source synthetic` and `streamlit run dashboard/app.py`."
+    },
+    {
+     "t": "p",
+     "text": "First rows from CI on 20,000 orders: top category `cool_stuff` with 12.99% of items revenue; top state SP with 1,105,722.19; 511 of 18,019 customers bought again (2.84%); credit cards carry 75.06% of payment value."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "What does `SUM(SUM(price)) OVER ()` compute, and in which order does SQL evaluate it?",
+       "a": "The inner `SUM(price)` is the per-group total from `GROUP BY`; the outer `SUM(...) OVER ()` adds those group totals over all rows, giving the grand total next to each group, so `share = group / grand total`. Order: FROM and WHERE, GROUP BY, aggregates, HAVING, window functions, SELECT, ORDER BY."
+      },
+      {
+       "q": "Why does the payment-mix query not join the two facts?",
+       "a": "Lines and payments are both per order, at different grains. Joining them repeats each payment for every line of the order and multiplies the values. Payment mix needs only `fact_payment`."
+      },
+      {
+       "q": "Why count repeat customers with `customer_unique_id`?",
+       "a": "Olist gives a new `customer_id` for every order, so every buyer would look like a one-time buyer. `customer_unique_id` is the person, so only it can show who came back."
+      },
+      {
+       "q": "How do you make sure two dashboards report the same revenue?",
+       "a": "Define each metric once and reuse it: here the dashboard and `analyze` run the same SQL files, with the definition written down (canceled and unavailable orders out, freight in). A test can compare the two numbers."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s6:analyze-ran-each-of-the-10-queries-expla",
+       "text": "`analyze` ran; each of the 10 queries explained"
+      },
+      {
+       "id": "s6:dashboard-runs-two-minute-walkthrough-re",
+       "text": "Dashboard runs; two-minute walkthrough rehearsed"
+      },
+      {
+       "id": "s6:analyze-run-on-olist-its-repeat-rate-not",
+       "text": "`analyze` run on Olist; its repeat rate noted"
+      },
+      {
+       "id": "s6:step-6-result-and-trade-off-written-in-s",
+       "text": "Step 6 result and trade-off written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s7",
+   "kind": "step",
+   "n": 7,
+   "title": "Performance tuning",
+   "short": "Step 7",
+   "summary": "You make the batch 5.4 times faster (176.9 s to 33.0 s in CI) and prove it one change at a time.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-07-performance.md",
+   "topics": [
+    "de-spark-tuning",
+    "de-sql-tuning"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "An action becomes a **job**, the job is cut into **stages** at every shuffle, and each stage runs one **task** per partition.",
+      "**Shuffle partitions** default to 200: hundreds of tiny tasks on a laptop. Sizing them to the machine did most of the speed-up (176.9 s to 39.5 s).",
+      "**Broadcast joins** copy a small dimension to every task, so the big fact is never shuffled. A star schema is built for this (another 16%).",
+      "**AQE** re-plans during the job (merges small partitions, switches joins, splits skew). It added nothing here, because the first two changes had already done its work. Saying so is part of an honest benchmark.",
+      "**Postgres doesn't index foreign keys** by itself. An index on the fact's `customer_sk` took one customer's history from 12.5 ms (Seq Scan) to 0.013 ms (Index Scan).",
+      "**Benchmark honestly**: same data and machine, one change at a time, warm up, take the median, report the machine."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "Docker"
+    },
+    {
+     "t": "p",
+     "text": "Your laptop has 8 GB, so start at 50,000 orders and go to 200,000 only if that finishes comfortably. Close Chrome while it runs."
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose run --rm pipeline generate --orders 50000\ndocker compose run --rm -p 4040:4040 pipeline benchmark --source synthetic --repeat 2"
+    },
+    {
+     "t": "p",
+     "text": "The report is `reports\\benchmark_synthetic.md`. While it runs, http://localhost:4040 shows the Spark UI: find `SortMergeJoin` in the baseline and `BroadcastHashJoin` in the tuned run, under the SQL tab. `--orders 200000` writes 201,874 order rows, because about 1% are injected duplicates."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "What is a shuffle, and which operations cause one?",
+       "a": "Moving rows between partitions so that rows with the same key meet in one task. Wide operations cause it: joins that are not broadcast, groupBy and aggregations, distinct, window functions with `PARTITION BY`, sort, repartition."
+      },
+      {
+       "q": "How do you choose `spark.sql.shuffle.partitions`?",
+       "a": "Size them to the data and the machine: tasks of roughly 100 to 200 MB, and at least two to three tasks per core. On a laptop with little data the default 200 is far too many tiny tasks; this project uses 16. With AQE on, start a little high and let it merge small partitions."
+      },
+      {
+       "q": "When does Spark use a broadcast hash join, and when a sort-merge join?",
+       "a": "Broadcast hash join when one side is small (under `spark.sql.autoBroadcastJoinThreshold`, 10 MB by default, or with a hint): the small side is copied to every task and the big side is never shuffled. Sort-merge join when both sides are large: both are shuffled by key, sorted and merged. AQE can switch to broadcast at run time."
+      },
+      {
+       "q": "When is a Postgres index not used, and why is that correct?",
+       "a": "When the planner estimates a sequential scan is cheaper: the query reads a large share of the table, the table is tiny, or the condition cannot use the index (a function on the column, a type mismatch). Many random index lookups cost more than one pass over the table."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s7:benchmark-ran-on-your-laptop-numbers-and",
+       "text": "Benchmark ran on your laptop; numbers and machine in `RESULTS.md`"
+      },
+      {
+       "id": "s7:each-row-of-the-ablation-table-explained",
+       "text": "Each row of the ablation table explained"
+      },
+      {
+       "id": "s7:both-join-types-found-in-the-spark-ui",
+       "text": "Both join types found in the Spark UI"
+      },
+      {
+       "id": "s7:step-7-trade-off-written-in-stories-md",
+       "text": "Step 7 trade-off written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s8",
+   "kind": "step",
+   "n": 8,
+   "title": "Orchestration with Airflow",
+   "short": "Step 8",
+   "summary": "You run the batch as an Airflow 3 DAG with retries, history, and gates that stop a bad run before it reaches Postgres.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-08-airflow.md",
+   "topics": [
+    "de-orchestration"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "An orchestrator decides **when** tasks run, in **what order**, and what happens on **failure**, and it keeps the history. It holds no business logic: each task is one `python -m ecom_etl` command.",
+      "The DAG `ecom_batch_pipeline` runs extract, bronze, silver, silver_gate, gold, gold_gate, load_gold, analyze in that order, `@daily` with `catchup=False`.",
+      "**Idempotent tasks**: each overwrites its own layer, so a retry or rerun gives the same result.",
+      "**Retries only where they help**: Spark tasks retry twice; gates have `retries=0`, because a data problem fails again.",
+      "When a gate fails, every task after it ends as `upstream_failed` (not \"skipped\") and `load_gold` never runs.",
+      "**Airflow 3 parts**: API server (the UI), scheduler, DAG processor, triggerer, and a metadata database (the `airflow` database in your Postgres)."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "Docker"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose --profile airflow build airflow    # first time: a few minutes\ndocker compose --profile airflow up -d airflow"
+    },
+    {
+     "t": "p",
+     "text": "Open http://localhost:8080 (no login), switch on `ecom_batch_pipeline` and press Trigger. A synthetic run regenerates `data\\raw\\synthetic` with 20,000 orders, the DAG's `orders` parameter."
+    },
+    {
+     "t": "p",
+     "text": "Test without the UI:"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose --profile airflow exec airflow airflow dags test ecom_batch_pipeline"
+    },
+    {
+     "t": "p",
+     "text": "To watch a gate stop the DAG, set `MAX_QUARANTINE_RATE = 0.01` as in step 5, trigger it, then restore `0.10`. Free the RAM afterwards with `docker compose --profile airflow stop airflow`."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "What does an orchestrator do that a cron job does not?",
+       "a": "It runs tasks in dependency order, retries failed tasks, keeps every run's history and logs, passes parameters, schedules by data interval, backfills the past and shows it all in a UI. Cron only starts a command at a time and forgets."
+      },
+      {
+       "q": "What makes a task idempotent, and why does that matter for retries?",
+       "a": "Running it again with the same input gives the same result: each task overwrites its own layer instead of appending. Then a retry or a rerun cannot duplicate data, so retries are safe."
+      },
+      {
+       "q": "Why do the gates have no retries?",
+       "a": "A gate fails because the data is bad. The same data fails again on a retry, so retrying only delays the alarm. Retries are for transient faults such as a network blip or memory."
+      },
+      {
+       "q": "What is a DAG run's logical date?",
+       "a": "The moment the run is for, not when it ran: the start of its data interval for a scheduled run. A backfill for last Monday has Monday's logical date even when it runs today."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s8:dag-ran-green-in-the-ui",
+       "text": "DAG ran green in the UI"
+      },
+      {
+       "id": "s8:gate-failure-seen-and-its-reason-found-i",
+       "text": "Gate failure seen, and its reason found in the task log"
+      },
+      {
+       "id": "s8:idempotency-retries-and-catchup-explaine",
+       "text": "Idempotency, retries and catchup explained with this DAG"
+      },
+      {
+       "id": "s8:step-8-trade-off-written-in-stories-md",
+       "text": "Step 8 trade-off written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s9",
+   "kind": "step",
+   "n": 9,
+   "title": "Streaming with Kafka",
+   "short": "Step 9",
+   "summary": "You process orders as a stream and still get revenue right to the cent, although the stream delivers duplicates, late events and broken messages.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-09-streaming.md",
+   "topics": [
+    "de-streaming"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Kafka terms**: the topic `orders` is an append-only log split into 3 partitions. Messages are keyed by `order_id`, so one order's events stay in order in one partition. The **offset** is a message's position. Kafka 4 runs in KRaft mode, without ZooKeeper.",
+      "**Delivery**: real producers retry, so assume at-least-once and make the consumer handle duplicates.",
+      "**Exactly-once results** come from three things together: offsets stored in Spark's checkpoint, deduplication by `event_id`, and an idempotent Postgres upsert keyed by day.",
+      "**Event time** (when the order happened) decides the day, not processing time. A **watermark** says how late an event may still count: 3 days for the daily windows, 7 days for remembering `event_id`s.",
+      "**Triggers**: `availableNow` processes everything in the topic, then stops; `--continuous` runs 10-second micro-batches until Ctrl+C."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "Docker, on the 20,000 orders from step 5"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose run --rm pipeline generate --orders 20000      # only if step 7 or 8 replaced them\ndocker compose --profile streaming up -d --wait kafka\ndocker compose run --rm pipeline produce --source synthetic --limit 3000\ndocker compose run --rm pipeline stream --source synthetic --reset"
+    },
+    {
+     "t": "p",
+     "text": "What you should see (the producer's plan, recomputed on 25 Nov, gives exactly the CI numbers): `produce`: 3,063 messages, 63 duplicates, 34 late, 32 malformed, 2,968 valid unique events, total 414,831.77. `stream`: 3,063 bronze records, 32 quarantined, 2,968 silver events, daily revenue 414,831.77, 0 dropped by watermark."
+    },
+    {
+     "t": "p",
+     "text": "To start again from an empty topic: `docker compose --profile streaming exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic orders`. Otherwise a second `produce` adds to the first."
+    },
+    {
+     "t": "p",
+     "text": "Live mode: `docker compose run --rm pipeline stream --continuous` in one terminal and `docker compose run --rm pipeline produce --rate 20` in another, then watch the dashboard's Streaming tab."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "Which time do the daily windows use, and why?",
+       "a": "Event time, when the order happened. A late or replayed message still lands in the day it belongs to, so the daily revenue does not depend on when Spark happened to process it."
+      },
+      {
+       "q": "What does a watermark do, and what does it trade off?",
+       "a": "It tells Spark how late an event may arrive and still count, so old windows can be closed and their state dropped. A long watermark counts more late events but keeps more state and finalises later; a short one is lighter and faster but drops more late events."
+      },
+      {
+       "q": "Which three mechanisms turn at-least-once input into exactly-once results?",
+       "a": "Offsets stored in Spark's checkpoint (no message is skipped or read twice after a restart), deduplication by `event_id` (the producer's retries are removed) and an idempotent Postgres upsert keyed by day (writing a day again replaces it)."
+      },
+      {
+       "q": "What is a checkpoint, and what happens if you delete it?",
+       "a": "The checkpoint holds the offsets read so far and the query's state (the remembered `event_id`s and open windows). Delete it and the query forgets where it was: it starts again from the topic's start and rebuilds its state, which is what `--reset` does on purpose."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s9:produce-and-stream-ran-and-your-numbers",
+       "text": "`produce` and `stream` ran, and your numbers match"
+      },
+      {
+       "id": "s9:streaming-tab-shows-daily-revenue",
+       "text": "Streaming tab shows daily revenue"
+      },
+      {
+       "id": "s9:late-events-dropped-on-purpose-note-exer",
+       "text": "Late events dropped on purpose (note, exercise 1), then settings restored"
+      },
+      {
+       "id": "s9:watermarks-and-exactly-once-explained-wi",
+       "text": "Watermarks and exactly-once explained with this pipeline"
+      },
+      {
+       "id": "s9:step-9-trade-off-written-in-stories-md",
+       "text": "Step 9 trade-off written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s10",
+   "kind": "step",
+   "n": 10,
+   "title": "Databricks and Snowflake",
+   "short": "Step 10",
+   "summary": "You run the same Spark code on Databricks and load the gold tables into Snowflake. Until both runs are done, the honest line for an interview is \"written for Databricks and Snowflake and tested locally\".",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-10-cloud.md",
+   "topics": [
+    "de-cloud"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**The transformations don't change** in the cloud; what changes is around them: compute, file locations, table format, cost and secrets.",
+      "**Databricks**: names have three levels (`workspace.ecom.fact_order_line`). `saveAsTable` writes a **Delta** table, which adds ACID writes and history (`DESCRIBE HISTORY`).",
+      "**Serverless compute refuses persist()**, so the notebook sets `ECOM_NO_CACHE=1`. Turning the cache off exposed a real bug: `dropDuplicates` kept an arbitrary copy. Silver now keeps the first loaded copy. The rule: never rely on a cache for correctness.",
+      "**Snowflake** separates storage from compute: queries run on a warehouse you pay for per second, and `AUTO_SUSPEND = 60` stops it after a minute idle.",
+      "**Loading** is two steps: `PUT` files on a stage, then `COPY INTO` the table. Clearing the stage first makes a rerun give the same tables."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Databricks Free Edition",
+     "sub": ""
+    },
+    {
+     "t": "ol",
+     "items": [
+      "Sign up and open the workspace.",
+      "Workspace, your folder, ⋮, Import, File: pick `D:\\sem3_4\\ETL\\cloud\\databricks\\ecom_pipeline.py`.",
+      "Connect to serverless compute and choose Run all. The widgets default to catalog `workspace`, schema `ecom` and 20,000 orders.",
+      "Copy the printed seconds and bronze records into `RESULTS.md`, with \"Databricks Free Edition, serverless\" and the date."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Snowflake trial",
+     "sub": "PowerShell and Docker"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose run --rm pipeline run --source synthetic --no-load      # gold in the lake (Spark, so Docker)\ndocker compose run --rm pipeline export-snowflake --source synthetic   # Parquet + _manifest.json\npip install -e \".[snowflake]\"                                          # in the Windows .venv\n$env:SNOWFLAKE_ACCOUNT = \"<orgname-accountname>\"\n$env:SNOWFLAKE_USER = \"<your user>\"\n$env:SNOWFLAKE_AUTHENTICATOR = \"externalbrowser\"                       # signs in through your browser\npython -m ecom_etl load-snowflake --source synthetic                   # every table must say ok"
+    },
+    {
+     "t": "p",
+     "text": "The `$env:` lines last only for that PowerShell window. Then run `cloud\\snowflake\\queries.sql` in a Snowsight worksheet, and finish with `ALTER WAREHOUSE ECOM_WH SUSPEND;` so the trial credits last."
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "What did the code need to change to run on Databricks, and why so little?",
+       "a": "Only what surrounds the transformations: serverless compute, three-level table names and Delta tables (`saveAsTable`), file locations, secrets, and caching switched off with `ECOM_NO_CACHE=1`. The DataFrame code is plain Spark, so it runs unchanged."
+      },
+      {
+       "q": "Why was `dropDuplicates` a correctness risk without a cache?",
+       "a": "`dropDuplicates` keeps an arbitrary copy. Without a cache, Spark recomputes the plan for every action, and each recomputation may keep a different copy, so the silver write and its counts could disagree. Silver now keeps the first loaded copy (`row_number` over `_row_id`)."
+      },
+      {
+       "q": "What is a stage, and why doesn't `PUT` work in a worksheet?",
+       "a": "A stage is a place Snowflake loads files from; here an internal stage inside Snowflake. `PUT` uploads files from the machine the client runs on, and a browser worksheet has no access to your disk, so use the Python connector, SnowSQL or the Snowflake CLI."
+      },
+      {
+       "q": "How is the Snowflake load made idempotent?",
+       "a": "Each table is created with `CREATE OR REPLACE`, its stage folder is emptied (`REMOVE`) before `PUT`, then `COPY INTO` and a `COUNT(*)` check. A rerun ends with exactly the same tables."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s10:notebook-ran-on-databricks-its-row-added",
+       "text": "Notebook ran on Databricks; its row added to `RESULTS.md`"
+      },
+      {
+       "id": "s10:describe-history-on-a-gold-table-explain",
+       "text": "`DESCRIBE HISTORY` on a gold table explained"
+      },
+      {
+       "id": "s10:load-snowflake-printed-ok-for-every-tabl",
+       "text": "`load-snowflake` printed ok for every table; its row added"
+      },
+      {
+       "id": "s10:warehouse-suspended-after-use",
+       "text": "Warehouse suspended after use"
+      },
+      {
+       "id": "s10:section-5-of-the-note-answered-without-n",
+       "text": "Section 5 of the note answered without notes"
+      },
+      {
+       "id": "s10:step-10-result-and-trade-off-written-in",
+       "text": "Step 10 result and trade-off written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s11",
+   "kind": "step",
+   "n": 11,
+   "title": "LLM enrichment of review comments",
+   "short": "Step 11",
+   "summary": "You label Olist review comments with an LLM (sentiment, topics, whether the customer still needs help) at the lowest cost that still gives a measured result.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/steps/STEP-11-llm-enrichment.md",
+   "topics": [
+    "llm-use",
+    "evaluation",
+    "de-quality"
+   ],
+   "blocks": [
+    {
+     "t": "h",
+     "text": "What you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Pay only for new work**: identical comments are labelled once, and a cache keyed by a hash of prompt version, model and text means a rerun costs nothing.",
+      "**Batching**: 40 comments go in one Gemini request. A failed batch is retried in smaller pieces, and answers that don't fit the schema go to quarantine, with a 2% gate.",
+      "**--dry-run first**: it prints requests and tokens before anything is spent.",
+      "**Measure, don't assume**: the report compares the model with the star rating and with a free keyword rule. Stars already give sentiment; the model earns its cost on topics and the follow-up flag.",
+      "**One client, many models**: `src\\ecom_etl\\llm.py` talks to Gemini (the default) and to any OpenAI-compatible server (Ollama, llama.cpp, vLLM).",
+      "**Nothing heavy on the laptop**, by your rule: the sample uses Gemini, and the full Olist run goes to Kaggle's free T4s or the V100."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Run it",
+     "sub": "PowerShell, works before the merge"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "python -m ecom_etl enrich-reviews --source sample --dry-run    # requests and tokens; spends nothing\npython -m ecom_etl enrich-reviews --source sample              # Gemini: 1 request\npython -m ecom_etl enrich-reviews --source sample              # again: 0 requests, from the cache\npython -m ecom_etl enrich-reviews --source olist --dry-run     # after download-olist: what the full run costs"
+    },
+    {
+     "t": "h",
+     "text": "Full Olist run on Kaggle",
+     "sub": "after pull request #11 is merged: the notebook installs from GitHub's main"
+    },
+    {
+     "t": "ol",
+     "items": [
+      "On kaggle.com, create a notebook and import `cloud\\kaggle\\enrich_reviews.ipynb`.",
+      "Settings: Accelerator **GPU T4 x2**, Internet **on** (needs a phone-verified account). Add Input, Datasets: `olistbr/brazilian-ecommerce`.",
+      "Run all. Setup takes about 10 minutes, and the labelling time is printed at the end.",
+      "Download the outputs from the Output panel into `data\\enriched\\olist\\` and `reports\\` on your laptop."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Check yourself",
+     "sub": ""
+    },
+    {
+     "t": "qa",
+     "items": [
+      {
+       "q": "Why is the cache key a hash of prompt version, model and text, and not the `review_id`?",
+       "a": "The label depends only on the prompt, the model and the text. Identical comments from different reviews then share one cached label (that is the deduplication), and changing the prompt version or the model makes old labels miss the cache automatically."
+      },
+      {
+       "q": "Why does the retry use a smaller batch?",
+       "a": "A batch usually fails because one answer breaks the schema or the request is too long. Smaller pieces isolate the bad comment and fit the limits, so most comments still get labels and only the rest go to quarantine."
+      },
+      {
+       "q": "Why is agreement with the star score not accuracy?",
+       "a": "Stars measure overall satisfaction, which is not the sentiment of the text: an angry comment about delivery can come with three stars. Agreement shows consistency with a proxy. Accuracy needs hand labels, as in the 40-review sample."
+      },
+      {
+       "q": "When would you not use a model at all here?",
+       "a": "When stars already answer the question (sentiment), when the free keyword rule does as well, when there is no comment text, or when the cost, the quota or privacy outweighs what the labels add."
+      }
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Done when",
+     "sub": ""
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "s11:sample-run-printed-a-report-and-a-second",
+       "text": "Sample run printed a report, and a second run made 0 requests"
+      },
+      {
+       "id": "s11:olist-run-done-on-kaggle-or-the-v100",
+       "text": "Olist run done on Kaggle or the V100"
+      },
+      {
+       "id": "s11:throughput-quarantine-share-and-star-agr",
+       "text": "Throughput, quarantine share and star agreement added to `RESULTS.md`"
+      },
+      {
+       "id": "s11:section-5-of-the-note-answered-without-n",
+       "text": "Section 5 of the note answered without notes"
+      },
+      {
+       "id": "s11:step-11-story-written-in-stories-md",
+       "text": "Step 11 story written in `STORIES.md`"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "extras",
+   "kind": "extra",
+   "title": "Extras: GPU benchmark and Ask your data",
+   "short": "Extras",
+   "summary": "Two add-ons are built but not measured yet: CPU against GPU on the college V100, and how often Gemini's SQL matches the hand-written answers.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/GPU.md",
+   "blocks": [
+    {
+     "t": "h",
+     "text": "GPU: what you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "NVIDIA's **RAPIDS Accelerator** swaps Spark's plan operators (scans, joins, aggregations, windows) for GPU versions; the DataFrame code doesn't change. `ECOM_GPU=1` turns it on.",
+      "It needs Linux, an NVIDIA GPU of the Volta generation or newer, and driver 525 or newer. The V100 is Volta; your GTX 1650 qualifies but has only 4 GB.",
+      "A GPU only pays off with enough data to outweigh copying it to the GPU. At 5,000 orders, start-up costs dominate.",
+      "The benchmark checks that both engines produce the same row counts and revenue, not only which is faster."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "GPU: run it",
+     "sub": "PowerShell; connect the VPN first if needed; `v100` is your SSH alias"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": ".\\scripts\\gpu\\run_on_server.ps1 -Server v100 -List           # driver fixed? which GPU is free?\n.\\scripts\\gpu\\run_on_server.ps1 -Server v100 -Diagnose       # if it still fails: saves reports\\server\\diagnose.txt\n.\\scripts\\gpu\\run_on_server.ps1 -Server v100 -Prepare        # installs and makes data; needs no GPU\n.\\scripts\\gpu\\run_on_server.ps1 -Server v100 -Gpu 0 -Smoke   # 2-minute check of the GPU path\n.\\scripts\\gpu\\run_on_server.ps1 -Server v100 -Gpu 0          # 1,000,000 orders; keeps running if you disconnect\n.\\scripts\\gpu\\run_on_server.ps1 -Server v100 -Status         # progress\n.\\scripts\\gpu\\run_on_server.ps1 -Server v100 -Fetch          # report into reports\\server\\"
+    },
+    {
+     "t": "p",
+     "text": "Use the free GPU's index from `-List` instead of 0. The server pulls GitHub's `main`, so it runs what is pushed, not your laptop copy. If `-List` still shows the driver mismatch, send `diagnose.txt` to the server's admin and ask for the reboot."
+    },
+    {
+     "t": "h",
+     "text": "Ask your data: what you learn",
+     "sub": ""
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Gemini sees only the schema and your question, never rows. It writes one SQL query, which runs on your Postgres.",
+      "**Four guards** keep that SQL read-only: a SQL check, a role that can only read gold, a read-only transaction, and a 10 s timeout with a 500-row cap.",
+      "`ask-eval` asks the ten step-6 questions in plain English and compares each result with the hand-written SQL."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Ask your data: run it",
+     "sub": "needs gold loaded and your key in `.env`"
+    },
+    {
+     "t": "code",
+     "lang": "powershell",
+     "code": "docker compose run --rm pipeline ask \"Which 5 states had the most late deliveries in 2018?\"\ndocker compose run --rm pipeline ask-eval --source synthetic   # pauses 6 s per question; writes reports\\ask_eval_synthetic.md"
+    },
+    {
+     "t": "p",
+     "text": "A mismatch isn't always the model's fault: \"revenue\" can include or exclude freight. Read each mismatch's SQL before judging it."
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "extras:v100-driver-fixed-list-shows-the-gpus",
+       "text": "V100 driver fixed: `-List` shows the GPUs"
+      },
+      {
+       "id": "extras:smoke-test-passed-on-the-v100",
+       "text": "Smoke test passed on the V100"
+      },
+      {
+       "id": "extras:benchmark-fetched-cpu-and-gpu-times-adde",
+       "text": "Benchmark fetched; CPU and GPU times added to `GPU.md` and `RESULTS.md`"
+      },
+      {
+       "id": "extras:one-ask-answered-and-its-sql-read",
+       "text": "One `ask` answered and its SQL read"
+      },
+      {
+       "id": "extras:ask-eval-run-n-of-10-match-added-to-resu",
+       "text": "`ask-eval` run; \"N of 10 match\" added to `RESULTS.md`"
+      },
+      {
+       "id": "extras:every-mismatch-read-and-explained",
+       "text": "Every mismatch read and explained"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "record",
+   "kind": "record",
+   "title": "Numbers and stories to record",
+   "short": "Record",
+   "summary": "Eight measured numbers and 15 story gaps stand between the project and a resume you can defend line by line. Every number needs its data, command, machine and date in `docs\\RESULTS.md`.",
+   "note": "https://github.com/manojhunasimarad/ETL/blob/main/docs/RESULTS.md",
+   "blocks": [
+    {
+     "t": "table",
+     "rows": [
+      [
+       "Number to record",
+       "Command",
+       "Runs in"
+      ],
+      [
+       "Olist source records (orders, customers, payments, order lines)",
+       "`python -m ecom_etl profile --source olist`",
+       "PowerShell"
+      ],
+      [
+       "Bad records flagged per run, Olist",
+       "`run --source olist`",
+       "Docker"
+      ],
+      [
+       "Batch runtime on your laptop",
+       "`benchmark --repeat 2`",
+       "Docker"
+      ],
+      [
+       "Databricks Free Edition run",
+       "the notebook",
+       "Browser"
+      ],
+      [
+       "Snowflake load, every table ok",
+       "`load-snowflake --source synthetic`",
+       "PowerShell"
+      ],
+      [
+       "Ask your data: answers matching the hand-written SQL",
+       "`ask-eval --source synthetic`",
+       "Docker"
+      ],
+      [
+       "Step 11: throughput, quarantine share, star agreement",
+       "Kaggle notebook",
+       "Kaggle"
+      ],
+      [
+       "CPU against GPU on the V100",
+       "`run_on_server.ps1 -Fetch`",
+       "PowerShell"
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Story gaps in `docs\\STORIES.md`, each answer under a minute and its number taken from `RESULTS.md`:"
+    },
+    {
+     "t": "check",
+     "items": [
+      {
+       "id": "record:step-1-problem-result-and-trade-off",
+       "text": "Step 1: problem, result and trade-off"
+      },
+      {
+       "id": "record:step-2-trade-off",
+       "text": "Step 2: trade-off"
+      },
+      {
+       "id": "record:step-3-trade-off-and-a-real-number-in-pl",
+       "text": "Step 3: trade-off, and a real number in place of \"see the silver report\""
+      },
+      {
+       "id": "record:step-4-result-people-with-more-than-one",
+       "text": "Step 4: result (people with more than one version, from `q09_customers_who_moved.sql`) and trade-off"
+      },
+      {
+       "id": "record:step-5-trade-off",
+       "text": "Step 5: trade-off"
+      },
+      {
+       "id": "record:step-6-result-the-finding-you-would-show",
+       "text": "Step 6: result (the finding you would show a stakeholder first) and trade-off"
+      },
+      {
+       "id": "record:step-7-trade-off",
+       "text": "Step 7: trade-off"
+      },
+      {
+       "id": "record:step-8-trade-off",
+       "text": "Step 8: trade-off"
+      },
+      {
+       "id": "record:step-9-trade-off",
+       "text": "Step 9: trade-off"
+      },
+      {
+       "id": "record:step-10-result-databricks-seconds-snowfl",
+       "text": "Step 10: result (Databricks seconds, Snowflake counts) and trade-off"
+      },
+      {
+       "id": "record:step-11-the-whole-story-once-the-olist-r",
+       "text": "Step 11: the whole story, once the Olist run is done"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

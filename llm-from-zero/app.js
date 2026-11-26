@@ -27,7 +27,25 @@ async function api(path, body) {
     err.status = res.status;
     throw err;
   }
+  try { mirrorSolved(path, body, data); } catch (e) {}
   return data;
+}
+
+// The progress bar on every page (rail.mjs) counts solved exercises, but they live in Python's
+// database. Keep their ids in localStorage too: a solve just now is dated now; ones seen in a list
+// get an old date, so they never count as "today".
+function mirrorSolved(path, body, data) {
+  const fresh = [], seen = [];
+  if (path === "/api/run" && data && data.solved === true && body && body.id && !body.review) fresh.push(body.id);
+  if (data && Array.isArray(data.rows)) for (const r of data.rows) if (r && r.status === "solved" && r.id) seen.push(r.id);
+  if (path.startsWith("/api/exercise?") && data && data.solved === true && data.id) seen.push(data.id);
+  if (!fresh.length && !seen.length) return;
+  let s = lsGet("lfz-solved-v1", null);
+  if (!s || s.app !== "lfz-solved" || !s.ids || typeof s.ids !== "object") s = { app: "lfz-solved", version: 1, ids: {} };
+  let changed = false;
+  const add = (id, at) => { if (typeof id === "string" && /^[\w.-]{1,120}$/.test(id) && !["__proto__", "constructor", "prototype"].includes(id) && !s.ids[id]) { s.ids[id] = at; changed = true; } };
+  fresh.forEach(id => add(id, Date.now())); seen.forEach(id => add(id, 1));
+  if (changed) { lsSet("lfz-solved-v1", s); window.dispatchEvent(new Event("lfz-progress")); }
 }
 
 let toastTimer = 0;
@@ -1291,7 +1309,7 @@ async function projectsHome() {
   const card = (href, name, title, blurb, extra) => `<li><span class="grow"><strong>${esc(title)}</strong><br><span class="muted small">${esc(blurb)}</span>${extra || ""}</span><a class="btn primary" href="${href}">Open ${esc(name)}</a></li>`;
   view.innerHTML = `<div class="stack"><h1>Projects</h1><p class="lede">Each project page shows only what a goal needs, skips what you know, and links every step to its lesson and its code.</p></div>
     <section class="panel"><ol class="rows etl-steps">
-      ${card("#/etl", "ETL project", "E-commerce batch and streaming ETL pipeline", "Python, PySpark, SQL, Airflow, Kafka, Docker. Ten steps.")}
+      ${card("#/etl", "ETL project", "E-commerce batch and streaming ETL pipeline", "Python, PySpark, SQL, Airflow, Kafka, Docker and an LLM. Eleven steps.")}
       ${all.projects.map(x => card("#/project/" + x.id, x.name, x.title, x.blurb, x.repo ? `<br><a class="small" href="${esc(x.repo)}" target="_blank" rel="noopener">Code on GitHub ↗</a>` : `<br><span class="small muted">Code: ${esc(x.local || "local")} (not on GitHub yet)</span>`)).join("")}
     </ol></section>`;
 }
@@ -1450,8 +1468,13 @@ async function projectPage(pid, query) {
       ${marked.size ? `<p><button type="button" class="btn" id="etl-reset">Forget the ${marked.size} topic${marked.size > 1 ? "s" : ""} I marked known</button></p>` : ""}
     </div></section>`;
 
-    const stepCards = steps.map(st => `<li><span class="num">${st.n}</span><span class="grow"><strong>${esc(st.title)}</strong><br><span class="muted small">${esc(st.builds)} Done when: ${st.done.map(esc).join("; ")}.</span></span>`
-      + `<a class="btn${String(st.n) === goal ? " primary" : ""}" href="${spec.base}?goal=${st.n}">What it needs</a><a class="btn quiet" href="${esc(note(st))}"${internal(st) ? ">Lesson" : ' target="_blank" rel="noopener">Note ↗'}</a>${codeLink(st)}</li>`).join("");
+    // ETL steps: how many of the step guide's boxes you ticked, and a link to the guide (studio.html#etl/sN)
+    const ticks = (lsGet("lfz-etl-guide-v1", {}) || {}).ticks || {};
+    const guideCount = n => { const ids = Object.keys(ticks).filter(k => k.startsWith("s" + n + ":") && ticks[k] && ticks[k].on); return ids.length; };
+    const stepCards = steps.map(st => `<li><span class="num">${st.n}</span><span class="grow"><strong>${esc(st.title)}</strong><br><span class="muted small">${esc(st.builds)} Done when: ${st.done.map(esc).join("; ")}.</span>`
+      + (pid === "etl" ? `<br><span class="small guide-ticks">${guideCount(st.n) ? `✓ ${guideCount(st.n)} box${guideCount(st.n) > 1 ? "es" : ""} ticked in the step guide` : "Nothing ticked in the step guide yet"}</span>` : "") + `</span>`
+      + (pid === "etl" ? `<a class="btn${String(st.n) === goal ? " primary" : ""}" href="studio.html#etl/s${st.n}">Step guide</a>` : "")
+      + `<a class="btn${pid !== "etl" && String(st.n) === goal ? " primary" : pid === "etl" ? " quiet" : ""}" href="${spec.base}?goal=${st.n}">What it needs</a><a class="btn quiet" href="${esc(note(st))}"${internal(st) ? ">Lesson" : ' target="_blank" rel="noopener">Note ↗'}</a>${codeLink(st)}</li>`).join("");
 
     view.innerHTML = `
       <div class="stack">${pid === "etl" ? "" : `<p class="small muted"><a href="#/projects">← Projects</a></p>`}<h1>${esc(pid === "etl" ? "ETL project" : etl.title)}</h1><p class="lede">${esc(etl.blurb)}</p></div>
@@ -1467,7 +1490,7 @@ async function projectPage(pid, query) {
         <section class="panel"><div class="head"><h2>Study in this order</h2><span class="num">${p.study.size} topics · ${p.hours} h</span></div>
           ${list ? `<ol class="rows etl-order">${list}</ol>` : `<div class="body"><p class="muted">Nothing left for this goal.</p></div>`}</section></div>
       ${skipped}
-      <section class="panel"><div class="head"><h2>The ${steps.length === 10 ? "ten" : steps.length} steps</h2><a class="small" href="#/learn">Lessons under Learn</a></div><ol class="rows etl-steps">${stepCards}</ol></section>
+      <section class="panel"><div class="head"><h2>The ${({ 10: "ten", 11: "eleven" })[steps.length] || steps.length} steps</h2>${pid === "etl" ? `<a class="small" href="studio.html#etl">Step guide: commands and ticks →</a>` : ""}<a class="small" href="#/learn">Lessons under Learn</a></div><ol class="rows etl-steps">${stepCards}</ol></section>
       <details class="panel etl-how"><summary>How the plan is worked out</summary><div class="body stack">
         <p>The learning map is a directed acyclic graph: an edge runs from a prerequisite to the topic that needs it. For a goal, the page walks the edges <em>backwards</em> from the goal's topics. Anything the walk does not reach is not needed. The walk stops at a topic you know, because knowing it covers what it needs; those prerequisites are skipped unless another path still needs them. A topic counts as known when you mark it, when you recorded it as demonstrated in the learning desk, or when you solved its checkpoint (or all of its exercises).</p>
         <p>The topics left are sorted topologically (Kahn's algorithm: repeatedly take a topic whose prerequisites are all done), and drawn one row per layer, each topic one row below its deepest prerequisite. The <strong>longest chain</strong> is the prerequisite path with the most study hours, found in one pass over that order: it is the part of the plan that cannot be shortened by reordering.</p>

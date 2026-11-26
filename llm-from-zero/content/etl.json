@@ -2,7 +2,7 @@
   "version": 1,
   "repo": "https://github.com/manojhunasimarad/ETL",
   "title": "E-commerce batch and streaming ETL pipeline",
-  "blurb": "Python, PySpark, SQL, Airflow, Docker and Kafka on Olist-shaped e-commerce data. Pick a goal: a step of the project or the whole of it. The page shows only the topics that goal needs, leaves out what you already know, and puts the rest in order.",
+  "blurb": "Python, PySpark, SQL, Airflow, Docker, Kafka and an LLM on Olist-shaped e-commerce data. Pick a goal: a step of the project or the whole of it. The page shows only the topics that goal needs, leaves out what you already know, and puts the rest in order.",
   "steps": [
     {
       "n": 1,
@@ -135,12 +135,28 @@
         "the cloud scripts are explained",
         "RESULTS.md and STORIES.md are complete"
       ]
+    },
+    {
+      "n": 11,
+      "title": "LLM enrichment of review comments",
+      "note": "docs/steps/STEP-11-llm-enrichment.md",
+      "targets": [
+        "llm-use",
+        "evaluation",
+        "de-quality"
+      ],
+      "builds": "Sentiment, topics and a follow-up flag for Olist review comments with Gemini or a local model: deduplication, a content-hash cache, batching, validation with quarantine and a 2% gate, measured against stars and a keyword baseline.",
+      "done": [
+        "the sample run prints a report and a second run makes 0 requests",
+        "the Olist run is done on Kaggle or the V100 and its numbers are in RESULTS.md"
+      ]
     }
   ],
   "whole": {
     "title": "The whole project",
     "targets": [
       "de-capstone"
-    ]
+    ],
+    "summary": "All eleven steps, from source files to a tested star schema, Airflow, a Kafka stream and LLM enrichment of review comments."
   }
 }

@@ -7,6 +7,8 @@
 //   lfz-learning.json    learning plan, quizzes      newer record wins (mergeLearning)
 //   lfz-etl-check.json   ETL "check what you know"   newer decision wins
 //   lfz-etl.json         ETL goal and known topics   newer save wins
+//   lfz-etl-guide.json   ETL step guide tick boxes   per box, the newer change wins (mergeGuide)
+//   lfz-solved.json      solved exercise ids         union, first time seen (mergeSolved)
 //   lfz-practice.json    practice app (exercises,    the practice app's own merge (py/sync.py):
 //                        recall, solutions)          logs are joined, nothing is removed
 //
@@ -21,6 +23,7 @@
 
 import {mergeProgress} from './studio-core.mjs';
 import {emptyState, mergeLearning} from './learning-engine.mjs';
+import {GUIDE_KEY, SOLVED_KEY, emptyGuide, emptySolved, mergeGuide, mergeSolved} from './journey-core.mjs';
 
 export const SYNC_KEY = 'lfz-sync-v1';
 export const DESCRIPTION = 'LLM From Zero: learning progress sync (manojhunasimarad.github.io)';
@@ -179,6 +182,14 @@ export async function localParts({storage = globalThis.localStorage, base = '', 
      read: () => readJson(storage, 'lfz-etl-v1', {}) || {},
      merge: mergeEtl,
      write: m => put('lfz-etl-v1', m)},
+    {file: 'lfz-etl-guide.json', label: 'ETL guide ticks',
+     read: () => readJson(storage, GUIDE_KEY, null) || emptyGuide(),
+     merge: (l, r) => mergeGuide(l, r),
+     write: m => put(GUIDE_KEY, m)},
+    {file: 'lfz-solved.json', label: 'solved exercises (for the progress bar)',
+     read: () => readJson(storage, SOLVED_KEY, null) || emptySolved(),
+     merge: (l, r) => mergeSolved(l, r),
+     write: m => put(SOLVED_KEY, m)},
     // each resume project keeps its plan and its check like the ETL project, under its own keys
     ...projects.projects.flatMap(p => [
       {file: `lfz-proj-${p.id}.json`, label: `${p.name} known topics`,
