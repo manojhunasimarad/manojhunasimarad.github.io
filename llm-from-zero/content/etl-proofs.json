@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "checked": "2026-11-28",
+  "about": "Proof for the ETL step guide's tick boxes. A box listed here cannot be ticked by hand: it ticks itself when the learner pastes the output of their own run (paste) and/or when their GitHub repository shows the work (github). Numbers come from the repository's seeded generator (seed 42), so a real run prints exactly these. Rules: etl-proof-core.mjs; tests: tools/proof.test.mjs.",
+  "files": { "stories": "docs/STORIES.md", "results": "docs/RESULTS.md", "profiling": "src/ecom_etl/profiling.py" },
+  "proofs": {
+    "setup:docker-desktop-runs": {
+      "paste": { "run": "docker version", "where": "PowerShell, any folder",
+        "need": [{ "re": "^\\s*Server:", "say": "a Server section (the Docker engine is running)" }],
+        "forbid": [{ "re": "cannot connect to the docker daemon|error during connect|docker_engine.*cannot find", "flags": "i", "say": "Docker Desktop is not running: start it and wait for \"Engine running\"." }] }
+    },
+    "setup:venv-created-and-active": {
+      "paste": { "run": "python -c \"import sys; print(sys.prefix)\"", "where": "PowerShell in D:\\sem3_4\\ETL, after .venv\\Scripts\\Activate.ps1",
+        "need": [{ "re": "[\\\\/]\\.venv\\s*$", "say": "Python runs from the project's .venv folder" }],
+        "hints": [{ "re": "Python3\\d*|Program Files|AppData", "flags": "i", "say": "That is the system Python. Run .venv\\Scripts\\Activate.ps1 first; the prompt then starts with (.venv)." }] }
+    },
+    "setup:packages-installed": {
+      "paste": { "run": "pip show ecom-etl", "where": "PowerShell in D:\\sem3_4\\ETL with (.venv) active",
+        "need": [{ "re": "^Name:\\s*ecom[-_]etl\\s*$", "flags": "im", "say": "the project is installed (Name: ecom-etl)" }, { "re": "^Editable project location:", "flags": "im", "say": "installed in editable mode (pip install -e), so your edits are used at once" }],
+        "forbid": [{ "re": "Package\\(s\\) not found", "flags": "i", "say": "Not installed yet: run pip install -e \".[dev,postgres,dashboard,kaggle]\"." }] }
+    },
+    "setup:postgres-up-and-pipeline-image-built": {
+      "paste": { "run": "docker compose ps postgres; docker image ls ecom-etl/pipeline", "where": "PowerShell in D:\\sem3_4\\ETL",
+        "need": [{ "re": "postgres.*\\b(Up|running)\\b", "flags": "i", "say": "the postgres container is up" }, { "re": "^ecom-etl/pipeline\\s+latest\\b", "flags": "m", "say": "the pipeline image is built" }] }
+    },
+    "setup:git-name-and-email-correct": {
+      "paste": { "run": "git config user.name; git config user.email", "where": "PowerShell in D:\\sem3_4\\ETL",
+        "need": [{ "re": "^\\s*{owner}\\s*$", "flags": "im", "say": "user.name is {owner}" }, { "re": "^\\s*\\d+\\+{owner}@users\\.noreply\\.github\\.com\\s*$", "flags": "im", "say": "user.email is your GitHub no-reply address" }] }
+    },
+    "setup:pytest-q-shows-0-failed": {
+      "paste": { "run": "python -m pytest -q", "where": "PowerShell in D:\\sem3_4\\ETL with (.venv) active", "pytest": true }
+    },
+    "latest:pull-request-11-merged-with-ci-green": {
+      "github": [{ "check": "ci" }]
+    },
+    "latest:local-main-updated-with-git-pull": {
+      "paste": { "run": "git log -1 --oneline", "where": "PowerShell in D:\\sem3_4\\ETL, on main after git pull", "sha": true,
+        "need": [{ "re": "^\\s*[0-9a-f]{7,40}\\b", "say": "a commit id" }] },
+      "github": [{ "check": "head" }]
+    },
+    "latest:pytest-q-shows-0-failed-on-main": {
+      "paste": { "run": "python -m pytest -q", "where": "PowerShell in D:\\sem3_4\\ETL, on main", "pytest": true }
+    },
+    "latest:dry-run-of-enrich-reviews-prints-a-plan": {
+      "paste": { "run": "python -m ecom_etl enrich-reviews --source sample --dry-run", "where": "PowerShell in D:\\sem3_4\\ETL with (.venv) active",
+        "need": [{ "re": "^40 reviews, 37 with a comment, 35 unique", "flags": "m", "say": "the 40 bundled reviews were read (35 unique comments)" }, { "re": "Would label [\\d,]+ comments in [\\d,]+ request", "say": "a plan of requests and tokens, with nothing spent" }] }
+    },
+    "s1:generate-and-profile-ran": {
+      "paste": { "run": "python -m ecom_etl generate; python -m ecom_etl profile", "where": "PowerShell in D:\\sem3_4\\ETL with (.venv) active",
+        "need": [{ "re": "^\\s*orders\\s+10,103 rows", "flags": "m", "say": "10,103 order rows: the 10,000 generated plus the injected duplicates" }, { "re": "Injected vs detected: 14/14 defect types match exactly", "say": "the profiler caught all 14 injected defect types" }, { "re": "Report: .*profile_synthetic\\.md", "say": "the report was written" }],
+        "hints": [{ "re": "^\\s*orders\\s+(?!10,103 )[\\d,]+ rows", "flags": "m", "say": "A different order count means a different --orders or --seed. Run plain generate (10,000 orders, seed 42), then profile." }] }
+    },
+    "s1:customers-without-orders-written-its-3-t": {
+      "paste": { "run": "python -m pytest -q tests/test_your_turn.py; python -m ecom_etl profile", "where": "PowerShell in D:\\sem3_4\\ETL with (.venv) active", "pytest": true,
+        "need": [{ "re": "^\\s*\\[warn\\s*\\]\\s+customers\\s+customers_without_orders\\s+100\\s*$", "flags": "m", "say": "the new [warn] finding counts 100 customers without orders" }],
+        "hints": [{ "re": "customers_without_orders\\s+(?!100\\s*$)[\\d,]+\\s*$", "flags": "m", "say": "Your count is off. Count each customer_id once (the customers file has exact duplicates), and leave out orders whose customer_id is blank." }, { "re": "\\b3 skipped\\b", "say": "The 3 \"your turn\" tests still skip: the function still raises NotImplementedError." }] },
+      "github": [{ "check": "fileLacks", "file": "profiling", "text": "your turn: implement customers_without_orders", "say": "your customers_without_orders is pushed to main" }]
+    },
+    "s1:olist-downloaded-and-profiled": {
+      "paste": { "run": "python -m ecom_etl profile --source olist", "where": "PowerShell in D:\\sem3_4\\ETL, after download-olist",
+        "need": [{ "re": "Profiled .*olist", "flags": "i", "say": "the real Olist files were profiled" }, { "re": "^\\s*orders\\s+99,441 rows", "flags": "m", "say": "99,441 Olist orders" }] }
+    },
+    "s1:olist-row-counts-added-to-results-md": {
+      "github": [{ "check": "results", "row": "Olist source records", "say": "the Olist row counts row in RESULTS.md is filled in" }]
+    },
+    "s1:step-1-story-written-in-stories-md": {
+      "github": [{ "check": "story", "step": 1 }]
+    },
+    "s2:load-raw-and-build-core-ran-and-match-th": {
+      "paste": { "run": "python -m ecom_etl build-core --source synthetic", "where": "PowerShell in D:\\sem3_4\\ETL, after generate --orders 5000 and load-raw",
+        "need": [{ "re": "Built schema synthetic_core", "say": "the core schema was built" }, { "re": "^\\s*customers\\s+5,062\\s+5,000\\s+62\\s*$", "flags": "m", "say": "customers 5,062 → 5,000" }, { "re": "^\\s*orders\\s+5,061\\s+4,805\\s+256\\s*$", "flags": "m", "say": "orders 5,061 → 4,805" }, { "re": "^\\s*order_items\\s+5,656\\s+5,333\\s+323\\s*$", "flags": "m", "say": "order_items 5,656 → 5,333" }, { "re": "^\\s*order_payments\\s+5,286\\s+4,914\\s+372\\s*$", "flags": "m", "say": "order_payments 5,286 → 4,914" }],
+        "hints": [{ "re": "^\\s*orders\\s+10,103\\b", "flags": "m", "say": "These are the numbers for 10,000 orders. Run generate --orders 5000, then load-raw and build-core again." }] }
+    },
+    "s2:postgres-tests-pass": {
+      "paste": { "run": "python -m pytest -q -rs", "where": "PowerShell in D:\\sem3_4\\ETL with Postgres up", "pytest": true,
+        "forbid": [{ "re": "Postgres not reachable|psycopg not installed", "say": "The Postgres tests were skipped, not run: start Postgres (docker compose up -d postgres) or install the [postgres] extra." }] }
+    },
+    "s2:olist-loaded-too-source-olist-on-both-co": {
+      "paste": { "run": "python -m ecom_etl load-raw --source olist; python -m ecom_etl build-core --source olist", "where": "PowerShell in D:\\sem3_4\\ETL",
+        "need": [{ "re": "into schema olist_raw", "say": "Olist loaded into olist_raw" }, { "re": "Built schema olist_core", "say": "olist_core built" }] }
+    },
+    "s2:step-2-trade-off-line-written-in-stories": {
+      "github": [{ "check": "story", "step": 2 }]
+    },
+    "s3:bronze-and-silver-ran-in-docker": {
+      "paste": { "run": "docker compose run --rm pipeline silver --source synthetic", "where": "PowerShell in D:\\sem3_4\\ETL, after bronze (5,000 orders)",
+        "need": [{ "re": "Silver written to", "say": "silver was written" }, { "re": "^\\s*orders\\s+5,061\\s+61\\s+195\\s+4,805\\s*$", "flags": "m", "say": "orders 5,061 → 61 dupes, 195 quarantined, 4,805 silver" }, { "re": "^\\s*order_payments\\s+5,286\\s+59\\s+313\\s+4,914\\s*$", "flags": "m", "say": "order_payments → 4,914 silver" }],
+        "hints": [{ "re": "^\\s*orders\\s+10,103\\b", "flags": "m", "say": "These are the numbers for 10,000 orders. Run generate --orders 5000, then bronze and silver again." }] }
+    },
+    "s3:silver-run-on-olist-reasons-compared-wit": {
+      "paste": { "run": "docker compose run --rm pipeline silver --source olist", "where": "PowerShell in D:\\sem3_4\\ETL, after bronze --source olist",
+        "need": [{ "re": "Silver written to .*olist", "flags": "i", "say": "silver was written for Olist" }] }
+    },
+    "s3:step-3-result-and-trade-off-written-in-s": {
+      "github": [{ "check": "story", "step": 3, "forbid": ["see the quarantine counts per reason"] }]
+    },
+    "s4:gold-and-load-gold-ran-counts-match": {
+      "paste": { "run": "docker compose run --rm pipeline load-gold --source synthetic", "where": "PowerShell in D:\\sem3_4\\ETL, after gold (5,000 orders)",
+        "need": [{ "re": "Loaded gold into Postgres schema synthetic_gold", "say": "gold loaded into Postgres" }, { "re": "^\\s*dim_customer\\s+4,660 rows", "flags": "m", "say": "dim_customer 4,660 rows" }, { "re": "^\\s*fact_order_line\\s+5,333 rows", "flags": "m", "say": "fact_order_line 5,333 rows (= silver order_items)" }, { "re": "^\\s*fact_payment\\s+4,914 rows", "flags": "m", "say": "fact_payment 4,914 rows (= silver order_payments)" }] }
+    },
+    "s4:gold-built-and-loaded-for-olist-too": {
+      "paste": { "run": "docker compose run --rm pipeline load-gold --source olist", "where": "PowerShell in D:\\sem3_4\\ETL, after gold --source olist",
+        "need": [{ "re": "Loaded gold into Postgres schema olist_gold", "say": "Olist gold loaded into Postgres" }] }
+    },
+    "s4:step-4-result-and-trade-off-written-in-s": {
+      "github": [{ "check": "story", "step": 4 }]
+    },
+    "s5:run-succeeded-on-20-000-orders-and-match": {
+      "paste": { "run": "docker compose run --rm pipeline run --source synthetic", "where": "PowerShell in D:\\sem3_4\\ETL, after generate --orders 20000",
+        "need": [{ "re": "^Pipeline success in", "flags": "m", "say": "the pipeline finished: success" }, { "re": "115 checks \\(80 row-level, 35 table-level\\), \\d+ flagged, 0 blocking", "say": "115 checks, 0 blocking" }, { "re": "bronze records 91,521: quarantined 3,497", "say": "91,521 bronze records, 3,497 quarantined" }, { "re": "quarantine precision 100\\.0%, recall 100\\.0%", "say": "precision and recall 100%" }],
+        "forbid": [{ "re": "^STOPPED:", "flags": "m", "say": "A gate stopped the run. Read the STOPPED line, fix the cause (or restore the threshold you changed) and run again." }],
+        "hints": [{ "re": "bronze records (?!91,521)[\\d,]+", "say": "A different record count means different data: run generate --orders 20000 first." }] }
+    },
+    "s5:gate-blocked-on-purpose-exit-code-2-seen": {
+      "paste": { "run": "docker compose run --rm pipeline run --source synthetic; echo \"exit code $LASTEXITCODE\"", "where": "PowerShell in D:\\sem3_4\\ETL, with one threshold lowered on purpose",
+        "need": [{ "re": "^STOPPED:", "flags": "m", "say": "a blocking gate stopped the run" }, { "re": "exit code 2\\s*$", "flags": "m", "say": "exit code 2" }] }
+    },
+    "s5:run-on-olist-its-bad-record-counts-added": {
+      "github": [{ "check": "results", "row": "Bad records flagged per run, Olist", "say": "the Olist bad-record row in RESULTS.md is filled in" }]
+    },
+    "s5:step-5-trade-off-written-in-stories-md": {
+      "github": [{ "check": "story", "step": 5 }]
+    },
+    "s6:analyze-ran-each-of-the-10-queries-expla": {
+      "paste": { "run": "docker compose run --rm pipeline analyze --source synthetic", "where": "PowerShell in D:\\sem3_4\\ETL",
+        "need": [{ "re": "\\[\\d[\\d,]* rows\\]", "min": 10, "say": "all 10 questions answered" }, { "re": "Report: .*analysis_synthetic\\.md", "say": "the report was written" }] }
+    },
+    "s6:analyze-run-on-olist-its-repeat-rate-not": {
+      "paste": { "run": "docker compose run --rm pipeline analyze --source olist", "where": "PowerShell in D:\\sem3_4\\ETL",
+        "need": [{ "re": "Report: .*analysis_olist\\.md", "say": "the Olist analysis report was written" }] }
+    },
+    "s6:step-6-result-and-trade-off-written-in-s": {
+      "github": [{ "check": "story", "step": 6 }]
+    },
+    "s7:benchmark-ran-on-your-laptop-numbers-and": {
+      "paste": { "run": "docker compose run --rm -p 4040:4040 pipeline benchmark --source synthetic --repeat 2", "where": "PowerShell in D:\\sem3_4\\ETL, after generate --orders 50000",
+        "need": [{ "re": "Bronze ready: [\\d,]+ records", "say": "the benchmark started on your data" }, { "re": "speedup vs baseline", "say": "the result table was printed" }] },
+      "github": [{ "check": "resultsAny", "all": ["benchmark"], "not": ["GitHub runner", "pending"], "say": "a benchmark row measured on your own machine is in RESULTS.md" }]
+    },
+    "s7:step-7-trade-off-written-in-stories-md": {
+      "github": [{ "check": "story", "step": 7 }]
+    },
+    "s8:dag-ran-green-in-the-ui": {
+      "paste": { "run": "docker compose --profile airflow exec airflow airflow dags test ecom_batch_pipeline", "where": "PowerShell in D:\\sem3_4\\ETL, Airflow up (paste the last lines)",
+        "need": [{ "re": "ecom_batch_pipeline", "say": "the DAG ran" }, { "re": "success", "flags": "i", "say": "it finished in state success" }],
+        "forbid": [{ "re": "state=failed|DagRunState\\.FAILED|marking run .* failed", "flags": "i", "say": "The run failed. Open the failed task's log in the UI and find the reason." }] }
+    },
+    "s8:step-8-trade-off-written-in-stories-md": {
+      "github": [{ "check": "story", "step": 8 }]
+    },
+    "s9:produce-and-stream-ran-and-your-numbers": {
+      "paste": { "run": "docker compose run --rm pipeline stream --source synthetic --reset", "where": "PowerShell in D:\\sem3_4\\ETL, after produce --limit 3000 on 20,000 orders",
+        "need": [{ "re": "Processed everything in", "say": "the stream drained the topic" }, { "re": "^\\s*bronze_records\\s+3,063\\s*$", "flags": "m", "say": "3,063 bronze records (every message kept)" }, { "re": "^\\s*silver_events\\s+2,968\\s*$", "flags": "m", "say": "2,968 valid, unique events" }, { "re": "^\\s*daily_revenue\\s+414,831\\.77\\s*$", "flags": "m", "say": "daily revenue 414,831.77, the producer's total to the cent" }],
+        "hints": [{ "re": "silver_events\\s+(?!2,968)[\\d,]+", "say": "Different numbers mean different data or a reused checkpoint: generate --orders 20000, produce --limit 3000, then stream with --reset." }] }
+    },
+    "s9:step-9-trade-off-written-in-stories-md": {
+      "github": [{ "check": "story", "step": 9 }]
+    },
+    "s10:notebook-ran-on-databricks-its-row-added": {
+      "github": [{ "check": "results", "row": "Databricks Free Edition run", "say": "the Databricks row in RESULTS.md is filled in" }]
+    },
+    "s10:load-snowflake-printed-ok-for-every-tabl": {
+      "paste": { "run": "python -m ecom_etl load-snowflake --source synthetic", "where": "PowerShell in D:\\sem3_4\\ETL with (.venv) and the SNOWFLAKE_* variables set",
+        "need": [{ "re": "Loaded gold into Snowflake", "say": "the load ran" }, { "re": "rows\\s+ok\\s*$", "flags": "m", "min": 5, "say": "every table says ok" }],
+        "forbid": [{ "re": "EXPECTED [\\d,]+", "say": "A table's count differs from the export (EXPECTED …). Re-run export-snowflake and load-snowflake." }] },
+      "github": [{ "check": "results", "row": "Snowflake load", "say": "the Snowflake row in RESULTS.md is filled in" }]
+    },
+    "s10:step-10-result-and-trade-off-written-in": {
+      "github": [{ "check": "story", "step": 10 }]
+    },
+    "s11:sample-run-printed-a-report-and-a-second": {
+      "paste": { "run": "python -m ecom_etl enrich-reviews --source sample", "where": "PowerShell in D:\\sem3_4\\ETL; paste the SECOND run",
+        "need": [{ "re": "^\\|\\s*requests\\s*\\|\\s*0\\s*\\|", "flags": "m", "say": "0 requests: every answer came from the cache" }, { "re": "Wrote .*reviews_enriched\\.csv", "say": "the labelled file was written" }],
+        "hints": [{ "re": "^\\|\\s*requests\\s*\\|\\s*[1-9]", "flags": "m", "say": "This run still made requests. Paste the output of running the same command a second time." }] }
+    },
+    "s11:olist-run-done-on-kaggle-or-the-v100": {
+      "paste": { "run": "python -m ecom_etl enrich-reviews --source olist", "where": "Kaggle notebook or the V100 (paste the last lines)",
+        "need": [{ "re": "enrich_olist\\.md", "say": "the Olist enrichment report was written" }],
+        "forbid": [{ "re": "GATE FAILED", "say": "The quarantine gate failed: read quarantine.csv, fix the cause and run again." }] }
+    },
+    "s11:throughput-quarantine-share-and-star-agr": {
+      "github": [{ "check": "results", "row": "Review enrichment, Olist", "say": "the Olist enrichment row in RESULTS.md is filled in" }]
+    },
+    "s11:step-11-story-written-in-stories-md": {
+      "github": [{ "check": "story", "step": 11 }]
+    },
+    "extras:v100-driver-fixed-list-shows-the-gpus": {
+      "paste": { "run": ".\\scripts\\gpu\\run_on_server.ps1 -Server v100 -List", "where": "PowerShell in D:\\sem3_4\\ETL",
+        "need": [{ "re": "V100", "say": "the V100 GPUs are listed" }],
+        "forbid": [{ "re": "NVIDIA-SMI has failed|couldn't communicate with the NVIDIA driver", "flags": "i", "say": "The driver still fails: run -Diagnose and send diagnose.txt to the server admin." }] }
+    },
+    "extras:benchmark-fetched-cpu-and-gpu-times-adde": {
+      "github": [{ "check": "resultsAny", "all": ["V100"], "not": ["pending"], "say": "a V100 CPU vs GPU row is in RESULTS.md" }]
+    },
+    "extras:one-ask-answered-and-its-sql-read": {
+      "paste": { "run": "docker compose run --rm pipeline ask \"Which 5 states had the most late deliveries in 2018?\"", "where": "PowerShell in D:\\sem3_4\\ETL",
+        "need": [{ "re": "^SQL \\(ran, attempt \\d+\\):", "flags": "m", "say": "the generated SQL ran" }, { "re": "^\\d+ rows.* in [\\d.]+s", "flags": "m", "say": "rows came back" }] }
+    },
+    "extras:ask-eval-run-n-of-10-match-added-to-resu": {
+      "github": [{ "check": "resultsAny", "all": ["ask"], "re": "\\b\\d+ of 10\\b", "not": ["pending"], "say": "an \"N of 10 match\" row is in RESULTS.md" }]
+    },
+    "record:step-1-problem-result-and-trade-off": { "github": [{ "check": "story", "step": 1 }] },
+    "record:step-2-trade-off": { "github": [{ "check": "story", "step": 2 }] },
+    "record:step-3-trade-off-and-a-real-number-in-pl": { "github": [{ "check": "story", "step": 3, "forbid": ["see the quarantine counts per reason"] }] },
+    "record:step-4-result-people-with-more-than-one": { "github": [{ "check": "story", "step": 4 }] },
+    "record:step-5-trade-off": { "github": [{ "check": "story", "step": 5 }] },
+    "record:step-6-result-the-finding-you-would-show": { "github": [{ "check": "story", "step": 6 }] },
+    "record:step-7-trade-off": { "github": [{ "check": "story", "step": 7 }] },
+    "record:step-8-trade-off": { "github": [{ "check": "story", "step": 8 }] },
+    "record:step-9-trade-off": { "github": [{ "check": "story", "step": 9 }] },
+    "record:step-10-result-databricks-seconds-snowfl": { "github": [{ "check": "story", "step": 10 }] },
+    "record:step-11-the-whole-story-once-the-olist-r": { "github": [{ "check": "story", "step": 11 }] }
+  }
+}

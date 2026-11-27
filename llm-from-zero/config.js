@@ -1,7 +1,7 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "5.0.4-speedrun-20261128",
- "version": "5.0.0",
+ "build": "5.1.0-proof-map-20261128",
+ "version": "5.1.0",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",
  "pyodideCore": [
@@ -96,6 +96,9 @@ self.LFZ_CONFIG = {
   "rail.mjs",
   "tour.mjs",
   "etl-guide.mjs",
+  "etl-proof-core.mjs",
+  "etl-proof.mjs",
+  "etl-map.mjs",
   "clock-core.mjs",
   "clock.mjs",
   "coach-core.mjs",
@@ -154,6 +157,7 @@ self.LFZ_CONFIG = {
   "content/skills.json",
   "content/etl.json",
   "content/etl-guide.json",
+  "content/etl-proofs.json",
   "content/projects.json",
   "icons/icon-192.png",
   "icons/icon-512.png",

@@ -1,6 +1,6 @@
 {
- "version": 1,
- "checked": "2026-11-25",
+ "version": 2,
+ "checked": "2026-11-28",
  "repo": "https://github.com/manojhunasimarad/ETL",
  "pr": "https://github.com/manojhunasimarad/ETL/pull/11",
  "title": "ETL project: step-by-step guide",
@@ -14,7 +14,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Work from top to bottom. Each step says what you learn, the commands, what you should see and when it counts as done. Tick a box only when you have done it yourself: the word **done** in the repository README means \"built and passing CI on GitHub\", not \"run and learned by you\"."
+     "text": "Work from top to bottom. Each step says what you learn, the commands, what you should see and when it counts as done. Done means you ran it on your own laptop and your work is on GitHub: the word **done** in the repository README means \"built and passing CI on GitHub\", not \"run and learned by you\"."
     },
     {
      "t": "p",
@@ -28,9 +28,10 @@
     {
      "t": "ul",
      "items": [
-      "**One step at a time.** A step opens only when every \"Done when\" box of the step before it is ticked; locked steps show 🔒. To turn the lock off you have to type SKIP on the [All steps](#etl) page.",
-      "**Every step runs the same loop**, shown at the top of each step: read \"What you learn\" → watch or read (max 45 minutes) → run it → Check yourself with the answers closed → tick \"Done when\".",
-      "**Tick honestly.** A box means you did it yourself. Ticking just to unlock the next step is skipping.",
+      "**One step at a time.** A step opens only when every \"Done when\" box of the step before it is done; locked steps show 🔒 and appear on your pipeline map as dashed outlines. To turn the lock off you have to type SKIP on the [All steps](#etl) page.",
+      "**Run it, paste it, push it.** Boxes marked ▶ run + paste tick themselves when you paste what your own terminal printed (the generator is seeded, so a real run prints exactly the numbers in the guide). Boxes marked ⎇ GitHub tick themselves when your repository shows the work: a story written, a results row filled, CI green. Pasted text is checked in the page and never saved; never paste a key or password.",
+      "**Every step runs the same loop**, shown at the top of each step: read \"What you learn\" → watch or read (max 45 minutes) → run it → Check yourself with the answers closed → prove it → the next part of the map unlocks.",
+      "**Tick the rest honestly.** Boxes without a mark (\"explained\", \"drawn from memory\") are yours to tick. Ticking just to unlock the next step is skipping.",
       "**Going faster:** video at 1.5–2× with captions on; reading as headings first, then the bold lines, then only the paragraphs you need."
      ]
     },

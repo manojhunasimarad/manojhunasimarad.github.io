@@ -1,4 +1,4 @@
-LLM FROM ZERO — LOCAL LEARNING BUILD 5.0.0 (FROZEN FOR LEARNING)
+LLM FROM ZERO — LOCAL LEARNING BUILD 5.1.0
 
 Source: https://github.com/manojhunasimarad/manojhunasimarad.github.io/tree/main/llm-from-zero
 Baseline commit: 94c4cb8df1e4408826a520516b5a97593ff69ab4
@@ -44,4 +44,10 @@ Version 5.0.0 freezes the site so the time goes into learning. From here on, onl
 - ETL step guide (etl-guide.mjs, content/etl-guide.json, studio.html#etl): all eleven steps of github.com/manojhunasimarad/ETL with what you learn, commands with where they run, expected output, questions with answers and 88 tick boxes; ticks sync (lfz-etl-guide.json in the gist). The ETL project page links each step to it, and step 11 (LLM enrichment) is on it.
 - Today uses two columns on a laptop and the full width on large screens; the old sidebar styles no longer leak into the new columns.
 - Fixed: the phone bottom tab bar had zero height in light mode (the theme's --tabbar-h won over the phone rule).
+
+Version 5.1.0 ends the freeze for one feature: the ETL step guide shows one step at a time and unlocks the next only when the current one is proven.
+- Growing pipeline map (etl-map.mjs): one picture of the whole pipeline (laptop, sources, Postgres, Spark, gold, dashboard, Kafka, quality gates, tuning, cloud, LLM labels, GPU, Airflow as a bracket around steps 2–5). Finished parts are solid, the part to do now is marked NOW, locked parts are dashed outlines with only their name. A part finished since the last visit pops in. Tap a part to open it. On the All steps page it sits next to one "Do this now" card; finished steps fold into "Done", and only the next two locked steps are listed.
+- Proof boxes (etl-proof-core.mjs, etl-proof.mjs, content/etl-proofs.json): 60 of the 88 boxes cannot be ticked by hand. ▶ run + paste: paste what your terminal printed; it must contain the exact lines and numbers a real run prints (the generator is seeded), and hints explain the usual mistakes (wrong --orders, counting rows instead of ids, system Python, Docker not running). ⎇ GitHub: the page reads your public repository at the newest commit of main (STORIES.md gaps, RESULTS.md rows, the pushed "your turn" function, CI green, your laptop on the same commit). Pasted text is never saved, and a paste that contains a key or password is refused and wiped. Unticking a proof box forgets its proof. The repository can be changed for a fork (All steps page).
+- Finishing a step shows what it unlocked, with the map.
+Tests: tools/proof.test.mjs (real step-1 output from the repository at 671d71d, the other outputs from its print formats).
 
