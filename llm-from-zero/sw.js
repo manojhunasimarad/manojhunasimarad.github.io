@@ -93,7 +93,7 @@ self.addEventListener('message', e => {
   if (e.data?.type === 'offline-all') { e.waitUntil(downloadAll(e.source)); return; }
   if (e.data?.type !== 'studio-ready') return;
   e.waitUntil(caches.open(SHELL).then(async cache => {
-    const essential = ['studio.html','studio.mjs','theme.js','sync-ui.mjs','cloud-sync.mjs','offline.mjs','auth.mjs','studio-core.mjs','learning-engine.mjs','learning-ui.mjs','quiz-core.mjs','quiz-ui.mjs','content/quiz.json','learning.css','content/learning-graph.json','studio.css','style.css','content/studio.json','content/lessons.json'];
+    const essential = ['studio.html','studio.mjs','theme.js','explain.js','sync-ui.mjs','cloud-sync.mjs','offline.mjs','auth.mjs','studio-core.mjs','learning-engine.mjs','learning-ui.mjs','quiz-core.mjs','quiz-ui.mjs','content/quiz.json','learning.css','content/learning-graph.json','studio.css','style.css','content/studio.json','content/lessons.json'];
     const hits = await Promise.all(essential.map(p => cache.match(new URL(p, scope).href)));
     e.source?.postMessage({type:'studio-ready',ok:hits.every(Boolean)});
   }));
