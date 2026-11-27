@@ -1,6 +1,6 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "5.0.2-watch-20261127",
+ "build": "5.0.3-sources-20261128",
  "version": "5.0.0",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",

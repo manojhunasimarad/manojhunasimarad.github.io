@@ -10,7 +10,7 @@
    "kind": "intro",
    "title": "Start here",
    "short": "Start here",
-   "summary": "How to use this guide, and where each command runs on your laptop.",
+   "summary": "How to use this guide, your 2-day plan, one best source per format, and where each command runs on your laptop.",
    "blocks": [
     {
      "t": "p",
@@ -19,6 +19,62 @@
     {
      "t": "p",
      "text": "Your ticks are saved on this device and synced with your other devices when sync is on. The full study notes stay in the repository, linked from each step."
+    },
+    {
+     "t": "h",
+     "text": "Your 2-day plan",
+     "sub": "Sat 28 and Sun 29 Nov, one block = 2 × 25 min"
+    },
+    {
+     "t": "p",
+     "text": "Goal for the two days: understand and run steps 1–9 yourself, and be able to tell the story of each. Rule: **at most 45 minutes of video per step** in these two days; the rest of each course can wait. Steps 10, 11 and the extras come after."
+    },
+    {
+     "t": "p",
+     "text": "**Day 1: the batch pipeline**"
+    },
+    {
+     "t": "ol",
+     "items": [
+      "**Big picture.** First hour of Joe Reis's course (see the sources kit below). Then [One-time setup](#etl/setup) and [Get the latest code](#etl/latest) so Docker and Postgres are up.",
+      "**[Step 1](#etl/s1)** data sources and profiling: run it, answer Check yourself.",
+      "**[Step 2](#etl/s2)** Postgres: first two chapters of PostgreSQL Essential Training, then run it.",
+      "**[Step 3](#etl/s3)** Spark bronze → silver: PySpark Essential Training (it is 1h 18m; stop at 45 min if needed), then run it.",
+      "**[Step 4](#etl/s4)** star schema and SCD Type 2: the dimensional-modelling part of the step-4 course, then run it.",
+      "**Recall.** Close the laptop and answer Check yourself for steps 1–4 from memory, then write one line per step in `STORIES.md`."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "**Day 2: trust, speed, scheduling, streaming**"
+    },
+    {
+     "t": "ol",
+     "items": [
+      "**[Step 5](#etl/s5)** data quality: run it; read the first two sections of the Deequ paper if time allows.",
+      "**[Step 6](#etl/s6)** SQL analysis and dashboard: run the ten questions and open the dashboard.",
+      "**[Step 7](#etl/s7)** tuning: Kumaran Ponnambalam's 1-hour course, then run the benchmark and note the numbers.",
+      "**[Step 8](#etl/s8)** Airflow: the first hour of the Airflow course, then trigger the DAG.",
+      "**[Step 9](#etl/s9)** Kafka streaming: the Kafka theory sections, then run produce and stream.",
+      "**Wrap up.** Add your numbers to `RESULTS.md` (including the V100 CPU vs GPU row) and say the three strongest stories out loud: quarantine with reason codes, the 176.9 s → 33.0 s tuning, and the GPU benchmark that came out 0.90x."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Sources kit",
+     "sub": "one best source per format"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Free playlist** · [DataTalksClub Data Engineering Zoomcamp](https://www.youtube.com/playlist?list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb) with its [GitHub repo](https://github.com/DataTalksClub/data-engineering-zoomcamp), the course this project used as reference. Use the modules `03-data-warehouse` and `06-batch`. Its 2026 streaming module uses Flink and Redpanda, not Spark, so for step 9 stay with the Kafka course and your own code.",
+      "**One video course** · [Introduction to the Fundamentals of Data Engineering](https://www.oreilly.com/videos/introduction-to-the/0636920921646/) (O'Reilly), Joe Reis, 2h 26m: the lifecycle that every step fits into.",
+      "**Books** · *Fundamentals of Data Engineering* (Reis and Housley, on O'Reilly) for the \"why\" of everything; [The Data Warehouse Toolkit, 3rd ed.](https://www.oreilly.com/library/view/-/9781118530801/) (Kimball and Ross, on O'Reilly) for step 4: chapters 1–2 and the slowly changing dimension section.",
+      "**Papers, one per big idea** · [Spark SQL](https://web.stanford.edu/class/cs245/win2020/readings/spark-sql.pdf) (SIGMOD 2015) for steps 3 and 7; [Automating Large-Scale Data Quality Verification](https://www.vldb.org/pvldb/vol11/p1781-schelter.pdf) (Deequ, VLDB 2018) for step 5; [The Dataflow Model](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf) (VLDB 2015) for step 9; [Lakehouse](https://www.cs.cmu.edu/~15721-f24/papers/Lakehouse.pdf) (CIDR 2021) for step 10. Read the abstract, introduction and figures first; that is enough for an interview.",
+      "**Looking back, 2026** · [The Dataflow Model Revisited](https://www.vldb.org/pvldb/vol19/p4953-fernandez-moctezuma.pdf) (VLDB 2026): the authors grade their own streaming paper after eleven years. Read it after step 9.",
+      "**Videos per step** · each step's *Watch first* section.",
+      "**When stuck, search in this order** · the step's study note (button at the top of each step) → the Zoomcamp module and its FAQ → the official docs (Spark, Postgres, Airflow, Kafka) → [dblp](https://dblp.org) or Google Scholar for papers."
+     ]
     },
     {
      "t": "h",
@@ -535,7 +591,8 @@
      "t": "ul",
      "items": [
       "**LinkedIn Learning** · [PySpark Essential Training: Introduction to Building Data Pipelines](https://www.linkedin.com/learning/apache-pyspark-by-example), Sam Bail, 1h 18m (2025). Spark architecture, DataFrames and how PySpark fits a pipeline. Watch all of it.",
-      "**Udemy, optional** · [Taming Big Data with Apache Spark 4 and Python](https://www.udemy.com/course/taming-big-data-with-apache-spark-hands-on/), Frank Kane, 8h 48m. Watch only the DataFrame and Spark SQL sections; skip the RDD-heavy and Amazon EMR parts."
+      "**Udemy, optional** · [Taming Big Data with Apache Spark 4 and Python](https://www.udemy.com/course/taming-big-data-with-apache-spark-hands-on/), Frank Kane, 8h 48m. Watch only the DataFrame and Spark SQL sections; skip the RDD-heavy and Amazon EMR parts.",
+      "**Paper, optional** · [Spark SQL: Relational Data Processing in Spark](https://web.stanford.edu/class/cs245/win2020/readings/spark-sql.pdf) (SIGMOD 2015). Sections 1–3 explain DataFrames and the Catalyst optimiser: why your Spark code is lazy and planned before it runs."
      ]
     },
     {
@@ -669,7 +726,8 @@
      "t": "ul",
      "items": [
       "**Udemy** · [Data Warehouse Fundamentals for Beginners](https://www.udemy.com/course/data-warehouse-fundamentals-for-beginners/). Data warehouse vs data mart, the staging layer, facts and dimensions: the theory behind your star schema and surrogate keys.",
-      "**Udemy, optional** · [Master Data Warehousing: Dimensional Modeling, ETL & SQL](https://www.udemy.com/course/master-data-warehousing-dimensional-modeling-etl-sql/). SCD Types 0–6 in depth. New course with few reviews, so only if SCD Type 2 still feels unclear."
+      "**Udemy, optional** · [Master Data Warehousing: Dimensional Modeling, ETL & SQL](https://www.udemy.com/course/master-data-warehousing-dimensional-modeling-etl-sql/). SCD Types 0–6 in depth. New course with few reviews, so only if SCD Type 2 still feels unclear.",
+      "**Book, optional** · [The Data Warehouse Toolkit, 3rd ed.](https://www.oreilly.com/library/view/-/9781118530801/), Kimball and Ross (on O'Reilly). Chapters 1–2 plus the slowly changing dimension techniques: the source of every term in this step."
      ]
     },
     {
@@ -792,7 +850,8 @@
     {
      "t": "ul",
      "items": [
-      "**LinkedIn Learning** · [Data Quality Testing with Great Expectations](https://www.linkedin.com/learning/search?keywords=Data%20Quality%20Testing%20with%20Great%20Expectations), Sam Bail. When and where to test data, writing tests and reading the results. Your 115 checks are hand-built rather than Great Expectations, but the ideas are the same. (Found via a library catalogue; search the title if the link shows nothing.)"
+      "**LinkedIn Learning** · [Data Quality Testing with Great Expectations](https://www.linkedin.com/learning/search?keywords=Data%20Quality%20Testing%20with%20Great%20Expectations), Sam Bail. When and where to test data, writing tests and reading the results. Your 115 checks are hand-built rather than Great Expectations, but the ideas are the same. (Found via a library catalogue; search the title if the link shows nothing.)",
+      "**Paper, optional** · [Automating Large-Scale Data Quality Verification](https://www.vldb.org/pvldb/vol11/p1781-schelter.pdf) (Amazon's Deequ, VLDB 2018). \"Unit tests for data\" computed as Spark aggregations: the same idea as your 115 checks."
      ]
     },
     {
@@ -1267,7 +1326,8 @@
      "t": "ul",
      "items": [
       "**Udemy** (also on [O'Reilly](https://www.oreilly.com/videos/apache-kafka-series/9781789342604/) and LinkedIn Learning) · [Apache Kafka Series: Learn Apache Kafka for Beginners](https://www.udemy.com/course/apache-kafka/), Stéphane Maarek. Watch only the theory and CLI sections: topics, partitions, brokers, producers, consumers, consumer groups. Skip the Java producer code; this project uses Python.",
-      "**Udemy** · Frank Kane's Spark course from step 3: its Structured Streaming chapters are enough for watermarks and dedupe at a basic level."
+      "**Udemy** · Frank Kane's Spark course from step 3: its Structured Streaming chapters are enough for watermarks and dedupe at a basic level.",
+      "**Paper, optional** · [The Dataflow Model](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf) (Google, VLDB 2015). Where event time, windows, watermarks and triggers come from. Read the introduction and the windowing section."
      ]
     },
     {
@@ -1386,7 +1446,8 @@
      "t": "ul",
      "items": [
       "**O'Reilly** · [Data Engineering Fundamentals on Databricks](https://www.oreilly.com/videos/-/10001ACADFORD/), Derar Alhussein, 4h 31m, beginner (2025). ETL pipelines, ingestion and streaming on Databricks. For this step, the platform tour and ETL parts are enough.",
-      "**LinkedIn Learning** · [Learning SnowflakeDB](https://www.linkedin.com/learning/learning-snowflakedb), Lynn Langit, 1h 42m, beginner. How Snowflake works, with demos: all you need for `load-snowflake`."
+      "**LinkedIn Learning** · [Learning SnowflakeDB](https://www.linkedin.com/learning/learning-snowflakedb), Lynn Langit, 1h 42m, beginner. How Snowflake works, with demos: all you need for `load-snowflake`.",
+      "**Paper, optional** · [Lakehouse](https://www.cs.cmu.edu/~15721-f24/papers/Lakehouse.pdf) (Databricks, CIDR 2021). Why Databricks keeps open Parquet/Delta files instead of a closed warehouse: the idea behind this step's two platforms."
      ]
     },
     {
