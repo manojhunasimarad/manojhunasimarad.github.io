@@ -250,6 +250,17 @@
     },
     {
      "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 2.5 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**O'Reilly** · [Introduction to the Fundamentals of Data Engineering](https://www.oreilly.com/videos/introduction-to-the/0636920921646/), Joe Reis, 2h 26m, beginner. The data engineering lifecycle (generation, ingestion, storage, transformation, serving). Watch this before anything else: it is why the project has raw → bronze → silver → gold."
+     ]
+    },
+    {
+     "t": "h",
      "text": "Run it",
      "sub": "PowerShell"
     },
@@ -389,6 +400,17 @@
     },
     {
      "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 3.5 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**LinkedIn Learning** · [PostgreSQL Essential Training](https://www.linkedin.com/learning/postgresql-essential-training-22611610), Adam Wilbert, 3h 18m. Postgres in Docker, psql, data types, tables, relationships and constraints: the 3NF core of this step."
+     ]
+    },
+    {
+     "t": "h",
      "text": "Run it",
      "sub": "PowerShell, Postgres in Docker"
     },
@@ -502,6 +524,18 @@
       "**Silver, in order**: apply the step-1 fixes (recorded in `_fixes`), remove exact duplicates keeping the first loaded copy, cast safely with `try_cast` (Spark 4's ANSI mode kills the job on a bad plain cast), tag every broken rule as a reason code, then split.",
       "**Orphan or cascade**: a child whose parent never existed gets `fk:...`; a child whose parent was itself rejected gets `parent_quarantined:...`. Step 5 needs that difference to score the checks honestly.",
       "**The invariant** bronze = duplicates + quarantine + silver is tested for every table: no row disappears without a reason."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, 1.5 h, plus 4–5 h optional"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**LinkedIn Learning** · [PySpark Essential Training: Introduction to Building Data Pipelines](https://www.linkedin.com/learning/apache-pyspark-by-example), Sam Bail, 1h 18m (2025). Spark architecture, DataFrames and how PySpark fits a pipeline. Watch all of it.",
+      "**Udemy, optional** · [Taming Big Data with Apache Spark 4 and Python](https://www.udemy.com/course/taming-big-data-with-apache-spark-hands-on/), Frank Kane, 8h 48m. Watch only the DataFrame and Spark SQL sections; skip the RDD-heavy and Amazon EMR parts."
      ]
     },
     {
@@ -628,6 +662,18 @@
     },
     {
      "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 2–3 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Udemy** · [Data Warehouse Fundamentals for Beginners](https://www.udemy.com/course/data-warehouse-fundamentals-for-beginners/). Data warehouse vs data mart, the staging layer, facts and dimensions: the theory behind your star schema and surrogate keys.",
+      "**Udemy, optional** · [Master Data Warehousing: Dimensional Modeling, ETL & SQL](https://www.udemy.com/course/master-data-warehousing-dimensional-modeling-etl-sql/). SCD Types 0–6 in depth. New course with few reviews, so only if SCD Type 2 still feels unclear."
+     ]
+    },
+    {
+     "t": "h",
      "text": "Run it",
      "sub": "Docker, on the same 5,000 orders"
     },
@@ -736,6 +782,17 @@
       "**Write, audit, publish**: bronze, silver, silver gates, gold, gold gates, then the Postgres load. A blocking gate stops the run with exit code 2, and the report explaining why is still written.",
       "**Checks are measured** like a classifier against `_defects.csv`. Recall is the share of injected bad rows caught; precision is the share of caught rows that really were bad. Rows rejected only because their parent was (`parent_quarantined:`) don't count toward precision.",
       "Results land in `reports\\dq_report_synthetic.md`, in a JSON report per run, and in Postgres `synthetic_dq.check_results` for history."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 1–2 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**LinkedIn Learning** · [Data Quality Testing with Great Expectations](https://www.linkedin.com/learning/search?keywords=Data%20Quality%20Testing%20with%20Great%20Expectations), Sam Bail. When and where to test data, writing tests and reading the results. Your 115 checks are hand-built rather than Great Expectations, but the ideas are the same. (Found via a library catalogue; search the title if the link shows nothing.)"
      ]
     },
     {
@@ -861,6 +918,17 @@
     },
     {
      "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 2.5 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**LinkedIn Learning** · [Data Analysis with PostgreSQL](https://www.linkedin.com/learning/data-analysis-with-postgresql), Adam Wilbert, 2h 31m, with code challenges. Cleaning, standardising and describing data in SQL, which is what the ten analysis questions practise."
+     ]
+    },
+    {
+     "t": "h",
      "text": "Run it",
      "sub": "gold from step 5 is already loaded"
     },
@@ -962,6 +1030,17 @@
     },
     {
      "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 1 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**LinkedIn Learning** · [Apache Spark Essential Training: Big Data Engineering](https://www.linkedin.com/learning/apache-spark-essential-training), Kumaran Ponnambalam, 1h 04m. Parallel processing, the execution plan, batch and real-time pipelines, best practices: why shuffle partitions and broadcast joins took the run from 176.9 s to 33.0 s."
+     ]
+    },
+    {
+     "t": "h",
      "text": "Run it",
      "sub": "Docker"
     },
@@ -1058,6 +1137,17 @@
       "**Retries only where they help**: Spark tasks retry twice; gates have `retries=0`, because a data problem fails again.",
       "When a gate fails, every task after it ends as `upstream_failed` (not \"skipped\") and `load_gold` never runs.",
       "**Airflow 3 parts**: API server (the UI), scheduler, DAG processor, triggerer, and a metadata database (the `airflow` database in your Postgres)."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 4–6 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Udemy** · [The Complete Hands-On Introduction to Apache Airflow](https://www.udemy.com/course/the-complete-hands-on-course-to-master-apache-airflow/), Marc Lamberti. Starts from what Airflow is and how it works; needs only Docker and basic Python. This project runs **Airflow 3**: if the course uses Airflow 2, the ideas carry over but some imports and syntax differ."
      ]
     },
     {
@@ -1170,6 +1260,18 @@
     },
     {
      "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 3 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**Udemy** (also on [O'Reilly](https://www.oreilly.com/videos/apache-kafka-series/9781789342604/) and LinkedIn Learning) · [Apache Kafka Series: Learn Apache Kafka for Beginners](https://www.udemy.com/course/apache-kafka/), Stéphane Maarek. Watch only the theory and CLI sections: topics, partitions, brokers, producers, consumers, consumer groups. Skip the Java producer code; this project uses Python.",
+      "**Udemy** · Frank Kane's Spark course from step 3: its Structured Streaming chapters are enough for watermarks and dedupe at a basic level."
+     ]
+    },
+    {
+     "t": "h",
      "text": "Run it",
      "sub": "Docker, on the 20,000 orders from step 5"
     },
@@ -1273,6 +1375,18 @@
       "**Serverless compute refuses persist()**, so the notebook sets `ECOM_NO_CACHE=1`. Turning the cache off exposed a real bug: `dropDuplicates` kept an arbitrary copy. Silver now keeps the first loaded copy. The rule: never rely on a cache for correctness.",
       "**Snowflake** separates storage from compute: queries run on a warehouse you pay for per second, and `AUTO_SUSPEND = 60` stops it after a minute idle.",
       "**Loading** is two steps: `PUT` files on a stage, then `COPY INTO` the table. Clearing the stage first makes a rerun give the same tables."
+     ]
+    },
+    {
+     "t": "h",
+     "text": "Watch first",
+     "sub": "video basics, about 2–6 h"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**O'Reilly** · [Data Engineering Fundamentals on Databricks](https://www.oreilly.com/videos/-/10001ACADFORD/), Derar Alhussein, 4h 31m, beginner (2025). ETL pipelines, ingestion and streaming on Databricks. For this step, the platform tour and ETL parts are enough.",
+      "**LinkedIn Learning** · [Learning SnowflakeDB](https://www.linkedin.com/learning/learning-snowflakedb), Lynn Langit, 1h 42m, beginner. How Snowflake works, with demos: all you need for `load-snowflake`."
      ]
     },
     {
