@@ -59,6 +59,21 @@ export function guideProgress(guide, state) {
   const next = sections.find(s => s.total && s.done < s.total) || null;
   return { sections, done, total, pct: total ? Math.round(100 * done / total) : 0, next };
 }
+/** Speedrun lock: the first earlier section that still has open boxes, or null when `id` is open. */
+export function lockedBy(progress, id) {
+  const all = progress.sections || [], i = all.findIndex(s => s.id === id);
+  return i < 0 ? null : all.slice(0, i).find(s => s.total && s.done < s.total) || null;
+}
+
+/** Video or reading? Points recalled per 10 minutes for each format, and the winner (20% margin). */
+export function formatVerdict(r = {}) {
+  const rate = (pts, min) => Number.isFinite(pts) && Number.isFinite(min) && pts >= 0 && min > 0 && min <= 600 ? Math.round(100 * pts / min) / 10 : null;
+  const video = rate(r.vPts, r.vMin), reading = rate(r.rPts, r.rMin);
+  if (video == null || reading == null) return { video, reading, winner: null };
+  const hi = Math.max(video, reading), lo = Math.min(video, reading);
+  const winner = hi === 0 || hi < lo * 1.2 ? 'tie' : video > reading ? 'video' : 'reading';
+  return { video, reading, winner };
+}
 /** Boxes ticked on a given day (for today's "Use" step). */
 export function ticksOn(state, day) {
   return Object.values(state?.ticks || {}).filter(t => t.on && dayKey(new Date(t.at)) === day).length;

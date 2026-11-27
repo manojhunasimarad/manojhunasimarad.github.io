@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
   emptyGuide, setTick, isTicked, mergeGuide, guideItems, guideProgress, ticksOn, noteSolved, mergeSolved,
-  goalProgress, todaySteps, todayState, pageKind, dayKey, tourPending, TOUR_VERSION
+  goalProgress, todaySteps, todayState, pageKind, dayKey, tourPending, TOUR_VERSION, lockedBy, formatVerdict
 } from '../journey-core.mjs';
 
 const root = new URL('../', import.meta.url);
@@ -117,4 +117,31 @@ test('the first-visit tour shows until it is finished or skipped, and again afte
   assert(!tourPending({ version: TOUR_VERSION, done: 1 }));
   assert(!tourPending({ version: TOUR_VERSION, skipped: 1 }));
   assert(tourPending({ version: TOUR_VERSION - 1, done: 1 }));
+});
+
+test('speedrun lock: a step opens only when every earlier step with boxes is fully ticked', async () => {
+  const g = await json('content/etl-guide.json');
+  let st = emptyGuide();
+  let p = guideProgress(g, st);
+  assert.equal(lockedBy(p, 'start'), null, 'Start here is always open');
+  assert.equal(lockedBy(p, 'setup'), null, 'the first section with boxes is open');
+  assert.equal(lockedBy(p, 's1').id, 'setup', 'step 1 waits for setup');
+  for (const it of guideItems(g).filter(i => ['setup', 'latest'].includes(i.section))) st = setTick(st, it.id, true, 5000);
+  p = guideProgress(g, st);
+  assert.equal(lockedBy(p, 's1'), null);
+  assert.equal(lockedBy(p, 's2').id, 's1');
+  const one = guideItems(g).find(i => i.section === 's1');
+  st = setTick(st, one.id, true, 6000);
+  assert.equal(lockedBy(guideProgress(g, st), 's2').id, 's1', 'one box is not the whole step');
+  assert.equal(lockedBy(p, 'nope'), null, 'unknown ids are not locked here (the page says not found)');
+});
+
+test('video or reading: points per 10 minutes, a 20% margin, and nothing until both rows are filled', () => {
+  assert.deepEqual(formatVerdict({ vMin: 10, vPts: 6, rMin: 10, rPts: 4 }), { video: 6, reading: 4, winner: 'video' });
+  assert.equal(formatVerdict({ vMin: 12, vPts: 5, rMin: 8, rPts: 6 }).winner, 'reading');
+  assert.equal(formatVerdict({ vMin: 10, vPts: 5, rMin: 10, rPts: 5.5 }).winner, 'tie');
+  assert.equal(formatVerdict({ vMin: 10, vPts: 0, rMin: 10, rPts: 0 }).winner, 'tie');
+  assert.equal(formatVerdict({ vMin: 10, vPts: 5 }).winner, null);
+  assert.equal(formatVerdict({ vMin: 0, vPts: 5, rMin: 5, rPts: 1 }).winner, null, 'zero minutes is not a result');
+  assert.equal(formatVerdict({ vMin: -3, vPts: 5, rMin: 5, rPts: 1 }).video, null);
 });

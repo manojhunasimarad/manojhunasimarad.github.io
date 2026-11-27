@@ -10,7 +10,7 @@
    "kind": "intro",
    "title": "Start here",
    "short": "Start here",
-   "summary": "How to use this guide, your 2-day plan, one best source per format, and where each command runs on your laptop.",
+   "summary": "How to use this guide, the speedrun rules, your 2-day plan, the video-or-reading test, one best source per format, and where each command runs.",
    "blocks": [
     {
      "t": "p",
@@ -19,6 +19,20 @@
     {
      "t": "p",
      "text": "Your ticks are saved on this device and synced with your other devices when sync is on. The full study notes stay in the repository, linked from each step."
+    },
+    {
+     "t": "h",
+     "text": "Speedrun rules",
+     "sub": "on by default"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "**One step at a time.** A step opens only when every \"Done when\" box of the step before it is ticked; locked steps show 🔒. To turn the lock off you have to type SKIP on the [All steps](#etl) page.",
+      "**Every step runs the same loop**, shown at the top of each step: read \"What you learn\" → watch or read (max 45 minutes) → run it → Check yourself with the answers closed → tick \"Done when\".",
+      "**Tick honestly.** A box means you did it yourself. Ticking just to unlock the next step is skipping.",
+      "**Going faster:** video at 1.5–2× with captions on; reading as headings first, then the bold lines, then only the paragraphs you need."
+     ]
     },
     {
      "t": "h",
@@ -38,7 +52,7 @@
      "items": [
       "**Big picture.** First hour of Joe Reis's course (see the sources kit below). Then [One-time setup](#etl/setup) and [Get the latest code](#etl/latest) so Docker and Postgres are up.",
       "**[Step 1](#etl/s1)** data sources and profiling: run it, answer Check yourself.",
-      "**[Step 2](#etl/s2)** Postgres: first two chapters of PostgreSQL Essential Training, then run it.",
+      "**[Step 2](#etl/s2)** Postgres: do the 25-minute video-or-reading test below with PostgreSQL Essential Training, then run it.",
       "**[Step 3](#etl/s3)** Spark bronze → silver: PySpark Essential Training (it is 1h 18m; stop at 45 min if needed), then run it.",
       "**[Step 4](#etl/s4)** star schema and SCD Type 2: the dimensional-modelling part of the step-4 course, then run it.",
       "**Recall.** Close the laptop and answer Check yourself for steps 1–4 from memory, then write one line per step in `STORIES.md`."
@@ -61,6 +75,31 @@
     },
     {
      "t": "h",
+     "text": "Video or reading? Settle it in 25 minutes",
+     "sub": "do it during step 2"
+    },
+    {
+     "t": "p",
+     "text": "Studies that tested it found no proof that matching lessons to a person's preferred format makes them learn more. What reliably helps is testing yourself after you study, which is why every step ends with Check yourself. Your **speed** with each format is still worth measuring, so measure it on the same material:"
+    },
+    {
+     "t": "ol",
+     "items": [
+      "Open step 2's course, **PostgreSQL Essential Training** on LinkedIn Learning. Each lesson there has a \"Transcript\" tab.",
+      "Take four short lessons in a row and alternate: **watch** lesson 1 → **read** lesson 2's transcript with the video off → watch lesson 3 → read lesson 4.",
+      "After each lesson, close it and spend **2 minutes** writing down every point you remember. Then open the transcript and count only the points that are correct.",
+      "Add up, for each format, the minutes you spent learning (not the 2-minute recall) and the correct points, and type them in below. It is saved on this device."
+     ]
+    },
+    {
+     "t": "formattest"
+    },
+    {
+     "t": "p",
+     "text": "Four lessons is a small sample, so treat the result as a rough guide. If it says no clear winner, stop testing and use whichever you feel like that day."
+    },
+    {
+     "t": "h",
      "text": "Sources kit",
      "sub": "one best source per format"
     },
@@ -69,10 +108,10 @@
      "items": [
       "**Free playlist** · [DataTalksClub Data Engineering Zoomcamp](https://www.youtube.com/playlist?list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb) with its [GitHub repo](https://github.com/DataTalksClub/data-engineering-zoomcamp), the course this project used as reference. Use the modules `03-data-warehouse` and `06-batch`. Its 2026 streaming module uses Flink and Redpanda, not Spark, so for step 9 stay with the Kafka course and your own code.",
       "**One video course** · [Introduction to the Fundamentals of Data Engineering](https://www.oreilly.com/videos/introduction-to-the/0636920921646/) (O'Reilly), Joe Reis, 2h 26m: the lifecycle that every step fits into.",
-      "**Books** · *Fundamentals of Data Engineering* (Reis and Housley, on O'Reilly) for the \"why\" of everything; [The Data Warehouse Toolkit, 3rd ed.](https://www.oreilly.com/library/view/-/9781118530801/) (Kimball and Ross, on O'Reilly) for step 4: chapters 1–2 and the slowly changing dimension section.",
+      "**Books** · \"Fundamentals of Data Engineering\" (Reis and Housley, on O'Reilly) for the \"why\" of everything; [The Data Warehouse Toolkit, 3rd ed.](https://www.oreilly.com/library/view/-/9781118530801/) (Kimball and Ross, on O'Reilly) for step 4: chapters 1–2 and the slowly changing dimension section.",
       "**Papers, one per big idea** · [Spark SQL](https://web.stanford.edu/class/cs245/win2020/readings/spark-sql.pdf) (SIGMOD 2015) for steps 3 and 7; [Automating Large-Scale Data Quality Verification](https://www.vldb.org/pvldb/vol11/p1781-schelter.pdf) (Deequ, VLDB 2018) for step 5; [The Dataflow Model](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf) (VLDB 2015) for step 9; [Lakehouse](https://www.cs.cmu.edu/~15721-f24/papers/Lakehouse.pdf) (CIDR 2021) for step 10. Read the abstract, introduction and figures first; that is enough for an interview.",
       "**Looking back, 2026** · [The Dataflow Model Revisited](https://www.vldb.org/pvldb/vol19/p4953-fernandez-moctezuma.pdf) (VLDB 2026): the authors grade their own streaming paper after eleven years. Read it after step 9.",
-      "**Videos per step** · each step's *Watch first* section.",
+      "**Videos per step** · each step's \"Watch first\" section.",
       "**When stuck, search in this order** · the step's study note (button at the top of each step) → the Zoomcamp module and its FAQ → the official docs (Spark, Postgres, Airflow, Kafka) → [dblp](https://dblp.org) or Google Scholar for papers."
      ]
     },

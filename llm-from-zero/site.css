@@ -488,6 +488,18 @@ a.etl-cta small { display: block; color: var(--muted); }
 .eg-card.now a { border-color: var(--use); box-shadow: 0 0 0 3px var(--use-soft); }
 .eg-card.done a { background: var(--use-soft); border-color: transparent; }
 .eg-num { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--surface-2); font-weight: 800; color: var(--accent-strong); }
+.eg-card.locked a { opacity: .62; }
+.eg-card:is(.now, .done, .locked) .eg-card-main b { padding-right: 88px; }
+.eg-card.locked a:hover { border-color: var(--line); }
+.eg-badge.lock { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
+.eg-chips a.locked { color: var(--muted); border-style: dashed; }
+.eg-locked { border: 1px solid var(--line); border-radius: 14px; padding: 6px 18px; background: var(--surface); margin: 18px 0; }
+.eg-lockctl { margin: 4px 0 16px; font-size: 14px; }
+.eg-lockctl summary { cursor: pointer; color: var(--muted); }
+.eg-lockctl input, .eg-ft input { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); width: 7em; box-sizing: border-box; }
+.eg-loop { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: 13.5px; margin: 6px 0 14px; }
+.eg-loop span { padding: 3px 10px; border-radius: 999px; background: var(--use-soft); }
+.eg-ft-out { margin-top: 8px; }
 .eg-card-main { display: grid; gap: 6px; min-width: 0; }
 .eg-card-main b { font-size: 15.5px; }
 .eg-card-main small { color: var(--muted); font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
