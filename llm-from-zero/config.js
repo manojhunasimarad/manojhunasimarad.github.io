@@ -1,6 +1,6 @@
 // Written by build_web.py. Read by the page (boot.js) and by the offline worker (sw.js).
 self.LFZ_CONFIG = {
- "build": "5.1.0-proof-map-20261128",
+ "build": "5.1.1-me-20261128",
  "version": "5.1.0",
  "pyodideVersion": "0.29.4",
  "pyodideUrl": "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/",
@@ -99,6 +99,8 @@ self.LFZ_CONFIG = {
   "etl-proof-core.mjs",
   "etl-proof.mjs",
   "etl-map.mjs",
+  "self.mjs",
+  "self-core.mjs",
   "clock-core.mjs",
   "clock.mjs",
   "coach-core.mjs",

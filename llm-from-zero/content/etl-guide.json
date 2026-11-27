@@ -77,27 +77,48 @@
     {
      "t": "h",
      "text": "Video or reading? Settle it in 25 minutes",
-     "sub": "do it during step 2"
+     "sub": "do it at the start of step 2"
     },
     {
      "t": "p",
-     "text": "Studies that tested it found no proof that matching lessons to a person's preferred format makes them learn more. What reliably helps is testing yourself after you study, which is why every step ends with Check yourself. Your **speed** with each format is still worth measuring, so measure it on the same material:"
+     "text": "Studies that tested it found no proof that matching lessons to a person's preferred format makes them learn more. What reliably helps is testing yourself after you study, which is why every step ends with Check yourself. Your **speed** with each format is still worth knowing, so the [Know yourself](#me) page measures it on four lessons of step 2's course, PostgreSQL Essential Training:"
     },
     {
-     "t": "ol",
-     "items": [
-      "Open step 2's course, **PostgreSQL Essential Training** on LinkedIn Learning. Each lesson there has a \"Transcript\" tab.",
-      "Take four short lessons in a row and alternate: **watch** lesson 1 → **read** lesson 2's transcript with the video off → watch lesson 3 → read lesson 4.",
-      "After each lesson, close it and spend **2 minutes** writing down every point you remember. Then open the transcript and count only the points that are correct.",
-      "Add up, for each format, the minutes you spent learning (not the 2-minute recall) and the correct points, and type them in below. It is saved on this device."
+     "t": "table",
+     "rows": [
+      [
+       "#",
+       "Lesson",
+       "How"
+      ],
+      [
+       "1",
+       "Chapter 2 · The structure of a database table",
+       "**Watch** at your speed (1.5× suggested), captions on, no pausing"
+      ],
+      [
+       "2",
+       "Chapter 2 · Join tables together with relationships",
+       "**Read** the Transcript tab, video paused and muted"
+      ],
+      [
+       "3",
+       "Chapter 3 · Link primary and foreign keys",
+       "**Watch**"
+      ],
+      [
+       "4",
+       "Chapter 3 · Enforce referential integrity on related records",
+       "**Read**"
+      ]
      ]
     },
     {
-     "t": "formattest"
+     "t": "p",
+     "text": "For each lesson the page runs the same three moves: **study** (timed by the page) → **recall** (close the lesson, 2 minutes, type every point you remember, one per line) → **mark** (open the transcript, tick only the lines it clearly supports). At the end it saves correct points per 10 minutes for each format to your profile, and each step's loop line here follows the result."
     },
     {
-     "t": "p",
-     "text": "Four lessons is a small sample, so treat the result as a rough guide. If it says no clear winner, stop testing and use whichever you feel like that day."
+     "t": "formattest"
     },
     {
      "t": "h",

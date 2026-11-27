@@ -36,6 +36,7 @@ export const SECTIONS = [
     { name: 'Reuse notebook', to: 's:#notebook', match: ['s:notebook'] }] },
   { id: 'progress', name: 'Progress', key: 'g', icon: 'chart', tabs: [
     { name: 'Progress & reviews', to: 's:#progress', match: ['s:progress'] },
+    { name: 'Know yourself', to: 's:#me', match: ['s:me'] },
     { name: 'Learning map', to: 's:#roadmap', match: ['s:roadmap', 's:topic/'] },
     { name: 'Skill map', to: 'p:#/map', match: ['p:/map', 'p:/skill/', 'p:/roles'] },
     { name: 'Certificates', to: 'p:#/certs', match: ['p:/certs'] }] },

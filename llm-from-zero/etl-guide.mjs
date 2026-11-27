@@ -2,7 +2,9 @@
 // e-commerce pipeline with what you learn, the exact commands and where they run, the output you
 // should see, questions with answers, and the "Done when" boxes you tick yourself. Works offline.
 // Content: content/etl-guide.json (from the repository's docs and the 25 Nov review). Ticks: journey-core.mjs.
-import { GUIDE_KEY, emptyGuide, guideProgress, isTicked, setTick, lockedBy, formatVerdict } from './journey-core.mjs';
+import { GUIDE_KEY, emptyGuide, guideProgress, isTicked, setTick, lockedBy } from './journey-core.mjs';
+import { selfState } from './self.mjs';
+import { profile } from './self-core.mjs';
 import { buildPanel, current as railNow } from './rail.mjs';
 import { PROOF_KEY, proofFor, kindsOf, checkPaste, recordPass, clearProof, proofComplete, emptyProofs } from './etl-proof-core.mjs';
 import { repoSetting, saveRepo, runGithubChecks } from './etl-proof.mjs';
@@ -11,27 +13,20 @@ import { pipelineMap } from './etl-map.mjs';
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const read = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 let guide = null, titles = null, proofs = null;
-// Speedrun lock (on unless turned off with the word SKIP) and the video-or-reading test, both on this device only.
-const LOCK_KEY = 'lfz-etl-lock-v1', FORMAT_KEY = 'lfz-etl-format-v1';
+// Speedrun lock (on unless turned off with the word SKIP), on this device only.
+const LOCK_KEY = 'lfz-etl-lock-v1';
 const lockOn = () => read(LOCK_KEY, true) !== false;
 const SEEN_KEY = 'lfz-etl-map-seen-v1';
 const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
-const FT_ROWS = [['v', 'Video', 'lessons you watched'], ['r', 'Reading', 'lessons you read as text']];
-function verdictText(v) {
-  if (!v.winner) return 'Fill in both rows to see your result.';
-  const nums = `Video ${v.video} · reading ${v.reading} points per 10 minutes.`;
-  if (v.winner === 'tie') return `<b>No clear winner</b> (less than 20% apart). ${nums} Pick whichever you feel like that day: what you do after (Check yourself, closed book) matters more than the format.`;
-  return v.winner === 'video'
-    ? `<b>Video wins.</b> ${nums} For steps 3–9: video first at 1.5× or faster, then read only the part you missed.`
-    : `<b>Reading wins.</b> ${nums} For steps 3–9: read first (headings, then bold lines, then the rest), and open a video only for a part that does not click.`;
-}
+/** The video-or-reading result from the Know yourself page, or a button to take the test. */
 function formatTest() {
-  const r = read(FORMAT_KEY, {}) || {};
-  const cell = (k, x) => `<input type="number" inputmode="decimal" min="0" max="600" step="0.5" data-ft="${k}${x}" value="${Number.isFinite(r[k + x]) ? r[k + x] : ''}" aria-label="${k === 'v' ? 'Video' : 'Reading'} ${x === 'Min' ? 'minutes' : 'points recalled'}">`;
-  return `<div class="eg-ft"><div class="table-scroll eg-table"><table><thead><tr><th scope="col">Format</th><th scope="col">Minutes spent</th><th scope="col">Points recalled</th></tr></thead><tbody>${FT_ROWS.map(([k, name, hint]) => `<tr><td><b>${name}</b><br><small>${hint}</small></td><td>${cell(k, 'Min')}</td><td>${cell(k, 'Pts')}</td></tr>`).join('')}</tbody></table></div><p class="eg-ft-out" data-ft-out aria-live="polite">${verdictText(formatVerdict(r))}</p></div>`;
+  const p = profile(selfState());
+  if (!p.complete) return `<p class="eg-ftbox"><a class="button primary" href="#me">Take the 25-minute test on the Know yourself page →</a><br><small class="muted">It times each lesson, runs the 2-minute recall and scores it for you.</small></p>`;
+  const L = p.latest, call = p.winner === 'tie' ? 'No clear winner' : p.winner === 'video' ? 'Video is faster for you' : 'Reading is faster for you';
+  return `<p class="eg-ftbox"><b>Your result: ${call}.</b> Latest test: video ${L.video.rate} · reading ${L.reading.rate} correct points per 10 minutes. <a href="#me">Your profile →</a></p>`;
 }
 function loopLine() {
-  const v = formatVerdict(read(FORMAT_KEY, {}) || {}).winner;
+  const v = profile(selfState()).winner;
   const how = v === 'video' ? 'watch (your test: video wins)' : v === 'reading' ? 'read (your test: reading wins)' : 'watch or read';
   return `<p class="eg-loop"><b>Speedrun loop</b> <span>1 Read “What you learn”</span> <span>2 ${how}, max 45 min</span> <span>3 Run it</span> <span>4 Check yourself, closed book</span> <span>5 Prove it: paste your run, push to GitHub, tick the rest — the next step opens</span></p>`;
 }
@@ -227,7 +222,6 @@ export async function renderGuide(screen, hash) {
     <aside class="eg-aside">${heads ? `<div class="eg-toc"><p class="eyebrow">ON THIS PAGE</p><ol>${heads}</ol></div>` : ''}<div data-journey="build-compact"></div></aside></div>`;
   fill(screen);
   screen.onchange = onTick;
-  screen.oninput = onFormat;
 }
 
 function celebrate(g, s) {
@@ -240,14 +234,6 @@ function lockControl() {
   return lockOn()
     ? `<details class="eg-lockctl"><summary>🔒 Speedrun lock is on: each step opens when the one before is done and proven</summary><p>To turn it off, type <b>SKIP</b> and press the button. Then every step opens and nothing stops you skipping. Proof boxes still need proof.</p><p><input type="text" data-lock-word aria-label="Type SKIP to turn the lock off" autocomplete="off"> <button type="button" data-lock-off>Turn the lock off</button></p></details>`
     : `<details class="eg-lockctl" open><summary>🔓 Speedrun lock is off</summary><p><button type="button" class="primary" data-lock-on>Turn the lock back on</button></p></details>`;
-}
-
-function onFormat(e) {
-  const box = e.target.closest('[data-ft]'); if (!box) return;
-  const r = read(FORMAT_KEY, {}) || {}, n = parseFloat(box.value);
-  if (Number.isFinite(n) && n >= 0 && n <= 600) r[box.dataset.ft] = n; else delete r[box.dataset.ft];
-  save(FORMAT_KEY, r);
-  const out = e.currentTarget.querySelector('[data-ft-out]'); if (out) out.innerHTML = verdictText(formatVerdict(r));
 }
 
 const list = (items, cls) => `<ul class="eg-pf-list ${cls || ''}">${items.map(i => `<li class="${i.ok ? 'ok' : 'no'}">${i.ok ? '✓' : '✗'} ${esc(i.say)}</li>`).join('')}</ul>`;

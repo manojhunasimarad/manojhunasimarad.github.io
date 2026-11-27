@@ -24,6 +24,7 @@
 import {mergeProgress} from './studio-core.mjs';
 import {emptyState, mergeLearning} from './learning-engine.mjs';
 import {GUIDE_KEY, SOLVED_KEY, emptyGuide, emptySolved, mergeGuide, mergeSolved} from './journey-core.mjs';
+import {SELF_KEY, emptySelf, mergeSelf} from './self-core.mjs';
 
 export const SYNC_KEY = 'lfz-sync-v1';
 export const DESCRIPTION = 'LLM From Zero: learning progress sync (manojhunasimarad.github.io)';
@@ -190,6 +191,10 @@ export async function localParts({storage = globalThis.localStorage, base = '', 
      read: () => readJson(storage, SOLVED_KEY, null) || emptySolved(),
      merge: (l, r) => mergeSolved(l, r),
      write: m => put(SOLVED_KEY, m)},
+    {file: 'lfz-self.json', label: 'Know yourself profile (video or reading tests)',
+     read: () => readJson(storage, SELF_KEY, null) || emptySelf(),
+     merge: (l, r) => mergeSelf(l, r),
+     write: m => put(SELF_KEY, m)},
     // each resume project keeps its plan and its check like the ETL project, under its own keys
     ...projects.projects.flatMap(p => [
       {file: `lfz-proj-${p.id}.json`, label: `${p.name} known topics`,

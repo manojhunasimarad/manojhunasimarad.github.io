@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
   emptyGuide, setTick, isTicked, mergeGuide, guideItems, guideProgress, ticksOn, noteSolved, mergeSolved,
-  goalProgress, todaySteps, todayState, pageKind, dayKey, tourPending, TOUR_VERSION, lockedBy, formatVerdict
+  goalProgress, todaySteps, todayState, pageKind, dayKey, tourPending, TOUR_VERSION, lockedBy
 } from '../journey-core.mjs';
 
 const root = new URL('../', import.meta.url);
@@ -134,14 +134,4 @@ test('speedrun lock: a step opens only when every earlier step with boxes is ful
   st = setTick(st, one.id, true, 6000);
   assert.equal(lockedBy(guideProgress(g, st), 's2').id, 's1', 'one box is not the whole step');
   assert.equal(lockedBy(p, 'nope'), null, 'unknown ids are not locked here (the page says not found)');
-});
-
-test('video or reading: points per 10 minutes, a 20% margin, and nothing until both rows are filled', () => {
-  assert.deepEqual(formatVerdict({ vMin: 10, vPts: 6, rMin: 10, rPts: 4 }), { video: 6, reading: 4, winner: 'video' });
-  assert.equal(formatVerdict({ vMin: 12, vPts: 5, rMin: 8, rPts: 6 }).winner, 'reading');
-  assert.equal(formatVerdict({ vMin: 10, vPts: 5, rMin: 10, rPts: 5.5 }).winner, 'tie');
-  assert.equal(formatVerdict({ vMin: 10, vPts: 0, rMin: 10, rPts: 0 }).winner, 'tie');
-  assert.equal(formatVerdict({ vMin: 10, vPts: 5 }).winner, null);
-  assert.equal(formatVerdict({ vMin: 0, vPts: 5, rMin: 5, rPts: 1 }).winner, null, 'zero minutes is not a result');
-  assert.equal(formatVerdict({ vMin: -3, vPts: 5, rMin: 5, rPts: 1 }).video, null);
 });

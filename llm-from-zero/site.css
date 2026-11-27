@@ -654,3 +654,25 @@ a.etl-cta small { display: block; color: var(--muted); }
 }
 /* the old studio sidebar styled every <aside>; the new side columns are plain */
 body[data-page="studio"] aside.td-side, body[data-page="studio"] aside.eg-aside { position: static; height: auto; border: 0; padding: 0; background: none; overflow: visible; }
+
+/* Know yourself (studio.html#me) */
+.me-call { font-size: 19px; margin: 6px 0 12px; }
+.me-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 12px; }
+.me-tile { display: grid; gap: 2px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.me-tile b { font: 700 36px/1.1 ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.me-tile small { color: var(--muted); }
+.me-steps li, .me-notes li { margin: 6px 0; line-height: 1.55; }
+.me-in { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); width: 100%; max-width: 460px; box-sizing: border-box; }
+.me-row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; }
+.me-row label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.me-row .me-in.wide { min-width: 260px; }
+.me-row select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.me-now { display: block; }
+.me-now .ck-now-act { margin-top: 10px; }
+.me-lesson { margin: 4px 0 8px; font-size: 20px; }
+.me-lesson small { display: block; font-size: 13px; font-weight: 400; margin-top: 2px; }
+#me-recall { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.me-marks { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.me-marks label { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.me-error { color: var(--recall); font-weight: 600; }
+.eg-ftbox { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }

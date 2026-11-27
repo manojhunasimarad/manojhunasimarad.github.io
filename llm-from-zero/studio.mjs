@@ -6,6 +6,7 @@ import {localParts} from './cloud-sync.mjs';
 import {mountOffline} from './offline.mjs';
 import {renderClock} from './clock.mjs';
 import {renderGuide} from './etl-guide.mjs';
+import {renderSelf} from './self.mjs';
 let quiz;
 let learning;
 const $ = s => document.querySelector(s), esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -108,7 +109,7 @@ function setup() {
   mountOffline($('#offline-panel'));
   $('#tour-again').onclick=()=>window.lfzCoach?.tour(0);$('#daily-again').onclick=()=>window.lfzCoach?.open(0);
 }
-function render() {routeGeneration++;if(request)request.abort();const hash=location.hash.slice(1)||'today';document.querySelectorAll('aside nav a').forEach(a=>{if(a.hash==='#'+(hash.startsWith('topic/')?'roadmap':hash.split('/')[0]))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});if(learning?.render(hash)||quiz?.render(hash)){}else if(hash.startsWith('lesson/'))lesson(hash.slice(7));else if(hash==='clock')renderClock($('#screen'));else if(hash==='etl'||hash.startsWith('etl/'))renderGuide($('#screen'),hash);else({library,notebook,lab,setup}[hash]||library)();window.scrollTo(0,0);$('#main').focus({preventScroll:true});}
+function render() {routeGeneration++;if(request)request.abort();const hash=location.hash.slice(1)||'today';document.querySelectorAll('aside nav a').forEach(a=>{if(a.hash==='#'+(hash.startsWith('topic/')?'roadmap':hash.split('/')[0]))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});if(learning?.render(hash)||quiz?.render(hash)){}else if(hash.startsWith('lesson/'))lesson(hash.slice(7));else if(hash==='clock')renderClock($('#screen'));else if(hash==='me')renderSelf($('#screen'));else if(hash==='etl'||hash.startsWith('etl/'))renderGuide($('#screen'),hash);else({library,notebook,lab,setup}[hash]||library)();window.scrollTo(0,0);$('#main').focus({preventScroll:true});}
 async function start() {
   try {
     [data,course]=await Promise.all(['content/studio.json','content/lessons.json'].map(async p=>{const r=await fetch(p);if(!r.ok)throw Error('Could not load '+p);return r.json();}));
