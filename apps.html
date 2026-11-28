@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manoj Hunasimarad · Apps</title>
+<meta name="description" content="Small web apps by Manoj Hunasimarad: an LLM learning tracker, a kitchen planner and a paper-trading dojo for Indian markets.">
+<style>
+  :root {
+    --bg: #f6f4ef; --ink: #1d1d1b; --muted: #6b6a64; --line: #dcd8cd; --card: #fffdf8; --accent: #b4532a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151513; --ink: #ecebe6; --muted: #9c9a92; --line: #2e2d29; --card: #1c1c19; --accent: #e08a5c; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 56px 20px 72px; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 28px; }
+  h1 { font: 600 30px/1.2 ui-serif, Georgia, "Times New Roman", serif; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  a.app {
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: baseline;
+    padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--card); color: inherit; text-decoration: none;
+    transition: border-color .15s, transform .15s;
+  }
+  a.app:hover, a.app:focus-visible { border-color: var(--accent); transform: translateY(-1px); outline: none; }
+  .name { font-weight: 600; font-size: 17px; }
+  .path { color: var(--muted); font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .desc { grid-column: 1 / -1; color: var(--muted); font-size: 15px; }
+  footer { margin-top: 36px; color: var(--muted); font-size: 14px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Manoj Hunasimarad</h1>
+    <p>MTech, Computational and Data Science, NIT Karnataka. Small apps I use every day. Each one runs in the browser and keeps its data on your device.</p>
+  </header>
+
+  <ul>
+    <li>
+      <a class="app" href="llm-from-zero/">
+        <span class="name">LLM From Zero</span><span class="path">/llm-from-zero</span>
+        <span class="desc">A staged, offline-capable study track from Python basics to building language models, with lessons, exercises, quizzes and paper replication.</span>
+      </a>
+    </li>
+    <li>
+      <a class="app" href="Kitchen/">
+        <span class="name">Kitchen From Zero</span><span class="path">/Kitchen</span>
+        <span class="desc">A phone-first meal planner for a small kitchen with no fridge or oven: recipes across seven cuisines with nutrition, pantry-based cooking and daily plans.</span>
+      </a>
+    </li>
+    <li>
+      <a class="app" href="dalal-dojo/">
+        <span class="name">Dalal Dojo</span><span class="path">/dalal-dojo</span>
+        <span class="desc">A paper-trading desk for Indian markets: a simulated NSE session, realistic brokerage charges and 20 missions from a first order to risk-sized trades.</span>
+      </a>
+    </li>
+    <li>
+      <a class="app" href="dalal-dojo-lessons/">
+        <span class="name">Dalal Dojo: Lessons and Lab</span><span class="path">/dalal-dojo-lessons</span>
+        <span class="desc">The first edition: 24 investing lessons with quizzes, belts, and a lab that backtests a SIP against trying to time the market.</span>
+      </a>
+    </li>
+  </ul>
+
+  <footer>
+    Code on <a href="https://github.com/manojhunasimarad">GitHub</a>.
+  </footer>
+</main>
+</body>
+</html>

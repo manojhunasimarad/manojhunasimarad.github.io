@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "Dinachari",
+  "short_name": "Dinachari",
+  "description": "One app for the day: sleep and wake, meals and soaking, study, trading practice, habits and reviews.",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eef1f6",
+  "theme_color": "#eef1f6",
+  "categories": ["lifestyle", "productivity", "education", "food"],
+  "icons": [
+    { "src": "/day/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/day/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/day/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/day/icons/monochrome-512.png", "sizes": "512x512", "type": "image/png", "purpose": "monochrome" }
+  ],
+  "shortcuts": [
+    { "name": "I’m awake", "short_name": "Awake", "url": "/?do=wake", "icons": [{ "src": "/day/icons/sc-wake.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Going to sleep", "short_name": "Sleep", "url": "/?do=sleep", "icons": [{ "src": "/day/icons/sc-sleep.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "New timer", "short_name": "Timer", "url": "/?do=timer", "icons": [{ "src": "/day/icons/sc-timer.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Review today", "short_name": "Review", "url": "/?do=review", "icons": [{ "src": "/day/icons/sc-review.png", "sizes": "96x96", "type": "image/png" }] }
+  ]
+}
