@@ -4,11 +4,11 @@
 // Zero and LLM From Zero have their own workers under their folders; for their pages theirs win, and
 // this one passes everything of theirs straight to the network.
 // VERSION changes whenever a file below changes (node day/tools/stamp.mjs), so phones get the update.
-const VERSION = 'day-1.0.0-f6c964910ccd';
+const VERSION = 'day-1.0.0-cccd52375d4e';
 const RUNTIME = 'day-runtime';
 const SHELL = [
   '/', '/manifest.webmanifest',
-  '/day/app.mjs', '/day/core.mjs', '/day/sources.mjs', '/day/sync.mjs', '/day/views.mjs', '/day/dial.mjs', '/day/app.css',
+  '/day/app.mjs', '/day/core.mjs', '/day/sources.mjs', '/day/sync.mjs', '/day/views.mjs', '/day/dial.mjs', '/day/prep.mjs', '/day/app.css',
   '/day/fonts/AtkinsonHyperlegibleNext.woff',
   '/day/icons/icon-192.png', '/day/icons/icon-512.png', '/day/icons/maskable-512.png', '/day/icons/monochrome-512.png',
   '/day/icons/badge-96.png', '/day/icons/favicon-32.png', '/day/icons/apple-touch-icon.png',

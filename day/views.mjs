@@ -2,6 +2,7 @@
 // No storage, no events here; buttons carry data-act and app.mjs handles them.
 
 import * as C from './core.mjs';
+import * as P from './prep.mjs';
 import { href, LINKS } from './sources.mjs';
 import { dial, sleepChart, dayBars, spark, meter } from './dial.mjs';
 
@@ -29,6 +30,7 @@ export const TABS = [
   { id: 'cook', name: 'Cook', icon: '<path d="M4.5 10.5h15v4.8a4.7 4.7 0 0 1-4.7 4.7H9.2a4.7 4.7 0 0 1-4.7-4.7z"/><path d="M2.5 10.5h19M9 7.2c0-1.5 1.3-2.7 3-2.7s3 1.2 3 2.7"/>' },
   { id: 'learn', name: 'Learn', icon: '<path d="M4 5.5c2.6-1 5.2-1 8 1 2.8-2 5.4-2 8-1v13.5c-2.6-1-5.2-1-8 1-2.8-2-5.4-2-8-1z"/><path d="M12 6.5v13.5"/>' },
   { id: 'trade', name: 'Trade', icon: '<path d="M7 4v16M17 4v16"/><rect x="4.5" y="7.5" width="5" height="8" rx="1"/><rect x="14.5" y="9.5" width="5" height="6" rx="1"/>' },
+  { id: 'prep', name: 'Disney', icon: '<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/>' },
   { id: 'me', name: 'Me', icon: '<path d="M18.5 14.6A7.5 7.5 0 0 1 9.4 5.5a7.5 7.5 0 1 0 9.1 9.1z"/>' }
 ];
 const icon = (paths, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
@@ -498,3 +500,15 @@ export function sheetTop3(x, date) {
 }
 
 export { LINKS };
+
+/* ================================================================== Disney prep */
+export function prep(x) {
+  const done = x.dprep || new Set(), total = P.ALL_IDS.length, n = P.ALL_IDS.filter(i => done.has(i)).length;
+  const days = Math.round((C.parseYmd(P.OA_DATE) - C.parseYmd(x.today)) / 864e5);
+  const head = `<section class="block"><header class="block-h"><h2>Disney: Data Engineer prep</h2></header>
+    <p class="big-num">${days > 0 ? days + ' day' + (days > 1 ? 's' : '') + ' to the OA' : days === 0 ? 'OA today, 5 pm' : 'OA done'}</p>
+    <p class="kv"><span>Done</span>${meter(n, total, 'k-learn')}<b>${n} of ${total}</b></p>
+    <p class="small muted">OA 2 Dec 2026, 5 pm, 60 min, virtual. Interviews in December. Bengaluru. CGPA cutoff 6.0, no backlogs.</p></section>`;
+  return head + P.GROUPS.map(g => block('', h(g.title), (g.note ? `<p class="small muted">${h(g.note)}</p>` : '') +
+    `<ul class="checks">${g.items.map(it => `<li><label><input type="checkbox" data-act="dprep" data-id="${h(it.id)}"${done.has(it.id) ? ' checked' : ''}><span>${it.url ? `<a href="${h(it.url)}" target="_blank" rel="noopener">${h(it.t)}</a> <span class="muted small">${h(it.src)}</span>` : h(it.t)}</span></label></li>`).join('')}</ul>`)).join('');
+}

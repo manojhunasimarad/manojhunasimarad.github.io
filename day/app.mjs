@@ -22,7 +22,7 @@ let timers = (read(TIMERS, []) || []).filter(t => t && t.id && Number.isFinite(t
 let ui = { tab: 'today', fullDay: false, theme: 'auto', introDone: false, ...read(UI, {}) };
 let x = null, routineFrom = false, installEvt = null, kitchenBusy = false, kitchenTried = 0, syncTimer = null;
 let syncState = { busy: false, error: '', report: '' }, undoSnap = null, extras = { offline: [], persisted: false, storageUse: '' };
-const tabs = ['today', 'cook', 'learn', 'trade', 'me', 'settings'];
+const tabs = ['today', 'cook', 'learn', 'trade', 'prep', 'me', 'settings'];
 if (!tabs.includes(ui.tab)) ui.tab = 'today';
 
 function save({ sync = true } = {}) { write(KEY, S); if (sync) scheduleSync(); }
@@ -136,7 +136,7 @@ function refresh() {
 let lastRender = 0;
 function render() {
   if (!x) return;
-  x.tab = ui.tab; x.timers = timers; x.ui = ui; x.canInstall = !!installEvt; x.now = Date.now(); Object.assign(x, extras);
+  x.dprep = new Set(C.all(S, 'dprep').filter(r => r.done).map(r => r.id.slice(6))); x.tab = ui.tab; x.timers = timers; x.ui = ui; x.canInstall = !!installEvt; x.now = Date.now(); Object.assign(x, extras);
   x.sync = { ...Sync.signIn(store), meta: Sync.readMeta(store), ...syncState };
   document.documentElement.dataset.tab = ui.tab;
   $('#top').innerHTML = V.topbar(x);
@@ -144,9 +144,9 @@ function render() {
   $('#tabs').innerHTML = V.nav(x);
   $('#timers').innerHTML = V.timersBar(x);
   document.body.classList.toggle('has-timers', timers.length > 0);
-  const view = { today: V.today, cook: V.cook, learn: V.learn, trade: V.trade, me: V.me, settings: V.settings }[ui.tab] || V.today;
+  const view = { today: V.today, cook: V.cook, learn: V.learn, trade: V.trade, prep: V.prep, me: V.me, settings: V.settings }[ui.tab] || V.today;
   $('#main').innerHTML = view(x);
-  document.title = ui.tab === 'today' ? 'Dinachari' : `${{ cook: 'Cook', learn: 'Learn', trade: 'Trade', me: 'Me', settings: 'Settings' }[ui.tab]} · Dinachari`;
+  document.title = ui.tab === 'today' ? 'Dinachari' : `${{ cook: 'Cook', learn: 'Learn', trade: 'Trade', prep: 'Disney prep', me: 'Me', settings: 'Settings' }[ui.tab]} · Dinachari`;
   lastRender = Date.now();
 }
 const typing = () => { const a = document.activeElement; return a && a !== document.body && $('#main').contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type !== 'checkbox'; };
@@ -570,6 +570,8 @@ document.addEventListener('change', e => {
     const ok = Src.markPrepDone(store, t.dataset.key, t.checked);
     if (!ok) { t.checked = !t.checked; toast('Open Kitchen once so this can be ticked.'); return; }
     buzz(15); toast(t.checked ? 'Ticked in Kitchen too.' : 'Unticked.'); refresh();
+  } else if (t.matches('input[data-act="dprep"]')) {
+    C.patch(S, 'dprep:' + t.dataset.id, { done: t.checked }); save(); buzz(15); render();
   } else if (t.matches('input[data-act="top3"]')) {
     const items = x.top3.map((it, i) => i === +t.dataset.i ? { ...it, done: t.checked } : it);
     C.put(S, { id: 'top3:' + x.today, k: 'top3', d: x.today, items }); save(); buzz(15); refresh();
@@ -591,7 +593,7 @@ document.addEventListener('submit', e => {
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || dlg().open || (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]'))) return;
   const k = e.key.toLowerCase();
-  if ('12345'.includes(k) && k.length === 1) setTab(V.TABS[+k - 1].id);
+  if ('123456'.includes(k) && k.length === 1) setTab(V.TABS[+k - 1].id);
   else if (k === 't') handlers['timer-new']();
   else if (k === 'r') handlers.review({ dataset: {} });
   else if (k === ',') setTab('settings');
